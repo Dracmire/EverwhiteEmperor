@@ -1,5 +1,5 @@
 {
-  "version": "0.3",
+  "version": "0.4",
   "nivelMax": 20,
   "xpPorNivel": 1000,
   "recompensaBase": 40,
@@ -35,6 +35,17 @@
   ],
   "redondeo": "nearest",
   "combinarTags": "max",
+  "gradosTag": {
+    "cumple": {
+      "nombre": "Cumple el tag",
+      "mult": 0.25,
+      "max": 0.3
+    },
+    "heroico": {
+      "nombre": "Cumple el tag de manera heroica",
+      "mult": 1.0
+    }
+  },
   "tags": [
     {
       "id": "acrobatics",
@@ -312,6 +323,7 @@
   ],
   "fuentes": {
     "recompensaBase": "40 XP por criatura de nivel igual al del grupo en Pathfinder 2e (1000 XP por nivel). Valor inicial editable.",
-    "tags": "Lista de habilidades de Pathfinder 1e (35) más 4 etiquetas propias. Multiplicadores en 1.0 hasta que el diseñador los defina."
+    "tags": "Lista de habilidades de Pathfinder 1e (35) más 4 etiquetas propias. Multiplicadores en 1.0 hasta que el diseñador los defina.",
+    "gradosTag": "Regla del diseñador: cumplir un tag da 25–30% de la XP de la entrada; cumplirlo de manera heroica da 100%."
   }
 }
