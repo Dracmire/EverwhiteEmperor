@@ -1,0 +1,317 @@
+{
+  "version": "0.3",
+  "nivelMax": 20,
+  "xpPorNivel": 1000,
+  "recompensaBase": 40,
+  "multDif": [
+    {
+      "delta": ">=2",
+      "mult": 1.5
+    },
+    {
+      "delta": 1,
+      "mult": 1.25
+    },
+    {
+      "delta": 0,
+      "mult": 1.0
+    },
+    {
+      "delta": -1,
+      "mult": 0.5
+    },
+    {
+      "delta": -2,
+      "mult": 0.25
+    },
+    {
+      "delta": -3,
+      "xpFija": 1
+    },
+    {
+      "delta": "<=-4",
+      "xpFija": 0
+    }
+  ],
+  "redondeo": "nearest",
+  "combinarTags": "max",
+  "tags": [
+    {
+      "id": "acrobatics",
+      "nombre": "Acrobacias",
+      "grupo": "cuerpo",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "climb",
+      "nombre": "Trepar",
+      "grupo": "cuerpo",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "escape-artist",
+      "nombre": "Escapismo",
+      "grupo": "cuerpo",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "fly",
+      "nombre": "Volar",
+      "grupo": "cuerpo",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "ride",
+      "nombre": "Montar",
+      "grupo": "cuerpo",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "swim",
+      "nombre": "Nadar",
+      "grupo": "cuerpo",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "stealth",
+      "nombre": "Sigilo",
+      "grupo": "cuerpo",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "perception",
+      "nombre": "Percepción",
+      "grupo": "sentidos",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "sense-motive",
+      "nombre": "Averiguar intenciones",
+      "grupo": "sentidos",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "appraise",
+      "nombre": "Tasar",
+      "grupo": "sentidos",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "bluff",
+      "nombre": "Engañar",
+      "grupo": "social",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "diplomacy",
+      "nombre": "Diplomacia",
+      "grupo": "social",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "disguise",
+      "nombre": "Disfrazarse",
+      "grupo": "social",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "intimidate",
+      "nombre": "Intimidar",
+      "grupo": "social",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "perform",
+      "nombre": "Interpretar",
+      "grupo": "social",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "craft",
+      "nombre": "Artesanía",
+      "grupo": "oficio",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "profession",
+      "nombre": "Profesión",
+      "grupo": "oficio",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "disable-device",
+      "nombre": "Inutilizar mecanismo",
+      "grupo": "oficio",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "sleight-of-hand",
+      "nombre": "Juego de manos",
+      "grupo": "oficio",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "handle-animal",
+      "nombre": "Trato con animales",
+      "grupo": "supervivencia",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "heal",
+      "nombre": "Sanar",
+      "grupo": "supervivencia",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "survival",
+      "nombre": "Supervivencia",
+      "grupo": "supervivencia",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "knowledge-arcana",
+      "nombre": "Conocimiento: arcano",
+      "grupo": "conocimiento",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "knowledge-dungeoneering",
+      "nombre": "Conocimiento: mazmorras",
+      "grupo": "conocimiento",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "knowledge-engineering",
+      "nombre": "Conocimiento: ingeniería",
+      "grupo": "conocimiento",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "knowledge-geography",
+      "nombre": "Conocimiento: geografía",
+      "grupo": "conocimiento",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "knowledge-history",
+      "nombre": "Conocimiento: historia",
+      "grupo": "conocimiento",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "knowledge-local",
+      "nombre": "Conocimiento: local",
+      "grupo": "conocimiento",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "knowledge-nature",
+      "nombre": "Conocimiento: naturaleza",
+      "grupo": "conocimiento",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "knowledge-nobility",
+      "nombre": "Conocimiento: nobleza",
+      "grupo": "conocimiento",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "knowledge-planes",
+      "nombre": "Conocimiento: planos",
+      "grupo": "conocimiento",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "knowledge-religion",
+      "nombre": "Conocimiento: religión",
+      "grupo": "conocimiento",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "linguistics",
+      "nombre": "Lingüística",
+      "grupo": "conocimiento",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "spellcraft",
+      "nombre": "Conocimiento de conjuros",
+      "grupo": "magia",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "use-magic-device",
+      "nombre": "Usar objeto mágico",
+      "grupo": "magia",
+      "mult": 1.0,
+      "origen": "skill-pf1"
+    },
+    {
+      "id": "combat",
+      "nombre": "Combate",
+      "grupo": "general",
+      "mult": 1.0,
+      "origen": "propio"
+    },
+    {
+      "id": "exploration",
+      "nombre": "Exploración",
+      "grupo": "general",
+      "mult": 1.0,
+      "origen": "propio"
+    },
+    {
+      "id": "quest",
+      "nombre": "Misión u objetivo",
+      "grupo": "general",
+      "mult": 1.0,
+      "origen": "propio"
+    },
+    {
+      "id": "rest",
+      "nombre": "Descanso y downtime",
+      "grupo": "general",
+      "mult": 1.0,
+      "origen": "propio"
+    }
+  ],
+  "fuentes": {
+    "recompensaBase": "40 XP por criatura de nivel igual al del grupo en Pathfinder 2e (1000 XP por nivel). Valor inicial editable.",
+    "tags": "Lista de habilidades de Pathfinder 1e (35) más 4 etiquetas propias. Multiplicadores en 1.0 hasta que el diseñador los defina."
+  }
+}
