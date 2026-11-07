@@ -193,6 +193,63 @@
     return sig <= nivelMax - 1 ? sig : null;
   }
 
+  /** Ataque base de una clase a un nivel (completa = nivel, media = 3/4, baja = 1/2; redondeo hacia abajo). null si no se sabe. */
+  function babDeClase(clase, nivel) {
+    if (!clase) return null;
+    if (clase.bab === 'completa') return nivel;
+    if (clase.bab === 'media') return Math.floor(nivel * 3 / 4);
+    if (clase.bab === 'baja') return Math.floor(nivel / 2);
+    return null;
+  }
+
+  /**
+   * Evalúa los requisitos de un feat contra un jugador.
+   * jug = { atributos, nivel, claseId, clase (objeto del catálogo o null), feats: [ids] }
+   * indice = catálogo de feats por id (para poner nombres).
+   * Devuelve { cumple, detalle: [{ clave, texto, estado }] } con estado "cumple", "falta" o "sin-verificar".
+   * Se evalúan atributos, ataque base, nivel de personaje, nivel de clase y feats previos.
+   * Lo demás (rangos de habilidad, nivel de lanzador, rasgos de clase…) queda "sin-verificar".
+   */
+  function evaluarRequisitos(f, jug, indice) {
+    const req = f.requisitos || {};
+    const detalle = [];
+    const poner = function (clave, texto, estado) { detalle.push({ clave: clave, texto: texto, estado: estado }); };
+
+    Object.keys(req.atributos || {}).forEach(function (k) {
+      poner('atributo', k + ' ' + req.atributos[k], (jug.atributos[k] || 0) >= req.atributos[k] ? 'cumple' : 'falta');
+    });
+    if (req.bab !== undefined) {
+      const texto = 'Ataque base +' + req.bab + (req.babAlt ? ' o ' + rotulo(req.babAlt.clase) + ' nivel ' + req.babAlt.nivel : '');
+      const bab = babDeClase(jug.clase, jug.nivel);
+      const porClase = req.babAlt && jug.claseId === req.babAlt.clase && jug.nivel >= req.babAlt.nivel;
+      if (porClase || (bab !== null && bab >= req.bab)) poner('bab', texto, 'cumple');
+      else if (bab === null) poner('bab', texto, 'sin-verificar');
+      else poner('bab', texto, 'falta');
+    }
+    if (req.nivelPj !== undefined) {
+      poner('nivel', 'Nivel de personaje ' + req.nivelPj, jug.nivel >= req.nivelPj ? 'cumple' : 'falta');
+    }
+    if (req.nivelClase) {
+      const texto = (jug.claseId === req.nivelClase.clase && jug.clase ? jug.clase.nombre : rotulo(req.nivelClase.clase)) + ' nivel ' + req.nivelClase.nivel;
+      poner('clase', texto, jug.claseId === req.nivelClase.clase && jug.nivel >= req.nivelClase.nivel ? 'cumple' : 'falta');
+    }
+    (req.feats || []).forEach(function (pre) {
+      poner('feat', indice && indice[pre] ? indice[pre].nombre : pre, jug.feats.indexOf(pre) >= 0 ? 'cumple' : 'falta');
+    });
+    (req.otros || []).forEach(function (t) { poner('otro', t, 'sin-verificar'); });
+
+    return { cumple: !detalle.some(function (d) { return d.estado === 'falta'; }), detalle: detalle };
+  }
+
+  /** Datos del jugador que necesita evaluarRequisitos, a partir del resultado de calcularPersonaje. */
+  function contextoJugador(ctx, pj, resultado) {
+    const clase = (ctx.classes || []).find(function (c) { return c.id === pj.clase; }) || null;
+    return {
+      atributos: pj.atributos || {}, nivel: resultado.nivel.nivel, claseId: pj.clase, clase: clase,
+      feats: resultado.feats.lista.map(function (x) { return x.id; }),
+    };
+  }
+
   // ----------------------------------------------------- perfil racial (5.2)
 
   /**
@@ -349,24 +406,29 @@
           case 'feat': {
             const f = feats[e.id];
             if (!f) throw new Error('el feat "' + e.id + '" no existe en el catálogo');
-            if (estado.feats.some(function (x) { return x.id === e.id; })) throw new Error('el feat "' + f.nombre + '" ya está ganado');
+            if (e.eleccion !== undefined && typeof e.eleccion !== 'string') throw new Error('eleccion debe ser un texto');
+            const eleccion = (e.eleccion || '').trim();
+            const previos = estado.feats.filter(function (x) { return x.id === e.id; });
+            if (previos.length && !f.multiple) throw new Error('el feat "' + f.nombre + '" ya está ganado');
+            if (previos.length && eleccion && previos.some(function (x) { return x.eleccion === eleccion; })) {
+              throw new Error('el feat "' + f.nombre + '" ya está ganado con la elección "' + eleccion + '"');
+            }
             const nivel = nivelActual();
             if (estado.feats.length + 1 > slotsDeFeats(nivel)) {
               throw new Error('no hay slot de feat libre en el nivel ' + nivel + ' (' + slotsDeFeats(nivel) + ' slots)');
             }
-            const req = f.requisitos || {};
-            Object.keys(req.atributos || {}).forEach(function (k) {
-              if ((atributos[k] || 0) < req.atributos[k]) throw new Error(f.nombre + ' exige ' + k + ' ' + req.atributos[k]);
-            });
-            (req.feats || []).forEach(function (pre) {
-              if (!estado.feats.some(function (x) { return x.id === pre; })) {
-                throw new Error(f.nombre + ' exige el feat ' + (feats[pre] ? feats[pre].nombre : pre));
-              }
-            });
+            const evaluacion = evaluarRequisitos(f, {
+              atributos: atributos, nivel: nivel, claseId: pj.clase, clase: clases[pj.clase] || null,
+              feats: estado.feats.map(function (x) { return x.id; }),
+            }, feats);
+            const faltan = evaluacion.detalle.filter(function (d) { return d.estado === 'falta'; });
+            if (faltan.length) throw new Error(f.nombre + ' exige ' + faltan.map(function (d) { return d.texto; }).join(', '));
             const activo = f.ejecucion === 'activo' && !f.excepcion;
             const reg = {
-              id: f.id, nombre: f.nombre, ejecucion: f.ejecucion || 'pasivo',
+              id: f.id, nombre: eleccion ? f.nombre + ' (' + eleccion + ')' : f.nombre, eleccion: eleccion || null,
+              categoria: f.tipo || null, libro: f.libro || null, ejecucion: f.ejecucion || 'pasivo',
               tipo: activo ? 'habilidad-tipo-conjuro' : 'feat', convertidoDe: activo ? f.id : null, nivel: nivel,
+              sinVerificar: evaluacion.detalle.filter(function (d) { return d.estado === 'sin-verificar'; }).map(function (d) { return d.texto; }),
             };
             estado.feats.push(reg);
             s.feats.push(reg);
@@ -562,6 +624,7 @@
         lista: estado.feats,
         slotsTotales: sl,
         slotsUsados: estado.feats.length,
+        slotsLibres: Math.max(0, sl - estado.feats.length),
         niveles: Array.from({ length: Math.ceil(cfg.nivelMax / 2) }, function (_, i) { return i * 2 + 1; }).filter(function (n) { return n <= Math.max(nivelInfo.nivel + 2, 9); }),
         proximoSlot: proximoSlot(nivelInfo.nivel, cfg.nivelMax),
       },
@@ -593,6 +656,7 @@
     razas: 'razas.json',
     meritos: 'meritos.json',
     feats: 'feats.pf1.json',
+    conversiones: 'feats.conversiones.json',
     items: 'items.json',
     achievements: 'achievements.json',
     traits: 'traits.json',
@@ -601,12 +665,14 @@
 
   /** Convierte los JSON de data/ (ya parseados, por clave de ARCHIVOS) en el contexto del motor. */
   function armarContexto(raw) {
+    const conv = (raw.conversiones && raw.conversiones.conversiones) || {};
     return {
       config: raw.config,
       zeo: raw.zeo,
       razas: raw.razas.razas,
       meritos: raw.meritos.meritos,
-      feats: raw.feats.feats,
+      // Las decisiones de diseño (conversiones) se aplican encima del catálogo importado.
+      feats: raw.feats.feats.map(function (f) { return conv[f.id] ? Object.assign({}, f, conv[f.id]) : f; }),
       items: raw.items.items,
       achievements: raw.achievements.achievements,
       traits: raw.traits.traits,
@@ -624,6 +690,9 @@
     umbralesZeo: umbralesZeo,
     detalleLinea: detalleLinea,
     slotsDeFeats: slotsDeFeats,
+    babDeClase: babDeClase,
+    evaluarRequisitos: evaluarRequisitos,
+    contextoJugador: contextoJugador,
     tienePerfilRacial: tienePerfilRacial,
     calcularPersonaje: calcularPersonaje,
   };

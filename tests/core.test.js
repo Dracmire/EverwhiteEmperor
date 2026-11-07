@@ -321,6 +321,133 @@ test('tipos de entrada desconocidos se reportan', () => {
   assert.match(errores(r)[0], /desconocido/);
 });
 
+// ---------------------------------------------- feats: catálogo y requisitos
+
+test('slots de feats: 1 en el nivel 1 y uno más cada 2 niveles (4 en el nivel 7)', () => {
+  const casos = [[1, 1], [2, 1], [3, 2], [4, 2], [5, 3], [6, 3], [7, 4], [8, 4], [9, 5], [19, 10], [20, 10]];
+  casos.forEach(([nivel, slots]) => assert.equal(Core.slotsDeFeats(nivel), slots, 'nivel ' + nivel));
+});
+
+test('ataque base por progresión de clase', () => {
+  const clases = contexto().classes;
+  const de = (id) => clases.find((c) => c.id === id);
+  assert.deepEqual([1, 7, 20].map((n) => Core.babDeClase(de('fighter'), n)), [1, 7, 20]);
+  assert.deepEqual([1, 7, 20].map((n) => Core.babDeClase(de('rogue'), n)), [0, 5, 15]);
+  assert.deepEqual([1, 7, 20].map((n) => Core.babDeClase(de('wizard'), n)), [0, 3, 10]);
+  assert.equal(Core.babDeClase(null, 5), null);
+  assert.equal(Core.babDeClase({ id: 'x' }, 5), null);
+});
+
+test('el ataque base de la clase decide si se cumple un requisito de BAB', () => {
+  const ctx = contexto();
+  // Power Attack: STR 13 y ataque base +1. Un mago de nivel 1 tiene +0.
+  const mago = Core.calcularPersonaje(ctx, pj([[{ tipo: 'feat', id: 'power-attack' }]], { clase: 'wizard' }));
+  assert.equal(mago.feats.lista.length, 0);
+  assert.match(errores(mago)[0], /exige Ataque base \+1/);
+  // Un guerrero de nivel 1 tiene +1.
+  const guerrero = Core.calcularPersonaje(ctx, pj([[{ tipo: 'feat', id: 'power-attack' }]]));
+  assert.deepEqual(errores(guerrero), []);
+  // Cadena Power Attack → Cleave → Great Cleave (BAB +4): un guerrero de nivel 7 la completa si tiene slots.
+  const cadena = Core.calcularPersonaje(ctx, pj([[xp(6000), { tipo: 'feat', id: 'power-attack' }, { tipo: 'feat', id: 'cleave' }, { tipo: 'feat', id: 'great-cleave' }]]));
+  assert.deepEqual(errores(cadena), []);
+  // Sin el feat previo no hay Great Cleave.
+  const salto = Core.calcularPersonaje(ctx, pj([[xp(6000), { tipo: 'feat', id: 'great-cleave' }]]));
+  assert.match(errores(salto)[0], /exige .*Cleave/);
+});
+
+test('requisitos: ataque base alternativo por clase, nivel de clase y nivel de personaje', () => {
+  const ctx = contexto();
+  const clases = ctx.classes;
+  const jug = (claseId, nivel, extra) => Object.assign({ atributos: {}, nivel: nivel, claseId: claseId, clase: clases.find((c) => c.id === claseId), feats: [] }, extra || {});
+  const estados = (f, j) => Core.evaluarRequisitos(f, j, {}).detalle.map((d) => d.estado);
+  // "ataque base +6 o monje nivel 5": un monje de nivel 5 tiene BAB +3 pero cumple por clase.
+  const alt = { requisitos: { bab: 6, babAlt: { clase: 'monk', nivel: 5 } } };
+  assert.deepEqual(estados(alt, jug('monk', 5)), ['cumple']);
+  assert.deepEqual(estados(alt, jug('monk', 4)), ['falta']);
+  assert.deepEqual(estados(alt, jug('fighter', 6)), ['cumple']);
+  assert.deepEqual(estados(alt, jug('wizard', 6)), ['falta']);
+  // Nivel de clase: otra clase nunca cumple.
+  const nc = { requisitos: { nivelClase: { clase: 'fighter', nivel: 4 } } };
+  assert.deepEqual(estados(nc, jug('fighter', 4)), ['cumple']);
+  assert.deepEqual(estados(nc, jug('fighter', 3)), ['falta']);
+  assert.deepEqual(estados(nc, jug('rogue', 10)), ['falta']);
+  // Nivel de personaje.
+  const np = { requisitos: { nivelPj: 11 } };
+  assert.deepEqual([estados(np, jug('fighter', 10)), estados(np, jug('fighter', 11))], [['falta'], ['cumple']]);
+  // Sin clase conocida el ataque base queda sin verificar, no se rechaza.
+  assert.deepEqual(estados({ requisitos: { bab: 3 } }, jug('inventada', 7, { clase: null })), ['sin-verificar']);
+});
+
+test('feats que se pueden tomar varias veces llevan una elección', () => {
+  const ctx = contexto();
+  const base = [xp(2000), { tipo: 'feat', id: 'weapon-focus', eleccion: 'espada larga' }, { tipo: 'feat', id: 'weapon-focus', eleccion: 'arco corto' }];
+  const r = Core.calcularPersonaje(ctx, pj([base]));
+  assert.deepEqual(errores(r), []);
+  assert.deepEqual(r.feats.lista.map((f) => f.nombre), ['Weapon Focus (espada larga)', 'Weapon Focus (arco corto)']);
+  // La misma elección dos veces no vale.
+  const igual = Core.calcularPersonaje(ctx, pj([[xp(2000), { tipo: 'feat', id: 'weapon-focus', eleccion: 'espada larga' }, { tipo: 'feat', id: 'weapon-focus', eleccion: ' espada larga ' }]]));
+  assert.match(errores(igual)[0], /ya está ganado con la elección/);
+  // Un feat que no es múltiple no se repite aunque cambie la elección.
+  const unico = Core.calcularPersonaje(ctx, pj([[xp(2000), { tipo: 'feat', id: 'toughness' }, { tipo: 'feat', id: 'toughness', eleccion: 'otra' }]]));
+  assert.match(errores(unico)[0], /ya está ganado/);
+  // La elección debe ser texto.
+  const malo = Core.calcularPersonaje(ctx, pj([[{ tipo: 'feat', id: 'weapon-focus', eleccion: 3 }]]));
+  assert.match(errores(malo)[0], /eleccion debe ser un texto/);
+});
+
+test('los requisitos que el motor no evalúa quedan como "sin verificar" en el feat ganado', () => {
+  const ctx = contexto();
+  ctx.feats = ctx.feats.concat([{ id: 'rango-alto', nombre: 'Rango alto', requisitos: { otros: ['Acrobatics 3 ranks'] } }]);
+  const r = Core.calcularPersonaje(ctx, pj([[{ tipo: 'feat', id: 'rango-alto' }]]));
+  assert.deepEqual(errores(r), []);
+  assert.deepEqual(r.feats.lista[0].sinVerificar, ['Acrobatics 3 ranks']);
+});
+
+test('las decisiones de data/feats.conversiones.json se aplican sobre el catálogo', () => {
+  const raw = {};
+  Object.keys(Core.ARCHIVOS).forEach((k) => { raw[k] = leer('data/' + Core.ARCHIVOS[k]); });
+  const base = Core.armarContexto(raw);
+  assert.equal(base.feats.find((f) => f.id === 'power-attack').ejecucion, 'activo');
+  assert.equal(base.feats.find((f) => f.id === 'toughness').ejecucion, 'pasivo');
+  raw.conversiones = { conversiones: { toughness: { ejecucion: 'activo' }, 'iron-will': { ejecucion: 'activo', excepcion: true } } };
+  const ctx = Core.armarContexto(raw);
+  const r = Core.calcularPersonaje(ctx, pj([[xp(3000), { tipo: 'feat', id: 'toughness' }, { tipo: 'feat', id: 'iron-will' }]]));
+  assert.equal(r.feats.lista.find((f) => f.id === 'toughness').tipo, 'habilidad-tipo-conjuro');
+  assert.equal(r.feats.lista.find((f) => f.id === 'iron-will').tipo, 'feat'); // excepción: se queda como feat
+});
+
+test('el catálogo importado es consistente', () => {
+  const ctx = contexto();
+  const ids = new Set(ctx.feats.map((f) => f.id));
+  assert.equal(ids.size, ctx.feats.length, 'ids únicos');
+  assert.ok(ctx.feats.length > 600, 'catálogo cargado');
+  const tipos = new Set(['general', 'combate', 'metamagia', 'creacion-de-objetos']);
+  const clases = new Set(ctx.classes.map((c) => c.id));
+  const por = Object.fromEntries(ctx.feats.map((f) => [f.id, f]));
+  ctx.feats.forEach((f) => {
+    assert.ok(f.nombre && f.fuente, f.id);
+    if (f.tipo !== undefined) assert.ok(tipos.has(f.tipo), f.id + ' tipo ' + f.tipo);
+    const req = f.requisitos || {};
+    (req.feats || []).forEach((p) => assert.ok(ids.has(p), f.id + ' exige un feat que no existe: ' + p));
+    if (req.nivelClase) assert.ok(clases.has(req.nivelClase.clase), f.id + ' clase ' + req.nivelClase.clase);
+    if (req.babAlt) assert.ok(clases.has(req.babAlt.clase), f.id + ' clase ' + req.babAlt.clase);
+    Object.keys(req.atributos || {}).forEach((k) => assert.ok(['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].indexOf(k) >= 0, f.id + ' atributo ' + k));
+  });
+  // Sin ciclos de feats previos.
+  const estado = {};
+  const visita = (id) => {
+    assert.notEqual(estado[id], 1, 'ciclo en ' + id);
+    if (estado[id] === 2) return;
+    estado[id] = 1;
+    ((por[id].requisitos || {}).feats || []).forEach(visita);
+    estado[id] = 2;
+  };
+  ctx.feats.forEach((f) => visita(f.id));
+  // Todas las clases tienen progresión de ataque base.
+  ctx.classes.forEach((c) => assert.ok(['completa', 'media', 'baja'].indexOf(c.bab) >= 0, c.id));
+  assert.ok(clases.has('fighter') && clases.has('wizard'));
+});
+
 // ------------------------------------------------------ personaje de ejemplo
 
 test('personaje de ejemplo: todo lo derivado coincide y no hay avisos', () => {

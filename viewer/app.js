@@ -1,6 +1,8 @@
-/* EverwhiteEmperor: visor de personajes (solo lectura).
+/* EverwhiteEmperor: visor de personajes.
  * Lee data/*.json y characters/<id>.json, calcula con src/core.js y dibuja la página.
- * En el archivo único de dist/ los datos vienen embebidos en window.EWE_DATA. */
+ * En el archivo único de dist/ los datos vienen embebidos en window.EWE_DATA.
+ * Dos vistas: «Jugar» (reducida) y «Construir» (amplia, con el selector de feats).
+ * El visor no escribe en los personajes: lo que se elige queda en un borrador que se copia como JSON. */
 (function () {
   'use strict';
 
@@ -26,9 +28,15 @@
   }
   var ATRIBUTOS = { STR: 'Fuerza', DEX: 'Destreza', CON: 'Constitución', INT: 'Inteligencia', WIS: 'Sabiduría', CHA: 'Carisma' };
   var ORDEN_ATRIBUTOS = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+  var TIPOS_FEAT = { combate: 'Combate', general: 'General', metamagia: 'Metamagia', 'creacion-de-objetos': 'Creación de objetos' };
 
   function guardar(clave, valor) { try { localStorage.setItem(clave, valor); } catch (e) { /* sin almacenamiento */ } }
   function leerGuardado(clave) { try { return localStorage.getItem(clave); } catch (e) { return null; } }
+  function leerJsonGuardado(clave, porDefecto) {
+    var t = leerGuardado(clave);
+    if (!t) return porDefecto;
+    try { return JSON.parse(t); } catch (e) { return porDefecto; }
+  }
 
   // ------------------------------------------------------------------------ carga
 
@@ -61,9 +69,59 @@
     });
   }
 
+  // ----------------------------------------------------------------------- estado
+
+  var estado = {
+    ctx: null, indiceFeats: {}, personajes: {}, ids: [], actual: null,
+    modo: leerGuardado('ewe-modo') === 'jugar' ? 'jugar' : 'construir',
+    abiertos: leerJsonGuardado('ewe-abiertos', {}),
+    picker: { q: '', tipo: 'todos', soloDisp: true, max: 40 },
+    borradores: {},
+    vista: null,
+  };
+
+  function pjActual() { return estado.personajes[estado.actual]; }
+  function claveBorrador(pj) { return 'ewe-borrador-' + (pj.personaje || estado.actual); }
+
+  /** Entradas de feat pendientes de guardar, del personaje mostrado. */
+  function borradorDe(pj) {
+    var k = claveBorrador(pj);
+    if (!estado.borradores[k]) {
+      var g = leerJsonGuardado(k, []);
+      estado.borradores[k] = Array.isArray(g) ? g.filter(function (e) { return e && e.tipo === 'feat' && typeof e.id === 'string'; }) : [];
+    }
+    return estado.borradores[k];
+  }
+  function fijarBorrador(pj, entradas) {
+    estado.borradores[claveBorrador(pj)] = entradas;
+    guardar(claveBorrador(pj), JSON.stringify(entradas));
+  }
+
+  /** Calcula el personaje; con borrador, añade una sesión final «borrador» que solo existe aquí. */
+  function calcular(pj, borr) {
+    var base = pj;
+    if (borr && borr.length) {
+      base = Object.assign({}, pj, { sesiones: pj.sesiones.concat([{ id: 'borrador', fecha: '', titulo: 'Borrador', entradas: borr }]) });
+    }
+    return Core.calcularPersonaje(estado.ctx, base);
+  }
+
   // ---------------------------------------------------------------------- dibujo
 
   function chip(texto, tono) { return '<span class="chip ' + (tono || '') + '">' + esc(texto) + '</span>'; }
+
+  /** Sección plegable. El estado abierto o cerrado se recuerda entre dibujos y entre visitas. */
+  function desplegable(id, titulo, resumen, cuerpo) {
+    return '<details class="desp" data-id="' + id + '"' + (estado.abiertos[id] ? ' open' : '') + '><summary><h2>' + esc(titulo) + '</h2>' +
+      '<span class="desp-res">' + resumen + '</span><span class="desp-flecha" aria-hidden="true"></span></summary>' +
+      '<div class="desp-cuerpo">' + cuerpo + '</div></details>';
+  }
+
+  function enlaceFeat(cat) {
+    if (!cat || cat.fuente !== 'pf1') return '';
+    return '<a class="link" href="https://aonprd.com/FeatDisplay.aspx?ItemName=' + encodeURIComponent(cat.nombre).replace(/%20/g, '+') +
+      '" target="_blank" rel="noopener noreferrer">Ver texto ↗</a>';
+  }
 
   function seccionAvisos(calc) {
     if (!calc.avisos.length) return '';
@@ -74,39 +132,71 @@
       ' del registro</b><ul>' + li + '</ul><span class="vacio">Las entradas con error no se aplicaron al personaje.</span></section>';
   }
 
-  function seccionHeroe(calc, pj) {
-    var n = calc.nivel;
-    var attrs = ORDEN_ATRIBUTOS.filter(function (k) { return pj.atributos[k] !== undefined; }).map(function (k) {
+  function cajasAtributos(calc, pj) {
+    return ORDEN_ATRIBUTOS.filter(function (k) { return pj.atributos[k] !== undefined; }).map(function (k) {
       var v = pj.atributos[k];
       var pref = calc.personaje.preferidos.indexOf(k) >= 0;
       return '<div class="attr"><div class="top"><span class="ab">' + k + '</span><span class="mod num">' + signo(Math.floor((v - 10) / 2)) + '</span></div>' +
         '<span class="score">' + v + '</span><span class="mute" style="font-size:13px">' + ATRIBUTOS[k] + '</span>' +
         (pref ? '<span class="chip acc">Preferido</span>' : '') + '</div>';
     }).join('');
+  }
+
+  function textoProgreso(calc) {
+    var n = calc.nivel;
+    return n.maximo && calc.xp >= n.fin ? 'Nivel máximo' : 'Faltan <strong>' + f(n.faltan) + ' XP</strong> para el nivel ' + (n.nivel + 1);
+  }
+
+  function barraXp(calc) {
+    var n = calc.nivel;
+    return '<div class="bar" role="progressbar" aria-label="Progreso hacia el nivel ' + (n.nivel + 1) + '" aria-valuemin="' + n.inicio + '" aria-valuemax="' + n.fin +
+      '" aria-valuenow="' + Math.min(calc.xp, n.fin) + '"><i style="width:' + (n.progreso * 100).toFixed(1) + '%"></i></div>';
+  }
+
+  function seccionHeroe(calc, pj) {
+    var n = calc.nivel;
     var pref = calc.personaje.preferidos;
     var perfilTexto = pref.length
       ? 'Preferido: atributo del perfil racial de ' + esc(calc.personaje.razaNombre) + ' (' + esc(pref.join(' y ')) + '). Perfil racial: ' +
         (calc.personaje.perfilRacial ? 'se cumple, hay descuento en los racials.' : 'no se cumple, sin descuento.')
       : '';
-    var progreso = n.maximo && calc.xp >= n.fin ? 'Nivel máximo' : 'Faltan <strong>' + f(n.faltan) + ' XP</strong> para el nivel ' + (n.nivel + 1);
     return '<section class="hero">' +
       '<div class="card" style="padding:28px;gap:24px;justify-content:space-between"><div style="display:flex;flex-direction:column;gap:6px"><h1>' + esc(pj.nombre) + '</h1>' +
       '<p class="mute">' + esc(calc.personaje.claseNombre) + ' · ' + esc(calc.personaje.razaNombre) + ' · ' + plural(Math.max(0, calc.sesiones.length - 1), 'sesión registrada', 'sesiones registradas') + '</p></div>' +
       '<div class="nivel-row"><div class="nivel-num"><span class="eyebrow">Nivel</span><b>' + n.nivel + '</b></div>' +
       '<div class="xp-block"><div class="row-between"><span class="xp-big num">' + f(calc.xp) + ' <small>XP</small></span>' +
       '<span class="mute num" style="font-size:14px">El nivel ' + n.nivel + ' abarca ' + f(n.inicio) + ' – ' + f(n.fin) + '</span></div>' +
-      '<div class="bar" role="progressbar" aria-label="Progreso hacia el nivel ' + (n.nivel + 1) + '" aria-valuemin="' + n.inicio + '" aria-valuemax="' + n.fin + '" aria-valuenow="' + Math.min(calc.xp, n.fin) + '"><i style="width:' + (n.progreso * 100).toFixed(1) + '%"></i></div>' +
-      '<span style="font-size:14px">' + progreso + '</span></div></div></div>' +
-      '<div class="card"><h2>Atributos</h2><div class="grid g120">' + attrs + '</div>' +
+      barraXp(calc) + '<span style="font-size:14px">' + textoProgreso(calc) + '</span></div></div></div>' +
+      '<div class="card"><h2>Atributos</h2><div class="grid g120">' + cajasAtributos(calc, pj) + '</div>' +
       (perfilTexto ? '<p class="mute" style="font-size:13px">' + perfilTexto + '</p>' : '') + '</div></section>';
   }
+
+  /** Cabecera reducida para jugar: nombre, nivel, XP y atributos en una sola tarjeta. */
+  function seccionHeroeCompacto(calc, pj) {
+    var n = calc.nivel;
+    return '<section class="card juego-hero"><div class="nivel-row"><div class="nivel-num chico"><span class="eyebrow">Nivel</span><b>' + n.nivel + '</b></div>' +
+      '<div class="xp-block"><h1>' + esc(pj.nombre) + '</h1>' +
+      '<p class="mute">' + esc(calc.personaje.claseNombre) + ' · ' + esc(calc.personaje.razaNombre) + '</p>' +
+      '<div class="row-between"><span class="xp-big num">' + f(calc.xp) + ' <small>XP</small></span><span style="font-size:14px">' + textoProgreso(calc) + '</span></div>' +
+      barraXp(calc) + '</div></div>' +
+      '<div class="grid g120 compactos">' + cajasAtributos(calc, pj) + '</div></section>';
+  }
+
+  /** Cifras que se consultan a mitad de partida. */
+  function seccionRecursos(calcB) {
+    var caja = function (rotuloTxt, valor) { return '<div class="caja"><small>' + rotuloTxt + '</small><b>' + valor + '</b></div>'; };
+    return '<section class="cajas">' + caja('Mana ganado', f(calcB.mana.total)) + caja('Fate', calcB.fate) + caja('Nivel zeo', calcB.zeo.nivel) +
+      caja('Slots de feat libres', calcB.feats.slotsLibres + ' de ' + calcB.feats.slotsTotales) + '</section>';
+  }
+
+  // ---- subsistemas plegables: zeo, mana y magia
 
   function seccionZeo(calc) {
     var z = calc.zeo;
     var limitan = z.ramas.filter(function (r) { return r.limita; });
     var nivelesTxt = z.ramas.map(function (r) { return r.nivel; }).join(', ');
     var lectura = z.lectura === 'costo-por-nivel' ? 'costo por nivel' : 'umbral acumulado';
-    var resumen = limitan.length === z.ramas.length
+    var resumenTxt = limitan.length === z.ramas.length
       ? 'Las tres ramas están en el mismo nivel.'
       : 'Hoy lo limita ' + limitan.map(function (r) { return Core.rotulo(r.rama); }).join(' y ') + ': con ' + f(limitan[0].falta) + ' sx más en esa rama el nivel de la rama sube a ' + (limitan[0].nivel + 1) + '.';
     var ramas = z.ramas.map(function (r) {
@@ -132,14 +222,41 @@
         '<div class="mini" aria-hidden="true"><i style="width:' + (l.llenado * 100).toFixed(1) + '%"></i>' + marcas + '</div>' +
         '<span class="mute" style="font-size:13px">' + texto + '</span></div>';
     }).join('');
-    return '<section class="card" style="padding:28px;gap:24px">' +
-      '<div class="zeo-head"><div style="display:flex;flex-direction:column;gap:8px;flex:1 1 360px;min-width:0"><h2>Zeo</h2>' +
-      '<p class="sub">El nivel zeo es el menor de las tres ramas. ' + resumen + ' Tabla de ' + esc(z.unidad) + ' por nivel: ' + z.niveles.join(' · ') + ' (lectura: ' + lectura + ', por confirmar).</p></div>' +
+    var cuerpo = '<div class="zeo-head"><p class="sub" style="flex:1 1 360px;min-width:0">El nivel zeo es el menor de las tres ramas. ' + resumenTxt +
+      ' Tabla de ' + esc(z.unidad) + ' por nivel: ' + z.niveles.join(' · ') + ' (lectura: ' + lectura + ', por confirmar).</p>' +
       '<div class="zeo-nivel"><div style="display:flex;flex-direction:column"><span class="eyebrow">Nivel zeo</span><span class="mute num" style="font-size:13px">= mín(' + nivelesTxt + ')</span></div><b>' + z.nivel + '</b></div></div>' +
       '<div class="grid g300">' + ramas + '</div>' +
       '<div style="display:flex;flex-direction:column;gap:14px"><div style="display:flex;flex-direction:column;gap:4px"><h3 style="font-size:20px">Líneas de técnica</h3>' +
       '<p class="sub">' + z.lineas.length + ' líneas base, cada una una cadena de técnicas con requisitos enlazados. Nacen con los pisos 1 a 3; el piso 4 se abre con 10 niveles acumulados en la línea y el piso 5 con 20.</p></div>' +
-      '<div class="grid g190">' + lineas + '</div></div></section>';
+      '<div class="grid g190">' + lineas + '</div></div>';
+    var resumen = chip('Nivel zeo ' + z.nivel, 'acc') + z.ramas.map(function (r) { return chip(Core.rotulo(r.rama) + ' ' + f(r.sx) + ' ' + z.unidad, 'soft'); }).join('');
+    return desplegable('zeo', 'Zeo', resumen, cuerpo);
+  }
+
+  function seccionMana(calc) {
+    var manaPartes = calc.sesiones.filter(function (s) { return s.mana > 0; }).map(function (s) { return '+' + s.mana; });
+    var cuerpo = '<div class="big"><b class="num">' + f(calc.mana.total) + '</b><span class="mute">de mana ganado</span></div>' +
+      '<p class="mute" style="font-size:14px">Magic reemplaza el casteo por mana: las habilidades tipo conjuro lo gastan.' + (manaPartes.length ? ' Ganado por sesión: ' + manaPartes.join(', ') + '.' : '') + '</p>' +
+      (calc.mana.tabla ? '' : '<span class="chip soft" style="align-self:flex-start">Tabla de niveles de mana: pendiente</span>');
+    return desplegable('mana', 'Mana', chip(f(calc.mana.total) + ' de mana ganado', 'acc'), cuerpo);
+  }
+
+  function seccionMagia(calc) {
+    var hab = calc.feats.lista.filter(function (x) { return x.tipo === 'habilidad-tipo-conjuro'; });
+    var lista = hab.map(function (x) {
+      var cat = estado.indiceFeats[x.convertidoDe];
+      return '<div class="item"><div class="t"><b>' + esc(x.nombre) + '</b><small>Convertido del feat ' + esc(cat ? cat.nombre : x.convertidoDe) + '</small>' +
+        (cat && cat.resumen ? '<small>' + esc(cat.resumen) + '</small>' : '') + '</div>' +
+        '<span class="chip soft">Costo en mana: pendiente</span>' + enlaceFeat(cat) + '</div>';
+    }).join('');
+    var cuerpo = '<p class="sub">Magia es lo que reemplaza el casteo: habilidades tipo conjuro que gastan mana. Hoy salen de los feats de ejecución activa de Pathfinder, que se reclasifican aquí. El catálogo de conjuros y el costo en mana de cada habilidad están pendientes de diseño.</p>' +
+      '<div class="lista">' + (lista || '<p class="mute">Todavía no hay habilidades tipo conjuro. Un feat de ejecución activa aparece aquí al ganarlo.</p>') + '</div>' +
+      '<div class="cajas"><div class="caja"><small>Mana ganado</small><b>' + f(calc.mana.total) + '</b></div><div class="caja"><small>Habilidades</small><b>' + hab.length + '</b></div></div>';
+    return desplegable('magia', 'Magia', chip(plural(hab.length, 'habilidad tipo conjuro', 'habilidades tipo conjuro'), 'acc') + chip('Mana ' + f(calc.mana.total), 'soft'), cuerpo);
+  }
+
+  function gruposSubsistemas(calc) {
+    return '<section class="desp-grupo">' + seccionZeo(calc) + seccionMana(calc) + seccionMagia(calc) + '</section>';
   }
 
   function etiquetaSesion(calc, id) {
@@ -147,11 +264,7 @@
     return i <= 0 ? 'la creación' : 'la sesión ' + i;
   }
 
-  function seccionTres(calc) {
-    var manaPartes = calc.sesiones.filter(function (s) { return s.mana > 0; }).map(function (s) { return '+' + s.mana; });
-    var mana = '<div class="card compact"><h2>Mana</h2><div class="big"><b class="num">' + f(calc.mana.total) + '</b><span class="mute">de mana ganado</span></div>' +
-      '<p class="mute" style="font-size:14px">Magic reemplaza el casteo por mana: las habilidades tipo conjuro lo gastan.' + (manaPartes.length ? ' Ganado por sesión: ' + manaPartes.join(', ') + '.' : '') + '</p>' +
-      (calc.mana.tabla ? '' : '<span class="chip soft" style="align-self:flex-start">Tabla de niveles de mana: pendiente</span>') + '</div>';
+  function seccionFateLogros(calc) {
     var conFate = calc.logros.filter(function (l) { return l.fate > 0; });
     var fate = '<div class="card compact"><h2>Fate</h2><div class="big"><b class="num gold">' + calc.fate + '</b><span class="mute">disponible</span></div>' +
       '<p class="mute" style="font-size:14px">' + (conFate.length ? 'Ganado con ' + conFate.map(function (l) { return '«' + esc(l.nombre) + '» en ' + etiquetaSesion(calc, l.sesion); }).join(' y ') + '. ' : '') +
@@ -165,13 +278,11 @@
       ? (nivel < 20 ? '<div class="logro libre"><span class="n">Nivel ' + (nivel + 1) + '</span><span class="t" style="font-weight:400;font-size:14px">Disponible al subir de nivel</span></div>' : '')
       : '<div class="logro libre"><span class="n">Nivel ' + nivel + '</span><span class="t" style="font-weight:400;font-size:14px">Disponible ahora</span></div>';
     var logros = '<div class="card compact"><h2>Achievement feats</h2><p class="mute" style="font-size:14px">Máximo uno por nivel.</p><div class="lista">' + filas + sig + '</div></div>';
-    return '<section class="grid g300" style="gap:24px">' + mana + fate + logros + '</section>';
+    return '<section class="grid g300" style="gap:24px">' + fate + logros + '</section>';
   }
 
-  function seccionMeritos(calc, pj) {
-    var m = calc.meritos;
-    var caja = function (rotuloTxt, valor, cls) { return '<div class="caja ' + (cls || '') + '"><small>' + rotuloTxt + '</small><b>' + valor + '</b></div>'; };
-    var lista = m.lista.map(function (g) {
+  function listaMeritos(m) {
+    return m.lista.map(function (g) {
       var tipo = g.tipo === 'defecto' ? 'Defecto' : (g.categoria === 'racial' ? 'Racial · ' + g.rareza : 'Mérito · ' + g.rareza);
       var nota = g.tipo === 'defecto' ? 'Aporta ' + plural(g.puntos, 'punto', 'puntos') + ' al fondo'
         : (g.descuento > 0 ? 'Costo base ' + g.costoBase + ', menos ' + g.descuento + ' por perfil racial' : (g.categoria === 'racial' ? 'Racial sin descuento (costo base ' + g.costoBase + ')' : 'Mérito común'));
@@ -179,36 +290,163 @@
         '<span class="chip ' + (g.tipo === 'defecto' ? '' : 'acc') + '">' + esc(tipo) + '</span>' +
         '<span class="v">' + (g.tipo === 'defecto' ? '+' : '−') + g.puntos + '</span></div>';
     }).join('');
-    var traits = calc.traits.length
+  }
+
+  function listaTraits(calc) {
+    return calc.traits.length
       ? '<div style="display:flex;flex-direction:column;gap:10px"><h3 style="font-size:20px">Traits</h3>' + calc.traits.map(function (t) {
         return '<div class="item"><div class="t"><b>' + esc(t.nombre) + '</b><ul class="componentes">' + t.incluye.map(function (c) {
           return '<li>' + esc(c.nombre) + ' <span class="mute">(' + (c.tipo === 'feat' ? 'feat' : 'ventaja') + ')</span></li>';
         }).join('') + '</ul></div><span class="chip gold">Trait</span></div>';
       }).join('') + '</div>'
       : '';
+  }
+
+  function seccionMeritos(calc, pj) {
+    var m = calc.meritos;
+    var caja = function (rotuloTxt, valor, cls) { return '<div class="caja ' + (cls || '') + '"><small>' + rotuloTxt + '</small><b>' + valor + '</b></div>'; };
     return '<div class="card" style="flex:1.2 1 520px;min-width:0"><div style="display:flex;flex-direction:column;gap:8px"><h2>Méritos y defectos</h2>' +
       '<p class="sub">Los méritos solo se pagan con defectos. Puntos iniciales: floor(' + calc.nivel.nivel + ' / 2) + 1 = ' + m.iniciales + '. Un mérito heroico cuesta 10 puntos.</p></div>' +
       '<div class="cajas">' + caja('Iniciales', m.iniciales) + caja('Defectos', '+' + m.defectos) + caja('Méritos', '−' + m.meritos) + caja('Saldo', m.total, m.total < 0 ? 'neg' : 'saldo') + '</div>' +
-      '<div class="lista">' + (lista || '<p class="mute">Sin méritos ni defectos registrados.</p>') + '</div>' + traits +
+      '<div class="lista">' + (listaMeritos(m) || '<p class="mute">Sin méritos ni defectos registrados.</p>') + '</div>' + listaTraits(calc) +
       (pj.datosDeEjemplo ? '<p class="mute" style="font-size:13px">Los costos, el valor de los defectos y el descuento por perfil racial son valores de ejemplo: están pendientes del diseñador.</p>' : '') + '</div>';
   }
 
-  function seccionFeats(calc, pj) {
-    var ft = calc.feats;
+  function seccionMeritosCompacto(calc) {
+    var m = calc.meritos;
+    var cuerpo = '<div class="lista">' + (listaMeritos(m) || '<p class="mute">Sin méritos ni defectos registrados.</p>') + '</div>' + listaTraits(calc);
+    return desplegable('meritos', 'Méritos y defectos', chip('Saldo ' + m.total, m.total < 0 ? 'warn' : 'acc') + chip(plural(m.lista.length, 'registro', 'registros'), 'soft'), cuerpo);
+  }
+
+  // ---- feats
+
+  function itemFeat(x, esBorrador, conDetalle) {
+    var cat = estado.indiceFeats[x.id];
+    var activo = x.tipo === 'habilidad-tipo-conjuro';
+    var detalle = [];
+    if (cat && cat.resumen) detalle.push(esc(cat.resumen));
+    if (conDetalle && x.sinVerificar && x.sinVerificar.length) detalle.push('Requisitos sin verificar: ' + esc(x.sinVerificar.join('; ')));
+    return '<div class="item"><div class="t"><b>' + esc(x.nombre) + '</b>' +
+      detalle.map(function (d) { return '<small>' + d + '</small>'; }).join('') + '</div>' +
+      (esBorrador ? chip('Borrador', 'gold') : '') +
+      (x.categoria && conDetalle ? chip(TIPOS_FEAT[x.categoria] || x.categoria, 'soft') : '') +
+      '<span class="chip ' + (activo ? 'acc' : '') + '">' + (activo ? 'Habilidad tipo conjuro' : 'Pasivo') + '</span>' + enlaceFeat(cat) + '</div>';
+  }
+
+  function seccionFeats(calc, calcB, conPicker) {
+    var ft = calcB.feats;
+    var confirmados = calc.feats.lista.length;
     var slots = ft.niveles.map(function (nv, i) {
       var cls = i < ft.slotsUsados ? 'usado' : i < ft.slotsTotales ? 'libre' : 'futuro';
       return '<span class="slot ' + cls + '">Nv. ' + nv + '</span>';
     }).join('');
-    var lista = ft.lista.map(function (x) {
-      var activo = x.tipo === 'habilidad-tipo-conjuro';
-      return '<div class="item"><div class="t"><b>' + esc(x.nombre) + '</b></div><span class="chip ' + (activo ? 'acc' : '') + '">' + (activo ? 'Habilidad tipo conjuro' : 'Pasivo') + '</span></div>';
-    }).join('');
+    var lista = ft.lista.map(function (x, i) { return itemFeat(x, i >= confirmados, true); }).join('');
     var activos = ft.lista.filter(function (x) { return x.tipo === 'habilidad-tipo-conjuro'; });
     return '<div class="card" style="flex:1 1 380px;min-width:0"><div style="display:flex;flex-direction:column;gap:8px"><h2>Feats</h2>' +
-      '<p class="sub">' + ft.slotsUsados + ' de ' + ft.slotsTotales + ' slots usados. Un slot nuevo cada dos niveles, desde el 1' + (ft.proximoSlot ? '; el próximo llega al nivel ' + ft.proximoSlot : '') + '.</p></div>' +
+      '<p class="sub">' + ft.slotsUsados + ' de ' + ft.slotsTotales + ' slots usados. Un slot en el nivel 1 y uno más cada dos niveles' + (ft.proximoSlot ? '; el próximo llega al nivel ' + ft.proximoSlot : '') + '.</p></div>' +
       '<div class="slots">' + slots + '</div><div class="lista">' + (lista || '<p class="mute">Sin feats.</p>') + '</div>' +
-      (activos.length ? '<p class="mute" style="font-size:13px">' + esc(activos.map(function (a) { return a.nombre; }).join(', ')) + (activos.length === 1 ? ' es un feat de ejecución activa: se reclasifica' : ' son feats de ejecución activa: se reclasifican') + ' como habilidad tipo conjuro.</p>' : '') + '</div>';
+      (activos.length ? '<p class="mute" style="font-size:13px">' + esc(activos.map(function (a) { return a.nombre; }).join(', ')) + (activos.length === 1 ? ' es un feat de ejecución activa: se reclasifica' : ' son feats de ejecución activa: se reclasifican') + ' como habilidad tipo conjuro.</p>' : '') +
+      (conPicker ? '<button class="btn prim" type="button" data-accion="abrir-picker" style="align-self:flex-start">Elegir feats' + (ft.slotsLibres ? ' (' + plural(ft.slotsLibres, 'slot libre', 'slots libres') + ')' : '') + '</button>' : '') + '</div>';
   }
+
+  function seccionFeatsCompacto(calc, calcB) {
+    var ft = calcB.feats;
+    var confirmados = calc.feats.lista.length;
+    var lista = ft.lista.map(function (x, i) { return itemFeat(x, i >= confirmados, false); }).join('');
+    return '<div class="card" style="flex:1 1 360px;min-width:0"><div class="row-between" style="align-items:center"><h2>Feats</h2>' + chip(ft.slotsUsados + ' de ' + ft.slotsTotales + ' slots', 'soft') + '</div>' +
+      '<div class="lista">' + (lista || '<p class="mute">Sin feats.</p>') + '</div></div>';
+  }
+
+  // ---- selector de feats
+
+  function datosPicker(calcB, pj) {
+    var p = estado.picker;
+    var jug = Core.contextoJugador(estado.ctx, pj, calcB);
+    var q = p.q.trim().toLowerCase();
+    var items = [];
+    estado.ctx.feats.forEach(function (ft) {
+      if (p.tipo !== 'todos' && ft.tipo !== p.tipo) return;
+      if (q && ft.nombre.toLowerCase().indexOf(q) < 0) return;
+      var yaLoTiene = jug.feats.indexOf(ft.id) >= 0;
+      var ev = Core.evaluarRequisitos(ft, jug, estado.indiceFeats);
+      var disponible = ev.cumple && !(yaLoTiene && !ft.multiple);
+      if (p.soloDisp && !disponible) return;
+      items.push({ f: ft, ev: ev, ya: yaLoTiene, disponible: disponible });
+    });
+    return items;
+  }
+
+  function chipRequisito(d) {
+    var simbolo = d.estado === 'cumple' ? '✓ ' : d.estado === 'falta' ? '✗ ' : '? ';
+    var tono = d.estado === 'cumple' ? 'acc' : d.estado === 'falta' ? 'warn' : 'soft';
+    var titulo = d.estado === 'cumple' ? 'Se cumple' : d.estado === 'falta' ? 'No se cumple' : 'El visor no puede comprobar este requisito: revísalo a mano';
+    return '<span class="chip ' + tono + '" title="' + esc(titulo) + '">' + simbolo + esc(d.texto) + '</span>';
+  }
+
+  function listaPicker(calcB, pj) {
+    var p = estado.picker;
+    var items = datosPicker(calcB, pj);
+    var libres = calcB.feats.slotsLibres;
+    var visibles = items.slice(0, p.max);
+    var filas = visibles.map(function (it) {
+      var ft = it.f;
+      var reqs = it.ev.detalle.length ? it.ev.detalle.map(chipRequisito).join('') : '<span class="chip soft">Sin requisitos</span>';
+      var puede = it.disponible && libres > 0;
+      var motivo = it.ya && !ft.multiple ? 'Ya lo tienes' : !it.ev.cumple ? 'Requisitos sin cumplir' : libres <= 0 ? 'Sin slots libres' : '';
+      var eleccion = ft.multiple
+        ? '<input class="campo" type="text" id="el-' + esc(ft.id) + '" placeholder="Elección (arma, escuela…)" aria-label="Elección para ' + esc(ft.nombre) + '" autocomplete="off">'
+        : '';
+      return '<div class="feat-row"><div class="t"><div class="row-between" style="justify-content:flex-start;gap:6px 10px;align-items:center"><b>' + esc(ft.nombre) + '</b>' +
+        chip(TIPOS_FEAT[ft.tipo] || ft.tipo || 'Feat', 'soft') + (ft.libro ? chip(ft.libro, 'soft') : '') +
+        (ft.ejecucion === 'activo' ? chip('Habilidad tipo conjuro', 'acc') : ft.candidatoActivo ? '<span class="chip soft" title="Su texto sugiere una acción o usos por día: conviene decidir si pasa a habilidad tipo conjuro">Posible activo</span>' : '') +
+        (ft.multiple ? chip('Repetible', 'soft') : '') + '</div>' +
+        '<div class="reqs">' + reqs + '</div></div>' +
+        '<div class="acc-fila">' + eleccion + '<button class="btn prim" type="button" data-accion="elegir" data-id="' + esc(ft.id) + '"' + (puede ? '' : ' disabled') + '>Elegir</button>' +
+        (motivo ? '<span class="mute" style="font-size:13px">' + motivo + '</span>' : '') + enlaceFeat(ft) + '</div></div>';
+    }).join('');
+    var resto = items.length - visibles.length;
+    return '<p class="mute" style="font-size:14px" role="status">' + plural(items.length, 'feat coincide', 'feats coinciden') + (resto > 0 ? ' (se muestran ' + visibles.length + ')' : '') + '.</p>' +
+      (filas || '<p class="mute">Ningún feat cumple el filtro. Quita «Solo los que puedo tomar» para ver también los que aún no puedes elegir.</p>') +
+      (resto > 0 ? '<button class="btn" type="button" data-accion="mas" style="align-self:flex-start">Mostrar más (' + resto + ' restantes)</button>' : '');
+  }
+
+  function bloqueBorrador(calcB, pj, borr) {
+    var avisosBorr = calcB.avisos.filter(function (a) { return a.sesion === 'borrador'; });
+    var items = borr.map(function (e, i) {
+      var cat = estado.indiceFeats[e.id];
+      var err = avisosBorr.find(function (a) { return a.indice === i; });
+      return '<div class="item"><div class="t"><b>' + esc(cat ? cat.nombre : e.id) + (e.eleccion ? ' (' + esc(e.eleccion) + ')' : '') + '</b>' +
+        (err ? '<small style="color:var(--warn)">No se aplica: ' + esc(err.mensaje) + '</small>' : '') + '</div>' +
+        (err ? chip('Con error', 'warn') : chip('Borrador', 'gold')) +
+        '<button class="btn" type="button" data-accion="quitar" data-indice="' + i + '">Quitar</button></div>';
+    }).join('');
+    var json = JSON.stringify(borr, null, 2);
+    return '<div class="borrador"><h3>Borrador de la sesión</h3>' +
+      (borr.length
+        ? '<div class="lista">' + items + '</div>' +
+          '<p class="sub">Estas entradas todavía no están en el personaje. Cópialas y pégalas en la lista <code>entradas</code> de una sesión de <code>characters/' + esc(pj.personaje || estado.actual) + '.json</code>; el borrador se queda en este navegador hasta que lo vacíes.</p>' +
+          '<textarea class="json" id="pk-json" readonly rows="' + Math.min(12, json.split('\n').length) + '" aria-label="Entradas del borrador en JSON">' + esc(json) + '</textarea>' +
+          '<div class="acc-fila"><button class="btn prim" type="button" data-accion="copiar">Copiar JSON</button><button class="btn" type="button" data-accion="vaciar">Vaciar borrador</button><span id="pk-msg" role="status" class="mute" style="font-size:14px"></span></div>'
+        : '<p class="mute">Todavía no elegiste ningún feat. Cada «Elegir» se suma aquí y se calcula como si ya estuviera en el personaje.</p>') + '</div>';
+  }
+
+  function seccionPicker(calcB, pj, borr) {
+    var p = estado.picker;
+    var libres = calcB.feats.slotsLibres;
+    var opciones = [['todos', 'Todos los tipos']].concat(Object.keys(TIPOS_FEAT).map(function (k) { return [k, TIPOS_FEAT[k]]; }));
+    var resumen = chip(plural(libres, 'slot libre', 'slots libres'), libres ? 'acc' : 'warn') + (borr.length ? chip(plural(borr.length, 'feat en el borrador', 'feats en el borrador'), 'gold') : '');
+    var cuerpo = '<p class="sub">' + estado.ctx.feats.length + ' feats de Pathfinder 1e (Core, Advanced Player\'s Guide, Ultimate Magic y Ultimate Combat, sin los raciales). El visor comprueba atributos, ataque base según tu clase, nivel y feats previos; ' +
+      'los demás requisitos aparecen con «?» y los revisas tú. El texto de cada feat está en Archives of Nethys.</p>' +
+      '<div class="picker-controles"><label class="campo-et">Buscar<input class="campo" type="search" id="pk-q" value="' + esc(p.q) + '" placeholder="Nombre del feat" autocomplete="off"></label>' +
+      '<label class="campo-et">Tipo<select class="btn" id="pk-tipo">' + opciones.map(function (o) {
+        return '<option value="' + o[0] + '"' + (o[0] === p.tipo ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
+      }).join('') + '</select></label>' +
+      '<label class="check"><input type="checkbox" id="pk-disp"' + (p.soloDisp ? ' checked' : '') + '> Solo los que puedo tomar</label></div>' +
+      '<div id="picker-lista" class="lista">' + listaPicker(calcB, pj) + '</div>' + bloqueBorrador(calcB, pj, borr);
+    return desplegable('picker', 'Elegir feats', resumen, cuerpo);
+  }
+
+  // ---- equipo
 
   function seccionEquipo(calc) {
     var e = calc.equipo;
@@ -236,6 +474,24 @@
       '<div class="chips">' + chip('Armadura ' + e.conteo.armadura + '/' + e.limites.armadura, 'soft') + chip('Arma ' + e.conteo.arma + '/' + e.limites.arma, 'soft') + chip('Objetos mágicos ' + e.conteo.objetos + '/' + e.limites.objetos, 'soft') + '</div></div>' +
       '<div class="grid g210">' + tarjetas + '</div></section>';
   }
+
+  function seccionEquipoCompacto(calc) {
+    var e = calc.equipo;
+    var fila = function (donde, it) {
+      var c = it.cargas ? '<span class="chip soft">' + it.cargas.actuales + ' de ' + it.cargas.max + ' cargas</span>' : '';
+      return '<div class="item"><div class="t"><b>' + esc(it.nombre) + '</b><small>' + esc(donde) + '</small></div>' + c +
+        '<span class="chip">' + (it.tipo === 'armadura' ? 'Armadura' : it.tipo === 'arma' ? 'Arma' : 'Objeto mágico') + '</span></div>';
+    };
+    var filas = (e.armadura ? fila('Armadura', e.armadura) : '') +
+      e.porExtremidad.filter(function (x) { return x.item; }).map(function (x) { return fila(x.etiqueta, x.item); }).join('');
+    var libres = e.porExtremidad.filter(function (x) { return !x.item; }).map(function (x) { return x.etiqueta.toLowerCase(); });
+    return '<div class="card" style="flex:1 1 360px;min-width:0"><div class="row-between" style="align-items:center"><h2>Equipo</h2>' +
+      chip('Objetos mágicos ' + e.conteo.objetos + '/' + e.limites.objetos, 'soft') + '</div>' +
+      '<div class="lista">' + (filas || '<p class="mute">Sin equipo.</p>') + '</div>' +
+      (libres.length ? '<p class="mute" style="font-size:13px">Libres: ' + esc(libres.join(', ')) + '.</p>' : '') + '</div>';
+  }
+
+  // ---- sesiones
 
   function dTxt(d) { return d === 0 ? 'Δ0' : d > 0 ? 'Δ+' + d : 'Δ−' + Math.abs(d); }
 
@@ -285,7 +541,17 @@
       '<div style="display:flex;flex-direction:column;gap:22px">' + filas + '</div></section>';
   }
 
-  function paginaCompleta(calc, pj, estado) {
+  // ---- página
+
+  function selectorModo() {
+    var b = function (valor, texto) {
+      return '<button class="btn" type="button" data-accion="modo" data-valor="' + valor + '" aria-pressed="' + (estado.modo === valor) + '">' + texto + '</button>';
+    };
+    return '<div class="modo" role="group" aria-label="Vista">' + b('jugar', 'Jugar') + b('construir', 'Construir') + '</div>';
+  }
+
+  function paginaCompleta(v) {
+    var calc = v.calc, calcB = v.calcB, pj = v.pj, borr = v.borr;
     var sel = '';
     if (estado.ids.length > 1) {
       sel = '<label class="mute" style="font-size:13px">Personaje <select class="btn" id="sel-pj" aria-label="Personaje">' + estado.ids.map(function (id) {
@@ -293,32 +559,39 @@
       }).join('') + '</select></label>';
     }
     var tema = esNoche();
+    var jugar = estado.modo === 'jugar';
+    var cuerpo = jugar
+      ? seccionAvisos(calc) + seccionHeroeCompacto(calc, pj) + seccionRecursos(calcB) +
+        (borr.length ? '<div class="avisos borrador-aviso"><b>Hay ' + plural(borr.length, 'feat', 'feats') + ' en el borrador sin guardar en el personaje. Cámbiate a «Construir» para verlo o copiarlo.</b></div>' : '') +
+        '<section class="cols">' + seccionFeatsCompacto(calc, calcB) + seccionEquipoCompacto(calc) + '</section>' +
+        gruposSubsistemas(calcB) + seccionMeritosCompacto(calc)
+      : seccionAvisos(calc) + seccionHeroe(calc, pj) + gruposSubsistemas(calcB) + seccionFateLogros(calc) +
+        '<section class="cols">' + seccionMeritos(calc, pj) + seccionFeats(calc, calcB, true) + '</section>' +
+        seccionPicker(calcB, pj, borr) + seccionEquipo(calc) + seccionSesiones(calc);
     return '<div class="page">' +
       '<header class="topbar"><div class="brand"><b>EverwhiteEmperor</b><span class="eyebrow">Visor de personajes</span></div>' +
-      '<div class="tools">' + (pj.datosDeEjemplo ? chip('Datos de ejemplo · personaje inventado', 'gold') : '') + sel +
+      '<div class="tools">' + selectorModo() + (pj.datosDeEjemplo ? chip('Datos de ejemplo · personaje inventado', 'gold') : '') + sel +
       '<label class="btn file">Abrir otro personaje (.json)<input type="file" id="archivo" accept="application/json,.json"></label>' +
       '<button class="btn" id="tema" type="button" aria-pressed="' + tema + '">' + (tema ? 'Tema noche' : 'Tema hielo') + '</button></div></header>' +
-      '<div id="msg" role="status"></div>' +
-      seccionAvisos(calc) + seccionHeroe(calc, pj) + seccionZeo(calc) + seccionTres(calc) +
-      '<section class="cols">' + seccionMeritos(calc, pj) + seccionFeats(calc, pj) + '</section>' +
-      seccionEquipo(calc) + seccionSesiones(calc) +
+      '<div id="msg" role="status"></div>' + cuerpo +
       '<footer><p class="pie">' + (pj.datosDeEjemplo ? 'Los nombres de raza, méritos, objetos y logros son inventados. ' : '') +
-      'Las reglas de Pathfinder 1e se usan bajo la OGL 1.0a; el proyecto es gratuito y no tiene afiliación con Paizo.</p></footer></div>';
+      'Las reglas de Pathfinder 1e se usan bajo la OGL 1.0a; el proyecto es gratuito y no tiene afiliación con Paizo. Los feats se importaron sin su texto: se leen en Archives of Nethys.</p></footer></div>';
   }
 
   // ----------------------------------------------------------------- arranque
 
-  var estado = { ctx: null, personajes: {}, ids: [], actual: null };
-
   function mostrar(pj) {
-    var calc;
+    var v;
     try {
-      calc = Core.calcularPersonaje(estado.ctx, pj);
+      var borr = borradorDe(pj);
+      var calc = calcular(pj, []);
+      v = { pj: pj, borr: borr, calc: calc, calcB: borr.length ? calcular(pj, borr) : calc };
     } catch (err) {
       app.innerHTML = '<div class="page"><section class="aviso-carga"><h2>No se pudo calcular el personaje</h2><p>' + esc(err.message) + '</p></section></div>';
       return;
     }
-    app.innerHTML = paginaCompleta(calc, pj, estado);
+    estado.vista = v;
+    app.innerHTML = paginaCompleta(v);
     document.title = pj.nombre + ' · EverwhiteEmperor';
     conectar();
   }
@@ -326,6 +599,76 @@
   function avisoMsg(texto) {
     var m = document.getElementById('msg');
     if (m) m.innerHTML = texto ? '<div class="avisos"><b>' + esc(texto) + '</b></div>' : '';
+  }
+
+  function refrescarPicker() {
+    var v = estado.vista;
+    var cont = document.getElementById('picker-lista');
+    if (v && cont) cont.innerHTML = listaPicker(v.calcB, v.pj);
+  }
+
+  function copiar(texto, area) {
+    var respaldo = function () {
+      try {
+        area.focus();
+        area.select();
+        return document.execCommand('copy');
+      } catch (e) { return false; }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(texto).then(function () { return true; }, function () { return respaldo(); });
+    }
+    return Promise.resolve(respaldo());
+  }
+
+  function elegirFeat(id) {
+    var pj = pjActual();
+    var entrada = { tipo: 'feat', id: id };
+    var campo = document.getElementById('el-' + id);
+    if (campo && campo.value.trim()) entrada.eleccion = campo.value.trim();
+    var nuevo = borradorDe(pj).concat([entrada]);
+    var errores = calcular(pj, nuevo).avisos.filter(function (a) { return a.sesion === 'borrador'; });
+    if (errores.length) { avisoMsg(errores[errores.length - 1].mensaje); return; }
+    fijarBorrador(pj, nuevo);
+    mostrar(pj);
+  }
+
+  function accion(boton) {
+    var a = boton.getAttribute('data-accion');
+    var pj = pjActual();
+    if (a === 'modo') {
+      estado.modo = boton.getAttribute('data-valor') === 'jugar' ? 'jugar' : 'construir';
+      guardar('ewe-modo', estado.modo);
+      mostrar(pj);
+    } else if (a === 'abrir-picker') {
+      estado.abiertos.picker = true;
+      guardar('ewe-abiertos', JSON.stringify(estado.abiertos));
+      mostrar(pj);
+      var det = app.querySelector('details[data-id="picker"]');
+      if (det && det.scrollIntoView) det.scrollIntoView({ block: 'start' });
+      var q = document.getElementById('pk-q');
+      if (q) q.focus({ preventScroll: true });
+    } else if (a === 'elegir') {
+      elegirFeat(boton.getAttribute('data-id'));
+    } else if (a === 'quitar') {
+      var borr = borradorDe(pj).slice();
+      borr.splice(Number(boton.getAttribute('data-indice')), 1);
+      fijarBorrador(pj, borr);
+      mostrar(pj);
+    } else if (a === 'vaciar') {
+      fijarBorrador(pj, []);
+      mostrar(pj);
+    } else if (a === 'mas') {
+      estado.picker.max += 40;
+      refrescarPicker();
+    } else if (a === 'copiar') {
+      var area = document.getElementById('pk-json');
+      copiar(area.value, area).then(function (ok) {
+        var m = document.getElementById('pk-msg');
+        if (m) m.textContent = ok ? 'Copiado.' : 'No se pudo copiar solo: el texto quedó seleccionado, cópialo con Ctrl+C.';
+        if (!ok && area) { area.focus(); area.select(); }
+      });
+    }
   }
 
   function conectar() {
@@ -340,6 +683,12 @@
     if (sel) sel.addEventListener('change', function () {
       estado.actual = sel.value;
       mostrar(estado.personajes[estado.actual]);
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('details.desp'), function (d) {
+      d.addEventListener('toggle', function () {
+        estado.abiertos[d.getAttribute('data-id')] = d.open;
+        guardar('ewe-abiertos', JSON.stringify(estado.abiertos));
+      });
     });
     var arch = document.getElementById('archivo');
     if (arch) arch.addEventListener('change', function () {
@@ -363,6 +712,25 @@
     });
   }
 
+  // Los clics y los filtros del selector se atienden una sola vez, en #app, porque la página se redibuja entera.
+  app.addEventListener('click', function (ev) {
+    var b = ev.target.closest ? ev.target.closest('[data-accion]') : null;
+    if (b && !b.disabled) accion(b);
+  });
+  app.addEventListener('input', function (ev) {
+    if (ev.target.id !== 'pk-q') return;
+    estado.picker.q = ev.target.value;
+    estado.picker.max = 40;
+    refrescarPicker();
+  });
+  app.addEventListener('change', function (ev) {
+    if (ev.target.id === 'pk-tipo') estado.picker.tipo = ev.target.value;
+    else if (ev.target.id === 'pk-disp') estado.picker.soloDisp = ev.target.checked;
+    else return;
+    estado.picker.max = 40;
+    refrescarPicker();
+  });
+
   function esNoche() {
     var t = document.documentElement.getAttribute('data-theme');
     if (t) return t === 'dark';
@@ -379,6 +747,7 @@
 
   cargarDatos().then(function (d) {
     estado.ctx = d.ctx;
+    estado.ctx.feats.forEach(function (ft) { estado.indiceFeats[ft.id] = ft; });
     estado.personajes = d.personajes;
     estado.ids = Object.keys(d.personajes);
     var pedido = new URLSearchParams(location.search).get('pj');

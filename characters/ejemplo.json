@@ -41,7 +41,8 @@
         },
         {
           "tipo": "feat",
-          "id": "weapon-focus-longsword"
+          "id": "weapon-focus",
+          "eleccion": "espada larga"
         },
         {
           "tipo": "feat",

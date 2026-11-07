@@ -1,41 +1,10416 @@
 {
-  "version": "0.6",
-  "nota": "Catálogo parcial: solo los feats que usa el personaje de ejemplo. La importación completa de Pathfinder 1e está pendiente.",
-  "feats": [
-    {
-      "id": "toughness",
-      "nombre": "Toughness",
-      "fuente": "pf1",
-      "ejecucion": "pasivo",
-      "requisitos": {}
+ "version": "0.7",
+ "nota": "Catálogo de Pathfinder 1e generado por scripts/import-feats.js. Sin texto de beneficios (ver docs/FUENTES.md). ejecucion es \"pasivo\" salvo lo que decida data/feats.conversiones.json; candidatoActivo marca los feats cuyo texto sugiere una acción o usos por día, para revisarlos.",
+ "libros": {
+  "CRB": "Core Rulebook",
+  "APG": "Advanced Player's Guide",
+  "UM": "Ultimate Magic",
+  "UC": "Ultimate Combat",
+  "ARG": "Advanced Race Guide",
+  "UCa": "Ultimate Campaign"
+ },
+ "feats": [
+  {
+   "id": "abundant-revelations",
+   "nombre": "Abundant Revelations",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Mystery class feature"
+    ]
+   }
+  },
+  {
+   "id": "accursed-critical",
+   "nombre": "Accursed Critical",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "etiquetas": [
+    "critico"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "critical-focus"
+    ],
+    "otros": [
+     "ability to cast bestow curse or major curse",
+     "caster level 9th"
+    ]
+   }
+  },
+  {
+   "id": "accursed-hex",
+   "nombre": "Accursed Hex",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Hex class feature"
+    ]
+   }
+  },
+  {
+   "id": "acrobatic",
+   "nombre": "Acrobatic",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "acrobatic-steps",
+   "nombre": "Acrobatic Steps",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 15
     },
-    {
-      "id": "iron-will",
-      "nombre": "Iron Will",
-      "fuente": "pf1",
-      "ejecucion": "pasivo",
-      "requisitos": {}
+    "feats": [
+     "nimble-moves"
+    ]
+   }
+  },
+  {
+   "id": "adder-strike",
+   "nombre": "Adder Strike",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Poison use class feature",
+     "Craft (alchemy) 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "additional-traits",
+   "nombre": "Additional Traits",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "adept-champion",
+   "nombre": "Adept Champion",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "bab": 5,
+    "otros": [
+     "Smite evil class feature"
+    ]
+   }
+  },
+  {
+   "id": "advanced-ranger-trap",
+   "nombre": "Advanced Ranger Trap",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "nivelClase": {
+     "clase": "ranger",
+     "nivel": 5
     },
-    {
-      "id": "weapon-focus-longsword",
-      "nombre": "Weapon Focus (Longsword)",
-      "fuente": "pf1",
-      "ejecucion": "pasivo",
-      "requisitos": {
-        "bab": 1
-      }
+    "otros": [
+     "Trap class feature"
+    ]
+   }
+  },
+  {
+   "id": "agile-maneuvers",
+   "nombre": "Agile Maneuvers",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "alertness",
+   "nombre": "Alertness",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "alignment-channel",
+   "nombre": "Alignment Channel",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Ability to channel energy"
+    ]
+   }
+  },
+  {
+   "id": "allied-spellcaster",
+   "nombre": "Allied Spellcaster",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Caster level 1st"
+    ]
+   }
+  },
+  {
+   "id": "amateur-gunslinger",
+   "nombre": "Amateur Gunslinger",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "You have no levels in a class that has the grit class feature"
+    ]
+   }
+  },
+  {
+   "id": "animal-affinity",
+   "nombre": "Animal Affinity",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "antagonize",
+   "nombre": "Antagonize",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {}
+  },
+  {
+   "id": "arc-slinger",
+   "nombre": "Arc Slinger",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "point-blank-shot"
+    ],
+    "otros": [
+     "proficient with sling or halfling sling staff"
+    ]
+   }
+  },
+  {
+   "id": "arcane-armor-mastery",
+   "nombre": "Arcane Armor Mastery",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "arcane-armor-training",
+     "medium-armor-proficiency"
+    ],
+    "otros": [
+     "caster level 7th"
+    ]
+   }
+  },
+  {
+   "id": "arcane-armor-training",
+   "nombre": "Arcane Armor Training",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "light-armor-proficiency"
+    ],
+    "otros": [
+     "caster level 3rd"
+    ]
+   }
+  },
+  {
+   "id": "arcane-blast",
+   "nombre": "Arcane Blast",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Arcane spellcaster",
+     "caster level 10th"
+    ]
+   }
+  },
+  {
+   "id": "arcane-shield",
+   "nombre": "Arcane Shield",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Arcane spellcaster",
+     "caster level 10th"
+    ]
+   }
+  },
+  {
+   "id": "arcane-strike",
+   "nombre": "Arcane Strike",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Ability to cast arcane spells"
+    ]
+   }
+  },
+  {
+   "id": "aspect-of-the-beast",
+   "nombre": "Aspect of the Beast",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "wild shape class feature",
+     "see Special"
+    ]
+   }
+  },
+  {
+   "id": "athletic",
+   "nombre": "Athletic",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "augment-summoning",
+   "nombre": "Augment Summoning",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Spell Focus (conjuration)"
+    ]
+   }
+  },
+  {
+   "id": "back-to-back",
+   "nombre": "Back to Back",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Perception 3 ranks"
+    ]
+   }
+  },
+  {
+   "id": "bashing-finish",
+   "nombre": "Bashing Finish",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-shield-bash",
+     "shield-master",
+     "two-weapon-fighting"
+    ],
+    "bab": 11
+   }
+  },
+  {
+   "id": "betrayer",
+   "nombre": "Betrayer",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "quick-draw",
+     "persuasive"
+    ],
+    "bab": 3
+   }
+  },
+  {
+   "id": "binding-throw",
+   "nombre": "Binding Throw",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-grapple",
+     "improved-trip",
+     "improved-unarmed-strike",
+     "ki-throw"
+    ]
+   }
+  },
+  {
+   "id": "bleeding-critical",
+   "nombre": "Bleeding Critical",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "etiquetas": [
+    "critico"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "critical-focus"
+    ],
+    "bab": 11
+   }
+  },
+  {
+   "id": "blighted-critical",
+   "nombre": "Blighted Critical",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "etiquetas": [
+    "critico"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Caster level 5th"
+    ]
+   }
+  },
+  {
+   "id": "blighted-critical-mastery",
+   "nombre": "Blighted Critical Mastery",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "blighted-critical"
+    ],
+    "otros": [
+     "caster level 9th"
+    ]
+   }
+  },
+  {
+   "id": "blind-fight",
+   "nombre": "Blind-Fight",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "blinding-critical",
+   "nombre": "Blinding Critical",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "etiquetas": [
+    "critico"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "critical-focus"
+    ],
+    "bab": 15
+   }
+  },
+  {
+   "id": "blood-of-heroes",
+   "nombre": "Blood Of Heroes",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "heros-fortune"
+    ]
+   }
+  },
+  {
+   "id": "bloody-assault",
+   "nombre": "Bloody Assault",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
     },
-    {
-      "id": "power-attack",
-      "nombre": "Power Attack",
-      "fuente": "pf1",
-      "ejecucion": "activo",
-      "requisitos": {
-        "atributos": {
-          "STR": 13
-        },
-        "bab": 1
-      }
+    "feats": [
+     "power-attack"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "bludgeoner",
+   "nombre": "Bludgeoner",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "boar-ferocity",
+   "nombre": "Boar Ferocity",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "boar-style"
+    ],
+    "otros": [
+     "Intimidate 6 ranks"
+    ]
+   }
+  },
+  {
+   "id": "boar-shred",
+   "nombre": "Boar Shred",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "boar-ferocity",
+     "boar-style"
+    ],
+    "otros": [
+     "Intimidate 9 ranks"
+    ]
+   }
+  },
+  {
+   "id": "boar-style",
+   "nombre": "Boar Style",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "estilo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Intimidate 3 ranks"
+    ]
+   }
+  },
+  {
+   "id": "body-shield",
+   "nombre": "Body Shield",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "improved-grapple",
+     "improved-unarmed-strike"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "bodyguard",
+   "nombre": "Bodyguard",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "combat-reflexes"
+    ]
+   }
+  },
+  {
+   "id": "bolstered-resilience",
+   "nombre": "Bolstered Resilience",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Damage reduction"
+    ]
+   }
+  },
+  {
+   "id": "bonebreaker",
+   "nombre": "Bonebreaker",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "improved-grapple",
+     "improved-unarmed-strike",
+     "jawbreaker",
+     "stunning-fist"
+    ],
+    "otros": [
+     "Heal 9 ranks"
+    ]
+   }
+  },
+  {
+   "id": "bouncing-spell",
+   "nombre": "Bouncing Spell",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {}
+  },
+  {
+   "id": "branded-for-retribution",
+   "nombre": "Branded for Retribution",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Bane class feature"
+    ]
+   }
+  },
+  {
+   "id": "break-guard",
+   "nombre": "Break Guard",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "DEX": 15,
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-disarm",
+     "two-weapon-fighting"
+    ]
+   }
+  },
+  {
+   "id": "brew-potion",
+   "nombre": "Brew Potion",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "creacion-de-objetos",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Caster level 3rd"
+    ]
+   }
+  },
+  {
+   "id": "broken-wing-gambit",
+   "nombre": "Broken Wing Gambit",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Bluff 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "bull-rush-strike",
+   "nombre": "Bull Rush Strike",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "improved-bull-rush",
+     "power-attack"
+    ],
+    "bab": 9
+   }
+  },
+  {
+   "id": "burning-spell",
+   "nombre": "Burning Spell",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "cartwheel-dodge",
+   "nombre": "Cartwheel Dodge",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Evasion class feature",
+     "improved evasion class feature",
+     "acrobatics 12 ranks"
+    ]
+   }
+  },
+  {
+   "id": "catch-off-guard",
+   "nombre": "Catch Off-Guard",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "cavalry-formation",
+   "nombre": "Cavalry Formation",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "mounted-combat"
+    ]
+   }
+  },
+  {
+   "id": "channel-smite",
+   "nombre": "Channel Smite",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Channel energy class feature"
+    ]
+   }
+  },
+  {
+   "id": "channeled-revival",
+   "nombre": "Channeled Revival",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Channel energy 6d6 (positive energy)"
+    ]
+   }
+  },
+  {
+   "id": "channeled-shield-wall",
+   "nombre": "Channeled Shield Wall",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Channel energy",
+     "3d6 prof iciency with a shield"
+    ]
+   }
+  },
+  {
+   "id": "channeling-scourge",
+   "nombre": "Channeling Scourge",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "nivelClase": {
+     "clase": "inquisitor",
+     "nivel": 1
+    },
+    "otros": [
+     "Channel energy class feature"
+    ]
+   }
+  },
+  {
+   "id": "charge-through",
+   "nombre": "Charge Through",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "improved-overrun",
+     "power-attack"
+    ],
+    "bab": 1
+   }
+  },
+  {
+   "id": "charging-hurler",
+   "nombre": "Charging Hurler",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "point-blank-shot"
+    ]
+   }
+  },
+  {
+   "id": "chokehold",
+   "nombre": "Chokehold",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-grapple",
+     "improved-unarmed-strike"
+    ],
+    "bab": 6,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 5
     }
-  ]
+   }
+  },
+  {
+   "id": "cleave",
+   "nombre": "Cleave",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "power-attack"
+    ],
+    "bab": 1
+   }
+  },
+  {
+   "id": "cleaving-finish",
+   "nombre": "Cleaving Finish",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "cleave",
+     "power-attack"
+    ]
+   }
+  },
+  {
+   "id": "close-quarters-thrower",
+   "nombre": "Close-Quarters Thrower",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "dodge",
+     "weapon-focus"
+    ],
+    "otros": [
+     "Weapon Focus with selected thrown weapon"
+    ]
+   }
+  },
+  {
+   "id": "cloud-step",
+   "nombre": "Cloud Step",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "spider-step"
+    ],
+    "nivelClase": {
+     "clase": "monk",
+     "nivel": 12
+    }
+   }
+  },
+  {
+   "id": "clustered-shots",
+   "nombre": "Clustered Shots",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "point-blank-shot",
+     "precise-shot"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "cockatrice-strike",
+   "nombre": "Cockatrice Strike",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "gorgons-fist",
+     "medusas-wrath"
+    ],
+    "bab": 14
+   }
+  },
+  {
+   "id": "combat-casting",
+   "nombre": "Combat Casting",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "combat-expertise",
+   "nombre": "Combat Expertise",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    }
+   }
+  },
+  {
+   "id": "combat-medic",
+   "nombre": "Combat Medic",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Heal 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "combat-patrol",
+   "nombre": "Combat Patrol",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "combat-reflexes",
+     "mobility"
+    ],
+    "bab": 5
+   }
+  },
+  {
+   "id": "combat-reflexes",
+   "nombre": "Combat Reflexes",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "combat-style-master",
+   "nombre": "Combat Style Master",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "bab": 6,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 5
+    },
+    "otros": [
+     "two or more style feats"
+    ]
+   }
+  },
+  {
+   "id": "command-undead",
+   "nombre": "Command Undead",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Channel negative energy class feature"
+    ]
+   }
+  },
+  {
+   "id": "concussive-spell",
+   "nombre": "Concussive Spell",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "contingent-channeling",
+   "nombre": "Contingent Channeling",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "selective-channeling"
+    ],
+    "otros": [
+     "True healer class feature"
+    ]
+   }
+  },
+  {
+   "id": "cooperative-crafting",
+   "nombre": "Cooperative Crafting",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "1 rank in any Craft skill",
+     "any item creation feat"
+    ]
+   }
+  },
+  {
+   "id": "coordinated-charge",
+   "nombre": "Coordinated Charge",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "bab": 10,
+    "otros": [
+     "You have at least two other teamwork feats"
+    ]
+   }
+  },
+  {
+   "id": "coordinated-defense",
+   "nombre": "Coordinated Defense",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "coordinated-maneuvers",
+   "nombre": "Coordinated Maneuvers",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "cosmopolitan",
+   "nombre": "Cosmopolitan",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "covering-defense",
+   "nombre": "Covering Defense",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "shield-focus"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "craft-magic-arms-and-armor",
+   "nombre": "Craft Magic Arms and Armor",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "creacion-de-objetos",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Caster level 5th"
+    ]
+   }
+  },
+  {
+   "id": "craft-rod",
+   "nombre": "Craft Rod",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "creacion-de-objetos",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Caster level 9th"
+    ]
+   }
+  },
+  {
+   "id": "craft-staff",
+   "nombre": "Craft Staff",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "creacion-de-objetos",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Caster level 11th"
+    ]
+   }
+  },
+  {
+   "id": "craft-wand",
+   "nombre": "Craft Wand",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "creacion-de-objetos",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Caster level 5th"
+    ]
+   }
+  },
+  {
+   "id": "craft-wondrous-item",
+   "nombre": "Craft Wondrous Item",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "creacion-de-objetos",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Caster level 3rd"
+    ]
+   }
+  },
+  {
+   "id": "crane-riposte",
+   "nombre": "Crane Riposte",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "crane-style",
+     "crane-wing",
+     "dodge",
+     "improved-unarmed-strike"
+    ],
+    "bab": 8,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 7
+    }
+   }
+  },
+  {
+   "id": "crane-style",
+   "nombre": "Crane Style",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "estilo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "dodge",
+     "improved-unarmed-strike"
+    ],
+    "bab": 2,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 1
+    }
+   }
+  },
+  {
+   "id": "crane-wing",
+   "nombre": "Crane Wing",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "crane-style",
+     "dodge",
+     "improved-unarmed-strike"
+    ],
+    "bab": 5,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 5
+    }
+   }
+  },
+  {
+   "id": "create-reliquary-arms-and-shields",
+   "nombre": "Create Reliquary Arms and Shields",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "craft-magic-arms-and-armor"
+    ],
+    "otros": [
+     "ability to cast consecrate or desecrate"
+    ]
+   }
+  },
+  {
+   "id": "create-sanguine-elixir",
+   "nombre": "Create Sanguine Elixir",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "CHA": 15
+    },
+    "feats": [
+     "brew-potion"
+    ],
+    "nivelClase": {
+     "clase": "sorcerer",
+     "nivel": 3
+    },
+    "otros": [
+     "Craft (alchemy) 12 ranks"
+    ]
+   }
+  },
+  {
+   "id": "crippling-critical",
+   "nombre": "Crippling Critical",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "etiquetas": [
+    "critico"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "critical-focus"
+    ],
+    "bab": 13
+   }
+  },
+  {
+   "id": "critical-focus",
+   "nombre": "Critical Focus",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 9
+   }
+  },
+  {
+   "id": "critical-mastery",
+   "nombre": "Critical Mastery",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "critical-focus"
+    ],
+    "nivelClase": {
+     "clase": "fighter",
+     "nivel": 14
+    },
+    "otros": [
+     "any two critical feats"
+    ]
+   }
+  },
+  {
+   "id": "crossbow-mastery",
+   "nombre": "Crossbow Mastery",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 15
+    },
+    "feats": [
+     "point-blank-shot",
+     "rapid-shot"
+    ],
+    "otros": [
+     "Rapid Reload"
+    ]
+   }
+  },
+  {
+   "id": "crusaders-fist",
+   "nombre": "Crusader's Fist",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "bab": 6,
+    "otros": [
+     "Lay on hands class feature or touch of corruption class feature"
+    ]
+   }
+  },
+  {
+   "id": "crusaders-flurry",
+   "nombre": "Crusader's Flurry",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "weapon-focus"
+    ],
+    "otros": [
+     "Channel energy class feature",
+     "flurry of blows class feature",
+     "Weapon Focus with your deity's favored melee weapon"
+    ]
+   }
+  },
+  {
+   "id": "crushing-blow",
+   "nombre": "Crushing Blow",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "stunning-fist"
+    ]
+   }
+  },
+  {
+   "id": "dastardly-finish",
+   "nombre": "Dastardly Finish",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Sneak attack +5d6"
+    ]
+   }
+  },
+  {
+   "id": "dazing-assault",
+   "nombre": "Dazing Assault",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "power-attack"
+    ],
+    "bab": 11
+   }
+  },
+  {
+   "id": "dazing-spell",
+   "nombre": "Dazing Spell",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "dazzling-display",
+   "nombre": "Dazzling Display",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "weapon-focus"
+    ],
+    "otros": [
+     "proficiency with the selected weapon"
+    ]
+   }
+  },
+  {
+   "id": "deadly-aim",
+   "nombre": "Deadly Aim",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "bab": 1
+   }
+  },
+  {
+   "id": "deadly-finish",
+   "nombre": "Deadly Finish",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 11
+   }
+  },
+  {
+   "id": "deadly-stroke",
+   "nombre": "Deadly Stroke",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "dazzling-display",
+     "greater-weapon-focus",
+     "shatter-defenses",
+     "weapon-focus"
+    ],
+    "bab": 11,
+    "otros": [
+     "proficiency with the selected weapon"
+    ]
+   }
+  },
+  {
+   "id": "deafening-critical",
+   "nombre": "Deafening Critical",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "etiquetas": [
+    "critico"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "critical-focus"
+    ],
+    "bab": 13
+   }
+  },
+  {
+   "id": "death-from-above",
+   "nombre": "Death from Above",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "death-or-glory",
+   "nombre": "Death or Glory",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "power-attack"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "deceitful",
+   "nombre": "Deceitful",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "deceptive-exchange",
+   "nombre": "Deceptive Exchange",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-feint"
+    ]
+   }
+  },
+  {
+   "id": "deep-drinker",
+   "nombre": "Deep Drinker",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CON": 13
+    },
+    "nivelClase": {
+     "clase": "monk",
+     "nivel": 11
+    },
+    "otros": [
+     "drunken ki class feature"
+    ]
+   }
+  },
+  {
+   "id": "deepsight",
+   "nombre": "Deepsight",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Darkvision 60 feet"
+    ]
+   }
+  },
+  {
+   "id": "defending-eidolon",
+   "nombre": "Defending Eidolon",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Shield ally feature"
+    ]
+   }
+  },
+  {
+   "id": "defensive-combat-training",
+   "nombre": "Defensive Combat Training",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "defensive-weapon-training",
+   "nombre": "Defensive Weapon Training",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "bab": 5
+   }
+  },
+  {
+   "id": "deflect-arrows",
+   "nombre": "Deflect Arrows",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "improved-unarmed-strike"
+    ]
+   }
+  },
+  {
+   "id": "deft-hands",
+   "nombre": "Deft Hands",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "deny-death",
+   "nombre": "Deny Death",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "endurance"
+    ],
+    "otros": [
+     "Ki pool"
+    ]
+   }
+  },
+  {
+   "id": "destructive-dispel",
+   "nombre": "Destructive Dispel",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Ability to cast dispel magic or greater dispel magic",
+     "caster level 11th"
+    ]
+   }
+  },
+  {
+   "id": "detect-expertise",
+   "nombre": "Detect Expertise",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "otros": [
+     "ability to cast detect chaos",
+     "detect evil",
+     "detect good",
+     "detect law",
+     "or detect magic"
+    ]
+   }
+  },
+  {
+   "id": "devastating-strike",
+   "nombre": "Devastating Strike",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "vital-strike"
+    ],
+    "bab": 9
+   }
+  },
+  {
+   "id": "die-for-your-master",
+   "nombre": "Die for Your Master",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Tumor familiar alchemist discovery"
+    ]
+   }
+  },
+  {
+   "id": "diehard",
+   "nombre": "Diehard",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "endurance"
+    ]
+   }
+  },
+  {
+   "id": "dimensional-agility",
+   "nombre": "Dimensional Agility",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Ability to use the abundant step class feature or cast dimension door"
+    ]
+   }
+  },
+  {
+   "id": "dimensional-assault",
+   "nombre": "Dimensional Assault",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "dimensional-agility"
+    ],
+    "otros": [
+     "Ability to use the abundant step class feature or cast dimension door"
+    ]
+   }
+  },
+  {
+   "id": "dimensional-dervish",
+   "nombre": "Dimensional Dervish",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "dimensional-agility",
+     "dimensional-assault"
+    ],
+    "bab": 6,
+    "otros": [
+     "Ability to use the abundant step class feature or cast dimension door"
+    ]
+   }
+  },
+  {
+   "id": "dimensional-maneuvers",
+   "nombre": "Dimensional Maneuvers",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "dimensional-agility",
+     "dimensional-assault",
+     "dimensional-dervish"
+    ],
+    "bab": 9,
+    "otros": [
+     "Ability to use the abundant step class feature or cast dimension door"
+    ]
+   }
+  },
+  {
+   "id": "dimensional-savant",
+   "nombre": "Dimensional Savant",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "dimensional-agility",
+     "dimensional-assault",
+     "dimensional-dervish"
+    ],
+    "bab": 9,
+    "otros": [
+     "ability to use the abundant step class feature or cast dimension door"
+    ]
+   }
+  },
+  {
+   "id": "disarming-strike",
+   "nombre": "Disarming Strike",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-disarm"
+    ],
+    "bab": 9
+   }
+  },
+  {
+   "id": "discordant-voice",
+   "nombre": "Discordant Voice",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Bardic performance class feature",
+     "Perform (oratory or sing) 10 ranks"
+    ]
+   }
+  },
+  {
+   "id": "disengaging-feint",
+   "nombre": "Disengaging Feint",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-feint"
+    ]
+   }
+  },
+  {
+   "id": "disengaging-flourish",
+   "nombre": "Disengaging Flourish",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "disengaging-feint",
+     "improved-feint"
+    ]
+   }
+  },
+  {
+   "id": "disengaging-shot",
+   "nombre": "Disengaging Shot",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "disengaging-feint",
+     "dodge",
+     "improved-feint",
+     "mobility"
+    ]
+   }
+  },
+  {
+   "id": "disorienting-maneuver",
+   "nombre": "Disorienting Maneuver",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "dodge"
+    ],
+    "otros": [
+     "Acrobatics 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "dispel-synergy",
+   "nombre": "Dispel Synergy",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Spellcraft 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "dispelling-critical",
+   "nombre": "Dispelling Critical",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "etiquetas": [
+    "critico"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "arcane-strike"
+    ],
+    "bab": 11,
+    "otros": [
+     "ability to cast dispel magic"
+    ]
+   }
+  },
+  {
+   "id": "dispelling-fist",
+   "nombre": "Dispelling Fist",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "bab": 11,
+    "otros": [
+     "ability to cast dispel magic",
+     "caster level 7th"
+    ]
+   }
+  },
+  {
+   "id": "disposable-weapon",
+   "nombre": "Disposable Weapon",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 1,
+    "otros": [
+     "proficient with weapon"
+    ]
+   }
+  },
+  {
+   "id": "disrupting-shot",
+   "nombre": "Disrupting Shot",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "point-blank-shot"
+    ],
+    "nivelClase": {
+     "clase": "fighter",
+     "nivel": 6
+    }
+   }
+  },
+  {
+   "id": "disruptive",
+   "nombre": "Disruptive",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "nivelClase": {
+     "clase": "fighter",
+     "nivel": 6
+    }
+   }
+  },
+  {
+   "id": "disruptive-recall",
+   "nombre": "Disruptive Recall",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Spell recall class feature",
+     "Spellcraft 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "disruptive-spell",
+   "nombre": "Disruptive Spell",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "distance-thrower",
+   "nombre": "Distance Thrower",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    }
+   }
+  },
+  {
+   "id": "divine-interference",
+   "nombre": "Divine Interference",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Divine spellcaster",
+     "caster level 10th"
+    ]
+   }
+  },
+  {
+   "id": "diviners-delving",
+   "nombre": "Diviner's Delving",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Spell Focus (divination)"
+    ]
+   }
+  },
+  {
+   "id": "djinni-spin",
+   "nombre": "Djinni Spin",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "CON": 15,
+     "WIS": 17
+    },
+    "feats": [
+     "djinni-style",
+     "djinni-spirit",
+     "elemental-fist",
+     "improved-unarmed-strike"
+    ],
+    "bab": 13,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 11
+    }
+   }
+  },
+  {
+   "id": "djinni-spirit",
+   "nombre": "Djinni Spirit",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CON": 15,
+     "WIS": 15
+    },
+    "feats": [
+     "djinni-style",
+     "elemental-fist",
+     "improved-unarmed-strike"
+    ],
+    "bab": 11,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 9
+    }
+   }
+  },
+  {
+   "id": "djinni-style",
+   "nombre": "Djinni Style",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "estilo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CON": 13,
+     "WIS": 15
+    },
+    "feats": [
+     "elemental-fist",
+     "improved-unarmed-strike"
+    ],
+    "bab": 9,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 5
+    }
+   }
+  },
+  {
+   "id": "dodge",
+   "nombre": "Dodge",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    }
+   }
+  },
+  {
+   "id": "domain-strike",
+   "nombre": "Domain Strike",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Domain class feature"
+    ]
+   }
+  },
+  {
+   "id": "double-bane",
+   "nombre": "Double Bane",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "two-weapon-fighting"
+    ],
+    "otros": [
+     "Bane class feature"
+    ]
+   }
+  },
+  {
+   "id": "double-slice",
+   "nombre": "Double Slice",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 15
+    },
+    "feats": [
+     "two-weapon-fighting"
+    ]
+   }
+  },
+  {
+   "id": "drag-down",
+   "nombre": "Drag Down",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-trip"
+    ]
+   }
+  },
+  {
+   "id": "dragon-ferocity",
+   "nombre": "Dragon Ferocity",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 15
+    },
+    "feats": [
+     "improved-unarmed-strike",
+     "dragon-style",
+     "stunning-fist"
+    ],
+    "otros": [
+     "Acrobatics 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "dragon-roar",
+   "nombre": "Dragon Roar",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "STR": 15
+    },
+    "feats": [
+     "improved-unarmed-strike",
+     "dragon-style",
+     "stunning-fist"
+    ],
+    "otros": [
+     "Acrobatics 8 ranks"
+    ]
+   }
+  },
+  {
+   "id": "dragon-style",
+   "nombre": "Dragon Style",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "estilo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 15
+    },
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Acrobatics 3 ranks"
+    ]
+   }
+  },
+  {
+   "id": "dragonbane-aura",
+   "nombre": "Dragonbane Aura",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Aura of courage class feature",
+     "caster level 8th"
+    ]
+   }
+  },
+  {
+   "id": "dramatic-display",
+   "nombre": "Dramatic Display",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "actuacion"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "dazzling-display"
+    ]
+   }
+  },
+  {
+   "id": "dreadful-carnage",
+   "nombre": "Dreadful Carnage",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "STR": 15
+    },
+    "feats": [
+     "power-attack",
+     "furious-focus"
+    ],
+    "bab": 11
+   }
+  },
+  {
+   "id": "duck-and-cover",
+   "nombre": "Duck and Cover",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "eagle-eyes",
+   "nombre": "Eagle Eyes",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "WIS": 13
+    },
+    "otros": [
+     "keen senses racial trait"
+    ]
+   }
+  },
+  {
+   "id": "echoing-spell",
+   "nombre": "Echoing Spell",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "ectoplasmic-spell",
+   "nombre": "Ectoplasmic Spell",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "efreeti-stance",
+   "nombre": "Efreeti Stance",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CON": 15,
+     "WIS": 15
+    },
+    "feats": [
+     "efreeti-style",
+     "elemental-fist",
+     "improved-unarmed-strike"
+    ],
+    "bab": 11,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 9
+    }
+   }
+  },
+  {
+   "id": "efreeti-style",
+   "nombre": "Efreeti Style",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "estilo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CON": 13,
+     "WIS": 15
+    },
+    "feats": [
+     "elemental-fist",
+     "improved-unarmed-strike"
+    ],
+    "bab": 9,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 5
+    }
+   }
+  },
+  {
+   "id": "efreeti-touch",
+   "nombre": "Efreeti Touch",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "CON": 15,
+     "WIS": 17
+    },
+    "feats": [
+     "efreeti-style",
+     "efreeti-stance",
+     "elemental-fist",
+     "improved-unarmed-strike"
+    ],
+    "bab": 13,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 11
+    }
+   }
+  },
+  {
+   "id": "eldritch-claws",
+   "nombre": "Eldritch Claws",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 15
+    },
+    "bab": 6,
+    "otros": [
+     "natural weapons"
+    ]
+   }
+  },
+  {
+   "id": "eldritch-heritage",
+   "nombre": "Eldritch Heritage",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CHA": 13
+    },
+    "feats": [
+     "skill-focus"
+    ],
+    "nivelPj": 3,
+    "otros": [
+     "Skill Focus with the class skill of bloodline selected for this feat (see below)"
+    ]
+   }
+  },
+  {
+   "id": "elemental-channel",
+   "nombre": "Elemental Channel",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Channel energy class feature"
+    ]
+   }
+  },
+  {
+   "id": "elemental-fist",
+   "nombre": "Elemental Fist",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "CON": 13,
+     "WIS": 13
+    },
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "bab": 8
+   }
+  },
+  {
+   "id": "elemental-focus",
+   "nombre": "Elemental Focus",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "elemental-spell",
+   "nombre": "Elemental Spell",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "metamagia",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "elusive-redirection",
+   "nombre": "Elusive Redirection",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "combat-expertise",
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Elusive target class feature",
+     "flowing monk level 12th"
+    ]
+   }
+  },
+  {
+   "id": "empower-spell",
+   "nombre": "Empower Spell",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "endurance",
+   "nombre": "Endurance",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "enfilading-fire",
+   "nombre": "Enfilading Fire",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "point-blank-shot",
+     "precise-shot"
+    ],
+    "otros": [
+     "one other teamwork feat"
+    ]
+   }
+  },
+  {
+   "id": "enforcer",
+   "nombre": "Enforcer",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Intimidate 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "enlarge-spell",
+   "nombre": "Enlarge Spell",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "ensemble",
+   "nombre": "Ensemble",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Perform 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "escape-route",
+   "nombre": "Escape Route",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "eschew-materials",
+   "nombre": "Eschew Materials",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "evolved-familiar",
+   "nombre": "Evolved Familiar",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13,
+     "CHA": 13
+    },
+    "otros": [
+     "familiar class feature"
+    ]
+   }
+  },
+  {
+   "id": "exhausting-critical",
+   "nombre": "Exhausting Critical",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "etiquetas": [
+    "critico"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "critical-focus",
+     "tiring-critical"
+    ],
+    "bab": 15
+   }
+  },
+  {
+   "id": "exotic-weapon-proficiency",
+   "nombre": "Exotic Weapon Proficiency",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 1
+   }
+  },
+  {
+   "id": "expanded-arcana",
+   "nombre": "Expanded Arcana",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Caster level 1st",
+     "see Special"
+    ]
+   }
+  },
+  {
+   "id": "expert-driver",
+   "nombre": "Expert Driver",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "skilled-driver"
+    ],
+    "otros": [
+     "Skilled Driver with the selected vehicle type"
+    ]
+   }
+  },
+  {
+   "id": "exploit-lore",
+   "nombre": "Exploit Lore",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "bab": 11,
+    "otros": [
+     "Monster lore class feature"
+    ]
+   }
+  },
+  {
+   "id": "extend-spell",
+   "nombre": "Extend Spell",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "extended-bane",
+   "nombre": "Extended Bane",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Bane class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-arcana",
+   "nombre": "Extra Arcana",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Magus arcana class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-arcane-pool",
+   "nombre": "Extra Arcane Pool",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Arcane pool class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-bane",
+   "nombre": "Extra Bane",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Bane class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-bombs",
+   "nombre": "Extra Bombs",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Bomb class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-cantrips-or-orisons",
+   "nombre": "Extra Cantrips or Orisons",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Ability to cast cantrips or orisons"
+    ]
+   }
+  },
+  {
+   "id": "extra-channel",
+   "nombre": "Extra Channel",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Channel energy class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-discovery",
+   "nombre": "Extra Discovery",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Discovery class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-evolution",
+   "nombre": "Extra Evolution",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Eidolon class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-grit",
+   "nombre": "Extra Grit",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Grit class feature or the Amateur Gunslinger feat"
+    ]
+   }
+  },
+  {
+   "id": "extra-hex",
+   "nombre": "Extra Hex",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Hex class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-ki",
+   "nombre": "Extra Ki",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Ki pool class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-lay-on-hands",
+   "nombre": "Extra Lay On Hands",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Lay on hands class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-mercy",
+   "nombre": "Extra Mercy",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Lay on hands class feature",
+     "mercy class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-performance",
+   "nombre": "Extra Performance",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Bardic performance class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-rage",
+   "nombre": "Extra Rage",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Rage class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-rage-power",
+   "nombre": "Extra Rage Power",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Rage power class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-ranger-trap",
+   "nombre": "Extra Ranger Trap",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Trap class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-revelation",
+   "nombre": "Extra Revelation",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Revelation class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-rogue-talent",
+   "nombre": "Extra Rogue Talent",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Rogue talent class feature"
+    ]
+   }
+  },
+  {
+   "id": "extra-summons",
+   "nombre": "Extra Summons",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "nivelClase": {
+     "clase": "summoner",
+     "nivel": 1
+    },
+    "otros": [
+     "Ability to cast summon monster as a spell-like ability"
+    ]
+   }
+  },
+  {
+   "id": "eyes-of-judgment",
+   "nombre": "Eyes of Judgment",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Detect alignment class feature",
+     "caster level 6th"
+    ]
+   }
+  },
+  {
+   "id": "false-opening",
+   "nombre": "False Opening",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "dodge",
+     "weapon-focus"
+    ],
+    "otros": [
+     "Close Quarters Thrower or Point-Blank Master",
+     "Weapon Focus with selected ranged weapon"
+    ]
+   }
+  },
+  {
+   "id": "far-shot",
+   "nombre": "Far Shot",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "point-blank-shot"
+    ]
+   }
+  },
+  {
+   "id": "fast-drinker",
+   "nombre": "Fast Drinker",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CON": 18
+    },
+    "otros": [
+     "drunken ki class feature"
+    ]
+   }
+  },
+  {
+   "id": "fast-empathy",
+   "nombre": "Fast Empathy",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Handle Animal 5 ranks",
+     "wild empathy class feature"
+    ]
+   }
+  },
+  {
+   "id": "fast-healer",
+   "nombre": "Fast Healer",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CON": 13
+    },
+    "feats": [
+     "diehard",
+     "endurance"
+    ]
+   }
+  },
+  {
+   "id": "favored-defense",
+   "nombre": "Favored Defense",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Favored enemy class feature"
+    ]
+   }
+  },
+  {
+   "id": "favored-judgment",
+   "nombre": "Favored Judgment",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "WIS": 13
+    },
+    "otros": [
+     "judgment class feature"
+    ]
+   }
+  },
+  {
+   "id": "fearless-aura",
+   "nombre": "Fearless Aura",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Aura of courage class feature",
+     "caster level 8th"
+    ]
+   }
+  },
+  {
+   "id": "feint-partner",
+   "nombre": "Feint Partner",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Bluff 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "felling-escape",
+   "nombre": "Felling Escape",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-trip"
+    ]
+   }
+  },
+  {
+   "id": "felling-smash",
+   "nombre": "Felling Smash",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "INT": 13,
+     "STR": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-trip",
+     "power-attack"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "feral-combat-training",
+   "nombre": "Feral Combat Training",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "weapon-focus"
+    ],
+    "otros": [
+     "Weapon Focus with selected natural weapon"
+    ]
+   }
+  },
+  {
+   "id": "field-repair",
+   "nombre": "Field Repair",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Craft 4 ranks"
+    ]
+   }
+  },
+  {
+   "id": "final-embrace",
+   "nombre": "Final Embrace",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13,
+     "INT": 3
+    },
+    "bab": 3,
+    "otros": [
+     "naga",
+     "serpentfolk",
+     "or creature that has the constrict special attack"
+    ]
+   }
+  },
+  {
+   "id": "final-embrace-horror",
+   "nombre": "Final Embrace Horror",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 15,
+     "INT": 3
+    },
+    "feats": [
+     "final-embrace"
+    ],
+    "bab": 6,
+    "otros": [
+     "naga",
+     "serpentfolk",
+     "or creature that has the constrict special attack"
+    ]
+   }
+  },
+  {
+   "id": "final-embrace-master",
+   "nombre": "Final Embrace Master",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 17,
+     "INT": 3
+    },
+    "feats": [
+     "final-embrace",
+     "final-embrace-horror"
+    ],
+    "bab": 9,
+    "otros": [
+     "naga",
+     "serpentfolk",
+     "or creature that has the constrict special attack",
+     "Ability Focus (constrict)"
+    ]
+   }
+  },
+  {
+   "id": "fire-music",
+   "nombre": "Fire Music",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Spellcraft 5 ranks",
+     "ability to cast bard spells",
+     "ability to cast an arcane fire spell from some other spellcasting class"
+    ]
+   }
+  },
+  {
+   "id": "flanking-foil",
+   "nombre": "Flanking Foil",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "flaring-spell",
+   "nombre": "Flaring Spell",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "fleet",
+   "nombre": "Fleet",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "focused-eidolon",
+   "nombre": "Focused Eidolon",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Shield ally class feature"
+    ]
+   }
+  },
+  {
+   "id": "focused-shot",
+   "nombre": "Focused Shot",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "precise-shot"
+    ],
+    "otros": [
+     "Point Blank Shot"
+    ]
+   }
+  },
+  {
+   "id": "focused-spell",
+   "nombre": "Focused Spell",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "following-step",
+   "nombre": "Following Step",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "step-up"
+    ]
+   }
+  },
+  {
+   "id": "forge-ring",
+   "nombre": "Forge Ring",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "creacion-de-objetos",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Caster level 7th"
+    ]
+   }
+  },
+  {
+   "id": "fortified-armor-training",
+   "nombre": "Fortified Armor Training",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Proficient with armor or shield"
+    ]
+   }
+  },
+  {
+   "id": "furious-finish",
+   "nombre": "Furious Finish",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "vital-strike"
+    ],
+    "bab": 6,
+    "otros": [
+     "Rage class feature"
+    ]
+   }
+  },
+  {
+   "id": "furious-focus",
+   "nombre": "Furious Focus",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "power-attack"
+    ],
+    "bab": 1
+   }
+  },
+  {
+   "id": "gang-up",
+   "nombre": "Gang Up",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise"
+    ]
+   }
+  },
+  {
+   "id": "gliding-steps",
+   "nombre": "Gliding Steps",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "dodge",
+     "mobility",
+     "nimble-moves"
+    ],
+    "otros": [
+     "ki pool"
+    ]
+   }
+  },
+  {
+   "id": "go-unnoticed",
+   "nombre": "Go Unnoticed",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "otros": [
+     "Small size or smaller"
+    ]
+   }
+  },
+  {
+   "id": "gorgons-fist",
+   "nombre": "Gorgon's Fist",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "scorpion-style"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "gory-finish",
+   "nombre": "Gory Finish",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "dazzling-display",
+     "weapon-focus"
+    ]
+   }
+  },
+  {
+   "id": "grant-initiative",
+   "nombre": "Grant Initiative",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Cunning initiative class feature"
+    ]
+   }
+  },
+  {
+   "id": "great-cleave",
+   "nombre": "Great Cleave",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "cleave",
+     "power-attack"
+    ],
+    "bab": 4
+   }
+  },
+  {
+   "id": "great-fortitude",
+   "nombre": "Great Fortitude",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "greater-blighted-critical",
+   "nombre": "Greater Blighted Critical",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "etiquetas": [
+    "critico"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "blighted-critical"
+    ],
+    "otros": [
+     "caster level 12th"
+    ]
+   }
+  },
+  {
+   "id": "greater-blind-fight",
+   "nombre": "Greater Blind-Fight",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-blind-fight"
+    ],
+    "otros": [
+     "Perception 15 ranks"
+    ]
+   }
+  },
+  {
+   "id": "greater-bull-rush",
+   "nombre": "Greater Bull Rush",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-bull-rush",
+     "power-attack"
+    ],
+    "bab": 6,
+    "atributos": {
+     "STR": 13
+    }
+   }
+  },
+  {
+   "id": "greater-channel-smite",
+   "nombre": "Greater Channel Smite",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "channel-smite"
+    ],
+    "bab": 8,
+    "otros": [
+     "Channel energy class feature"
+    ]
+   }
+  },
+  {
+   "id": "greater-dirty-trick",
+   "nombre": "Greater Dirty Trick",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-dirty-trick"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "greater-disarm",
+   "nombre": "Greater Disarm",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "combat-expertise",
+     "improved-disarm"
+    ],
+    "bab": 6,
+    "atributos": {
+     "INT": 13
+    }
+   }
+  },
+  {
+   "id": "greater-drag",
+   "nombre": "Greater Drag",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "improved-drag",
+     "power-attack"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "greater-eldritch-heritage",
+   "nombre": "Greater Eldritch Heritage",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CHA": 17
+    },
+    "feats": [
+     "eldritch-heritage",
+     "improved-eldritch-heritage"
+    ],
+    "nivelPj": 17
+   }
+  },
+  {
+   "id": "greater-elemental-focus",
+   "nombre": "Greater Elemental Focus",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "elemental-focus"
+    ]
+   }
+  },
+  {
+   "id": "greater-feint",
+   "nombre": "Greater Feint",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "combat-expertise",
+     "improved-feint"
+    ],
+    "bab": 6,
+    "atributos": {
+     "INT": 13
+    }
+   }
+  },
+  {
+   "id": "greater-grapple",
+   "nombre": "Greater Grapple",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-grapple",
+     "improved-unarmed-strike"
+    ],
+    "bab": 6,
+    "atributos": {
+     "DEX": 13
+    }
+   }
+  },
+  {
+   "id": "greater-mercy",
+   "nombre": "Greater Mercy",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CHA": 13
+    },
+    "otros": [
+     "lay on hands class feature",
+     "mercy class feature"
+    ]
+   }
+  },
+  {
+   "id": "greater-overrun",
+   "nombre": "Greater Overrun",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-overrun",
+     "power-attack"
+    ],
+    "bab": 6,
+    "atributos": {
+     "STR": 13
+    }
+   }
+  },
+  {
+   "id": "greater-penetrating-strike",
+   "nombre": "Greater Penetrating Strike",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "penetrating-strike",
+     "weapon-focus"
+    ],
+    "nivelClase": {
+     "clase": "fighter",
+     "nivel": 16
+    }
+   }
+  },
+  {
+   "id": "greater-rending-fury",
+   "nombre": "Greater Rending Fury",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-rending-fury",
+     "rending-fury"
+    ],
+    "bab": 12,
+    "otros": [
+     "rend special attack"
+    ]
+   }
+  },
+  {
+   "id": "greater-reposition",
+   "nombre": "Greater Reposition",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-reposition"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "greater-shield-focus",
+   "nombre": "Greater Shield Focus",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "shield-focus",
+     "shield-proficiency"
+    ],
+    "nivelClase": {
+     "clase": "fighter",
+     "nivel": 8
+    }
+   }
+  },
+  {
+   "id": "greater-shield-specialization",
+   "nombre": "Greater Shield Specialization",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "greater-shield-focus",
+     "shield-focus",
+     "shield-specialization"
+    ],
+    "nivelClase": {
+     "clase": "fighter",
+     "nivel": 12
+    },
+    "otros": [
+     "Proficiency with selected shield",
+     "Shield Specialization with selected shield"
+    ]
+   }
+  },
+  {
+   "id": "greater-snap-shot",
+   "nombre": "Greater Snap Shot",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 17
+    },
+    "feats": [
+     "improved-snap-shot",
+     "point-blank-shot",
+     "rapid-shot",
+     "snap-shot"
+    ],
+    "bab": 12
+   }
+  },
+  {
+   "id": "greater-spell-focus",
+   "nombre": "Greater Spell Focus",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "spell-focus"
+    ]
+   }
+  },
+  {
+   "id": "greater-spell-penetration",
+   "nombre": "Greater Spell Penetration",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "spell-penetration"
+    ]
+   }
+  },
+  {
+   "id": "greater-spell-specialization",
+   "nombre": "Greater Spell Specialization",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "spell-focus",
+     "spell-specialization"
+    ],
+    "otros": [
+     "able to prepare 5th-level spells"
+    ]
+   }
+  },
+  {
+   "id": "greater-steal",
+   "nombre": "Greater Steal",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-steal"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "greater-sunder",
+   "nombre": "Greater Sunder",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-sunder",
+     "power-attack"
+    ],
+    "bab": 6,
+    "atributos": {
+     "STR": 13
+    }
+   }
+  },
+  {
+   "id": "greater-trip",
+   "nombre": "Greater Trip",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "combat-expertise",
+     "improved-trip"
+    ],
+    "bab": 6,
+    "atributos": {
+     "INT": 13
+    }
+   }
+  },
+  {
+   "id": "greater-two-weapon-fighting",
+   "nombre": "Greater Two-Weapon Fighting",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 19
+    },
+    "feats": [
+     "improved-two-weapon-fighting",
+     "two-weapon-fighting"
+    ],
+    "bab": 11
+   }
+  },
+  {
+   "id": "greater-vital-strike",
+   "nombre": "Greater Vital Strike",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-vital-strike",
+     "vital-strike"
+    ],
+    "bab": 16
+   }
+  },
+  {
+   "id": "greater-weapon-focus",
+   "nombre": "Greater Weapon Focus",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "weapon-focus"
+    ],
+    "nivelClase": {
+     "clase": "fighter",
+     "nivel": 8
+    },
+    "otros": [
+     "Proficiency with selected weapon",
+     "Weapon Focus with selected weapon"
+    ]
+   }
+  },
+  {
+   "id": "greater-weapon-specialization",
+   "nombre": "Greater Weapon Specialization",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "greater-weapon-focus",
+     "weapon-focus",
+     "weapon-specialization"
+    ],
+    "nivelClase": {
+     "clase": "fighter",
+     "nivel": 12
+    },
+    "otros": [
+     "Proficiency with selected weapon",
+     "Greater Weapon Focus with selected weapon",
+     "Weapon Focus with selected weapon",
+     "Weapon Specialization with selected weapon"
+    ]
+   }
+  },
+  {
+   "id": "greater-whip-mastery",
+   "nombre": "Greater Whip Mastery",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-whip-mastery",
+     "whip-mastery"
+    ],
+    "bab": 8,
+    "otros": [
+     "Weapon Focus (whip)"
+    ]
+   }
+  },
+  {
+   "id": "greater-wild-empathy",
+   "nombre": "Greater Wild Empathy",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Knowledge (nature) 5 ranks",
+     "wild empathy class feature"
+    ]
+   }
+  },
+  {
+   "id": "guided-hand",
+   "nombre": "Guided Hand",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "channel-smite"
+    ],
+    "otros": [
+     "Channel energy class feature",
+     "proficiency with your deity's favored weapon"
+    ]
+   }
+  },
+  {
+   "id": "gunsmithing",
+   "nombre": "Gunsmithing",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "hammer-the-gap",
+   "nombre": "Hammer the Gap",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 6
+   }
+  },
+  {
+   "id": "harmonic-sage",
+   "nombre": "Harmonic Sage",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Bardic performance class feature",
+     "Knowledge (engineering) 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "haunted-gnome",
+   "nombre": "Haunted Gnome",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "CHA": 13
+    },
+    "otros": [
+     "gnome magic racial trait",
+     "Knowledge (arcana) 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "heavy-armor-proficiency",
+   "nombre": "Heavy Armor Proficiency",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "light-armor-proficiency",
+     "medium-armor-proficiency"
+    ]
+   }
+  },
+  {
+   "id": "heighten-spell",
+   "nombre": "Heighten Spell",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "heros-display",
+   "nombre": "Hero's Display",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "actuacion"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "dazzling-display",
+     "weapon-focus"
+    ],
+    "otros": [
+     "and proficiency with the selected weapon"
+    ]
+   }
+  },
+  {
+   "id": "heros-fortune",
+   "nombre": "Hero's Fortune",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "heroic-defiance",
+   "nombre": "Heroic Defiance",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "diehard",
+     "endurance"
+    ],
+    "otros": [
+     "base Fortitude save +8"
+    ]
+   }
+  },
+  {
+   "id": "heroic-recovery",
+   "nombre": "Heroic Recovery",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "diehard",
+     "endurance"
+    ],
+    "otros": [
+     "base Fortitude save +4"
+    ]
+   }
+  },
+  {
+   "id": "hex-strike",
+   "nombre": "Hex Strike",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Hex class feature"
+    ]
+   }
+  },
+  {
+   "id": "horse-master",
+   "nombre": "Horse Master",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Expert trainer class feature (Advanced Player's Guide 33)",
+     "Ride 6 ranks"
+    ]
+   }
+  },
+  {
+   "id": "impact-critical-shot",
+   "nombre": "Impact Critical Shot",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "critico"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "point-blank-shot"
+    ],
+    "bab": 9
+   }
+  },
+  {
+   "id": "impaling-critical",
+   "nombre": "Impaling Critical",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "critico"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "critical-focus",
+     "weapon-specialization"
+    ],
+    "bab": 11,
+    "otros": [
+     "Weapon Specialization with selected piercing melee weapon"
+    ]
+   }
+  },
+  {
+   "id": "implant-bomb",
+   "nombre": "Implant Bomb",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Heal 5 ranks",
+     "delayed bomb alchemist discovery"
+    ]
+   }
+  },
+  {
+   "id": "improved-back-to-back",
+   "nombre": "Improved Back to Back",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "back-to-back"
+    ],
+    "otros": [
+     "Perception 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "improved-blind-fight",
+   "nombre": "Improved Blind-Fight",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "blind-fight"
+    ],
+    "otros": [
+     "Perception 10 ranks"
+    ]
+   }
+  },
+  {
+   "id": "improved-bull-rush",
+   "nombre": "Improved Bull Rush",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "power-attack"
+    ],
+    "bab": 1
+   }
+  },
+  {
+   "id": "improved-channel",
+   "nombre": "Improved Channel",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Channel energy class feature"
+    ]
+   }
+  },
+  {
+   "id": "improved-charging-hurler",
+   "nombre": "Improved Charging Hurler",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "charging-hurler",
+     "point-blank-shot"
+    ]
+   }
+  },
+  {
+   "id": "improved-cleaving-finish",
+   "nombre": "Improved Cleaving Finish",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "cleave",
+     "cleaving-finish",
+     "great-cleave",
+     "power-attack"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "improved-counterspell",
+   "nombre": "Improved Counterspell",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "improved-critical",
+   "nombre": "Improved Critical",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 8,
+    "otros": [
+     "Proficient with weapon"
+    ]
+   }
+  },
+  {
+   "id": "improved-devastating-strike",
+   "nombre": "Improved Devastating Strike",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "devastating-strike",
+     "vital-strike"
+    ],
+    "bab": 13
+   }
+  },
+  {
+   "id": "improved-dirty-trick",
+   "nombre": "Improved Dirty Trick",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise"
+    ]
+   }
+  },
+  {
+   "id": "improved-disarm",
+   "nombre": "Improved Disarm",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise"
+    ]
+   }
+  },
+  {
+   "id": "improved-drag",
+   "nombre": "Improved Drag",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "power-attack"
+    ],
+    "bab": 1
+   }
+  },
+  {
+   "id": "improved-eldritch-heritage",
+   "nombre": "Improved Eldritch Heritage",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CHA": 15
+    },
+    "feats": [
+     "eldritch-heritage"
+    ],
+    "nivelPj": 11
+   }
+  },
+  {
+   "id": "improved-familiar",
+   "nombre": "Improved Familiar",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Ability to acquire a new familiar",
+     "compatible alignment",
+     "sufficiently high level (see below)"
+    ]
+   }
+  },
+  {
+   "id": "improved-feint",
+   "nombre": "Improved Feint",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise"
+    ]
+   }
+  },
+  {
+   "id": "improved-feint-partner",
+   "nombre": "Improved Feint Partner",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "combat-reflexes",
+     "feint-partner"
+    ],
+    "bab": 6,
+    "otros": [
+     "Bluff 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "improved-grapple",
+   "nombre": "Improved Grapple",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "improved-unarmed-strike"
+    ]
+   }
+  },
+  {
+   "id": "improved-great-fortitude",
+   "nombre": "Improved Great Fortitude",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "great-fortitude"
+    ]
+   }
+  },
+  {
+   "id": "improved-impaling-critical",
+   "nombre": "Improved Impaling Critical",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "critico"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "impaling-critical",
+     "critical-focus",
+     "weapon-specialization"
+    ],
+    "bab": 13,
+    "otros": [
+     "Weapon Specialization with selected piercing melee weapon"
+    ]
+   }
+  },
+  {
+   "id": "improved-initiative",
+   "nombre": "Improved Initiative",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "improved-iron-will",
+   "nombre": "Improved Iron Will",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "iron-will"
+    ]
+   }
+  },
+  {
+   "id": "improved-ki-throw",
+   "nombre": "Improved Ki Throw",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-bull-rush",
+     "ki-throw"
+    ]
+   }
+  },
+  {
+   "id": "improved-lightning-reflexes",
+   "nombre": "Improved Lightning Reflexes",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "lightning-reflexes"
+    ]
+   }
+  },
+  {
+   "id": "improved-monster-lore",
+   "nombre": "Improved Monster Lore",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Monster lore class feature"
+    ]
+   }
+  },
+  {
+   "id": "improved-overrun",
+   "nombre": "Improved Overrun",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "power-attack"
+    ],
+    "bab": 1
+   }
+  },
+  {
+   "id": "improved-precise-shot",
+   "nombre": "Improved Precise Shot",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 19
+    },
+    "feats": [
+     "point-blank-shot",
+     "precise-shot"
+    ],
+    "bab": 11
+   }
+  },
+  {
+   "id": "improved-rending-fury",
+   "nombre": "Improved Rending Fury",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "rending-fury"
+    ],
+    "bab": 9,
+    "otros": [
+     "rend special attack"
+    ]
+   }
+  },
+  {
+   "id": "improved-reposition",
+   "nombre": "Improved Reposition",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise"
+    ]
+   }
+  },
+  {
+   "id": "improved-second-chance",
+   "nombre": "Improved Second Chance",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "second-chance"
+    ],
+    "bab": 11
+   }
+  },
+  {
+   "id": "improved-share-spells",
+   "nombre": "Improved Share Spells",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Spellcraft 10 ranks",
+     "ability to acquire an animal companion",
+     "eidolon",
+     "familiar",
+     "or special mount"
+    ]
+   }
+  },
+  {
+   "id": "improved-shield-bash",
+   "nombre": "Improved Shield Bash",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "shield-proficiency"
+    ]
+   }
+  },
+  {
+   "id": "improved-sidestep",
+   "nombre": "Improved Sidestep",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 15
+    },
+    "feats": [
+     "dodge",
+     "mobility",
+     "sidestep"
+    ]
+   }
+  },
+  {
+   "id": "improved-snap-shot",
+   "nombre": "Improved Snap Shot",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 15
+    },
+    "feats": [
+     "point-blank-shot",
+     "rapid-shot",
+     "snap-shot",
+     "weapon-focus"
+    ],
+    "bab": 9
+   }
+  },
+  {
+   "id": "improved-stalwart",
+   "nombre": "Improved Stalwart",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "diehard",
+     "endurance",
+     "stalwart"
+    ],
+    "bab": 11
+   }
+  },
+  {
+   "id": "improved-steal",
+   "nombre": "Improved Steal",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise"
+    ]
+   }
+  },
+  {
+   "id": "improved-sunder",
+   "nombre": "Improved Sunder",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "power-attack"
+    ],
+    "bab": 1
+   }
+  },
+  {
+   "id": "improved-trip",
+   "nombre": "Improved Trip",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise"
+    ]
+   }
+  },
+  {
+   "id": "improved-two-weapon-feint",
+   "nombre": "Improved Two-Weapon Feint",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 17,
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-two-weapon-fighting",
+     "two-weapon-fighting"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "improved-two-weapon-fighting",
+   "nombre": "Improved Two-Weapon Fighting",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 17
+    },
+    "feats": [
+     "two-weapon-fighting"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "improved-unarmed-strike",
+   "nombre": "Improved Unarmed Strike",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "improved-vital-strike",
+   "nombre": "Improved Vital Strike",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "vital-strike"
+    ],
+    "bab": 11
+   }
+  },
+  {
+   "id": "improved-whip-mastery",
+   "nombre": "Improved Whip Mastery",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "whip-mastery"
+    ],
+    "bab": 5,
+    "otros": [
+     "Weapon Focus (whip)"
+    ]
+   }
+  },
+  {
+   "id": "improvised-weapon-mastery",
+   "nombre": "Improvised Weapon Mastery",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 8,
+    "otros": [
+     "Catch Off-Guard or Throw Anything"
+    ]
+   }
+  },
+  {
+   "id": "in-harms-way",
+   "nombre": "In Harm's Way",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "bodyguard"
+    ]
+   }
+  },
+  {
+   "id": "insightful-gaze",
+   "nombre": "Insightful Gaze",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Stern gaze class feature",
+     "Sense Motive 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "instant-judgment",
+   "nombre": "Instant Judgment",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Second judgment class feature"
+    ]
+   }
+  },
+  {
+   "id": "intensified-spell",
+   "nombre": "Intensified Spell",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "intimidating-bane",
+   "nombre": "Intimidating Bane",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "dazzling-display",
+     "weapon-focus"
+    ],
+    "nivelPj": 8,
+    "otros": [
+     "Bane class feature"
+    ]
+   }
+  },
+  {
+   "id": "intimidating-gaze",
+   "nombre": "Intimidating Gaze",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Cha 13+",
+     "stern gaze class feature",
+     "Intimidate 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "intimidating-prowess",
+   "nombre": "Intimidating Prowess",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "iron-will",
+   "nombre": "Iron Will",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "janni-rush",
+   "nombre": "Janni Rush",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "janni-style",
+     "janni-tempest"
+    ],
+    "otros": [
+     "Acrobatics 8 ranks",
+     "Perform (dance) 8 ranks"
+    ]
+   }
+  },
+  {
+   "id": "janni-style",
+   "nombre": "Janni Style",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "estilo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Acrobatics 3 ranks",
+     "Perform (dance) 3 ranks"
+    ]
+   }
+  },
+  {
+   "id": "janni-tempest",
+   "nombre": "Janni Tempest",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "janni-style"
+    ],
+    "otros": [
+     "Acrobatics 5 ranks",
+     "Perform (dance) 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "jawbreaker",
+   "nombre": "Jawbreaker",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "stunning-fist"
+    ],
+    "otros": [
+     "Heal 6 ranks"
+    ]
+   }
+  },
+  {
+   "id": "judgment-surge",
+   "nombre": "Judgment Surge",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Judgment class feature"
+    ]
+   }
+  },
+  {
+   "id": "ki-stand",
+   "nombre": "Ki Stand",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Ki pool"
+    ]
+   }
+  },
+  {
+   "id": "ki-throw",
+   "nombre": "Ki Throw",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-trip",
+     "improved-unarmed-strike"
+    ]
+   }
+  },
+  {
+   "id": "kirin-path",
+   "nombre": "Kirin Path",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "kirin-strike",
+     "kirin-style",
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Knowledge (arcana) 12 ranks",
+     "Knowledge (dungeoneering, local, nature, planes, or religion) 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "kirin-strike",
+   "nombre": "Kirin Strike",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "kirin-style",
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Knowledge (arcana) 9 ranks",
+     "Knowledge (dungeoneering, local, nature, planes, or religion) 3 ranks"
+    ]
+   }
+  },
+  {
+   "id": "kirin-style",
+   "nombre": "Kirin Style",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "estilo"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Knowledge (arcana) 6 ranks",
+     "Knowledge (dungeoneering, local, nature, planes, or religion) 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "knockout-artist",
+   "nombre": "Knockout Artist",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Sneak attack class feature"
+    ]
+   }
+  },
+  {
+   "id": "landing-roll",
+   "nombre": "Landing Roll",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "dodge",
+     "mobility"
+    ]
+   }
+  },
+  {
+   "id": "leadership",
+   "nombre": "Leadership",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "nivelPj": 7
+   }
+  },
+  {
+   "id": "leaping-shot-deed",
+   "nombre": "Leaping Shot Deed",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "dodge",
+     "mobility"
+    ],
+    "bab": 4,
+    "otros": [
+     "grit class feature or Amateur Gunslinger feat"
+    ]
+   }
+  },
+  {
+   "id": "learn-ranger-trap",
+   "nombre": "Learn Ranger Trap",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Survival 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "life-lure",
+   "nombre": "Life Lure",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Channel positive energy class feature"
+    ]
+   }
+  },
+  {
+   "id": "light-armor-proficiency",
+   "nombre": "Light Armor Proficiency",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "lightning-reflexes",
+   "nombre": "Lightning Reflexes",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "lightning-stance",
+   "nombre": "Lightning Stance",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 17
+    },
+    "feats": [
+     "dodge",
+     "wind-stance"
+    ],
+    "bab": 11
+   }
+  },
+  {
+   "id": "lingering-performance",
+   "nombre": "Lingering Performance",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Bardic performance class feature"
+    ]
+   }
+  },
+  {
+   "id": "lingering-spell",
+   "nombre": "Lingering Spell",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "lookout",
+   "nombre": "Lookout",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "low-profile",
+   "nombre": "Low Profile",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "otros": [
+     "Small size or smaller"
+    ]
+   }
+  },
+  {
+   "id": "luck-of-heroes",
+   "nombre": "Luck Of Heroes",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "heros-fortune"
+    ]
+   }
+  },
+  {
+   "id": "lunge",
+   "nombre": "Lunge",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 6
+   }
+  },
+  {
+   "id": "magical-aptitude",
+   "nombre": "Magical Aptitude",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "major-spell-expertise",
+   "nombre": "Major Spell Expertise",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "minor-spell-expertise"
+    ],
+    "otros": [
+     "ability to cast 9th-level spells"
+    ]
+   }
+  },
+  {
+   "id": "mantis-style",
+   "nombre": "Mantis Style",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "estilo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "stunning-fist"
+    ],
+    "otros": [
+     "Heal 3 ranks"
+    ]
+   }
+  },
+  {
+   "id": "mantis-torment",
+   "nombre": "Mantis Torment",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "mantis-style",
+     "mantis-wisdom",
+     "stunning-fist"
+    ],
+    "otros": [
+     "Heal 9 ranks"
+    ]
+   }
+  },
+  {
+   "id": "mantis-wisdom",
+   "nombre": "Mantis Wisdom",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "mantis-style",
+     "stunning-fist"
+    ],
+    "otros": [
+     "Heal 6 ranks"
+    ]
+   }
+  },
+  {
+   "id": "manyshot",
+   "nombre": "Manyshot",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 17
+    },
+    "feats": [
+     "point-blank-shot",
+     "rapid-shot"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "marid-coldsnap",
+   "nombre": "Marid Coldsnap",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "CON": 15,
+     "WIS": 17
+    },
+    "feats": [
+     "elemental-fist",
+     "marid-spirit",
+     "marid-style",
+     "improved-unarmed-strike"
+    ],
+    "bab": 13,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 11
+    }
+   }
+  },
+  {
+   "id": "marid-spirit",
+   "nombre": "Marid Spirit",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CON": 15,
+     "WIS": 15
+    },
+    "feats": [
+     "elemental-fist",
+     "marid-style",
+     "improved-unarmed-strike"
+    ],
+    "bab": 11,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 9
+    }
+   }
+  },
+  {
+   "id": "marid-style",
+   "nombre": "Marid Style",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "estilo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CON": 13,
+     "WIS": 15
+    },
+    "feats": [
+     "elemental-fist",
+     "improved-unarmed-strike"
+    ],
+    "bab": 9,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 5
+    }
+   }
+  },
+  {
+   "id": "martial-weapon-proficiency",
+   "nombre": "Martial Weapon Proficiency",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "master-alchemist",
+   "nombre": "Master Alchemist",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Craft (alchemy) 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "master-combat-performer",
+   "nombre": "Master Combat Performer",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "bab": 6,
+    "otros": [
+     "Performing Combatant or at least three performance feats"
+    ]
+   }
+  },
+  {
+   "id": "master-craftsman",
+   "nombre": "Master Craftsman",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "5 ranks in any Craft or Profession skill"
+    ]
+   }
+  },
+  {
+   "id": "master-siege-engineer",
+   "nombre": "Master Siege Engineer",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Siege Weapon Engineer",
+     "Knowledge (engineering) 10 ranks"
+    ]
+   }
+  },
+  {
+   "id": "masterful-display",
+   "nombre": "Masterful Display",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "actuacion"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "dazzling-display"
+    ],
+    "otros": [
+     "any two performance feats"
+    ]
+   }
+  },
+  {
+   "id": "maximize-spell",
+   "nombre": "Maximize Spell",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "maximized-spellstrike",
+   "nombre": "Maximized Spellstrike",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Maximized magic magus arcana",
+     "weapon expertise class feature or Quick Draw"
+    ]
+   }
+  },
+  {
+   "id": "medium-armor-proficiency",
+   "nombre": "Medium Armor Proficiency",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "light-armor-proficiency"
+    ]
+   }
+  },
+  {
+   "id": "medusas-wrath",
+   "nombre": "Medusa's Wrath",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "gorgons-fist",
+     "scorpion-style"
+    ],
+    "bab": 11
+   }
+  },
+  {
+   "id": "menacing-bane",
+   "nombre": "Menacing Bane",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Bane class feature"
+    ]
+   }
+  },
+  {
+   "id": "merciful-bane",
+   "nombre": "Merciful Bane",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Bane class feature"
+    ]
+   }
+  },
+  {
+   "id": "merciful-spell",
+   "nombre": "Merciful Spell",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "minor-spell-expertise",
+   "nombre": "Minor Spell Expertise",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Ability to cast 4th-level spells"
+    ]
+   }
+  },
+  {
+   "id": "missile-shield",
+   "nombre": "Missile Shield",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "shield-focus"
+    ]
+   }
+  },
+  {
+   "id": "mobility",
+   "nombre": "Mobility",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "dodge"
+    ]
+   }
+  },
+  {
+   "id": "mocking-dance",
+   "nombre": "Mocking Dance",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "actuacion"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Acrobatics 4 ranks or Perform (dance) 4 ranks"
+    ]
+   }
+  },
+  {
+   "id": "monastic-legacy",
+   "nombre": "Monastic Legacy",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Still mind class feature"
+    ]
+   }
+  },
+  {
+   "id": "monkey-moves",
+   "nombre": "Monkey Moves",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "WIS": 13
+    },
+    "feats": [
+     "improved-unarmed-strike",
+     "monkey-style"
+    ],
+    "otros": [
+     "Acrobatics 8 ranks",
+     "Climb 8 ranks"
+    ]
+   }
+  },
+  {
+   "id": "monkey-shine",
+   "nombre": "Monkey Shine",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "WIS": 13
+    },
+    "feats": [
+     "improved-unarmed-strike",
+     "monkey-moves",
+     "monkey-style",
+     "stunning-fist"
+    ],
+    "otros": [
+     "Acrobatics 11 ranks",
+     "Climb 11 ranks"
+    ]
+   }
+  },
+  {
+   "id": "monkey-style",
+   "nombre": "Monkey Style",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "estilo"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "WIS": 13
+    },
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Acrobatics 5 ranks",
+     "Climb 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "moonlight-stalker",
+   "nombre": "Moonlight Stalker",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "blind-fight",
+     "combat-expertise"
+    ],
+    "otros": [
+     "Bluff 3 ranks",
+     "darkvision or low-light vision racial trait"
+    ]
+   }
+  },
+  {
+   "id": "moonlight-stalker-feint",
+   "nombre": "Moonlight Stalker Feint",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "blind-fight",
+     "combat-expertise",
+     "moonlight-stalker"
+    ],
+    "otros": [
+     "Bluff 6 ranks",
+     "darkvision or lowlight vision racial trait"
+    ]
+   }
+  },
+  {
+   "id": "moonlight-stalker-master",
+   "nombre": "Moonlight Stalker Master",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "blind-fight",
+     "combat-expertise",
+     "improved-feint",
+     "moonlight-stalker",
+     "moonlight-stalker-feint"
+    ],
+    "otros": [
+     "Bluff 9 ranks",
+     "darkvision or low-light vision racial trait"
+    ]
+   }
+  },
+  {
+   "id": "moonlight-summons",
+   "nombre": "Moonlight Summons",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Spell Focus (conjuration)",
+     "able to cast summon nature's ally"
+    ]
+   }
+  },
+  {
+   "id": "mounted-archery",
+   "nombre": "Mounted Archery",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "mounted-combat"
+    ],
+    "otros": [
+     "Ride 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "mounted-combat",
+   "nombre": "Mounted Combat",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Ride 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "mounted-shield",
+   "nombre": "Mounted Shield",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "mounted-combat",
+     "shield-focus"
+    ]
+   }
+  },
+  {
+   "id": "mounted-skirmisher",
+   "nombre": "Mounted Skirmisher",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "mounted-combat",
+     "trick-riding"
+    ],
+    "otros": [
+     "Ride rank 14"
+    ]
+   }
+  },
+  {
+   "id": "murderers-circle",
+   "nombre": "Murderer's Circle",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "actuacion"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "dodge"
+    ],
+    "otros": [
+     "Acrobatics 4 ranks"
+    ]
+   }
+  },
+  {
+   "id": "mystic-stride",
+   "nombre": "Mystic Stride",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 15
+    },
+    "feats": [
+     "nimble-moves"
+    ],
+    "otros": [
+     "woodland stride class feature"
+    ]
+   }
+  },
+  {
+   "id": "natural-spell",
+   "nombre": "Natural Spell",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "WIS": 13
+    },
+    "otros": [
+     "wild shape class feature"
+    ]
+   }
+  },
+  {
+   "id": "neckbreaker",
+   "nombre": "Neckbreaker",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "bonebreaker",
+     "greater-grapple",
+     "improved-grapple",
+     "improved-unarmed-strike",
+     "jawbreaker",
+     "stunning-fist"
+    ],
+    "otros": [
+     "Heal 12 ranks"
+    ]
+   }
+  },
+  {
+   "id": "net-adept",
+   "nombre": "Net Adept",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 1,
+    "otros": [
+     "Exotic Weapon Proficiency (net)"
+    ]
+   }
+  },
+  {
+   "id": "net-and-trident",
+   "nombre": "Net and Trident",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 15
+    },
+    "feats": [
+     "net-adept",
+     "two-weapon-fighting"
+    ],
+    "otros": [
+     "Exotic Weapon Proficiency (net)"
+    ]
+   }
+  },
+  {
+   "id": "net-maneuvering",
+   "nombre": "Net Maneuvering",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "net-adept"
+    ],
+    "bab": 3,
+    "otros": [
+     "Exotic Weapon Proficiency (net)"
+    ]
+   }
+  },
+  {
+   "id": "net-trickery",
+   "nombre": "Net Trickery",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "net-adept",
+     "net-maneuvering"
+    ],
+    "bab": 6,
+    "otros": [
+     "Exotic Weapon Proficiency (net)"
+    ]
+   }
+  },
+  {
+   "id": "nightmare-fist",
+   "nombre": "Nightmare Fist",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Intimidate 1 rank",
+     "ability to create magical darkness"
+    ]
+   }
+  },
+  {
+   "id": "nightmare-striker",
+   "nombre": "Nightmare Striker",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "nightmare-fist",
+     "nightmare-weaver",
+     "stunning-fist"
+    ],
+    "otros": [
+     "Heal 5 ranks",
+     "ability to cast faerie fire"
+    ]
+   }
+  },
+  {
+   "id": "nightmare-weaver",
+   "nombre": "Nightmare Weaver",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "nightmare-fist"
+    ],
+    "otros": [
+     "Intimidate 2 ranks",
+     "ability to cast darkness"
+    ]
+   }
+  },
+  {
+   "id": "nimble-moves",
+   "nombre": "Nimble Moves",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    }
+   }
+  },
+  {
+   "id": "no-name",
+   "nombre": "No Name",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Grit class feature or Amateur Gunslinger feat",
+     "Bluff 4 ranks"
+    ]
+   }
+  },
+  {
+   "id": "opening-volley",
+   "nombre": "Opening Volley",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "oracular-intuition",
+   "nombre": "Oracular Intuition",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Mystery class feature"
+    ]
+   }
+  },
+  {
+   "id": "outflank",
+   "nombre": "Outflank",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 4
+   }
+  },
+  {
+   "id": "pack-attack",
+   "nombre": "Pack Attack",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "bab": 1
+   }
+  },
+  {
+   "id": "painful-anchor",
+   "nombre": "Painful Anchor",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Anchoring aura class feature"
+    ]
+   }
+  },
+  {
+   "id": "paired-opportunists",
+   "nombre": "Paired Opportunists",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "panther-claw",
+   "nombre": "Panther Claw",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "WIS": 15
+    },
+    "feats": [
+     "combat-reflexes",
+     "improved-unarmed-strike",
+     "panther-style"
+    ]
+   }
+  },
+  {
+   "id": "panther-parry",
+   "nombre": "Panther Parry",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "WIS": 15
+    },
+    "feats": [
+     "combat-reflexes",
+     "improved-unarmed-strike",
+     "panther-claw",
+     "panther-style"
+    ]
+   }
+  },
+  {
+   "id": "panther-style",
+   "nombre": "Panther Style",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "estilo"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "WIS": 13
+    },
+    "feats": [
+     "combat-reflexes",
+     "improved-unarmed-strike"
+    ]
+   }
+  },
+  {
+   "id": "parry-spell",
+   "nombre": "Parry Spell",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-counterspell"
+    ],
+    "otros": [
+     "Spellcraft 15 ranks"
+    ]
+   }
+  },
+  {
+   "id": "parting-shot",
+   "nombre": "Parting Shot",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "dodge",
+     "mobility",
+     "shot-on-the-run"
+    ],
+    "bab": 6,
+    "otros": [
+     "Point Blank Shot"
+    ]
+   }
+  },
+  {
+   "id": "passing-trick",
+   "nombre": "Passing Trick",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "dodge",
+     "improved-feint",
+     "mobility"
+    ],
+    "otros": [
+     "size Small or smaller"
+    ]
+   }
+  },
+  {
+   "id": "penetrating-strike",
+   "nombre": "Penetrating Strike",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "weapon-focus"
+    ],
+    "nivelClase": {
+     "clase": "fighter",
+     "nivel": 12
+    },
+    "otros": [
+     "proficiency with weapon"
+    ]
+   }
+  },
+  {
+   "id": "perfect-strike",
+   "nombre": "Perfect Strike",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "DEX": 13,
+     "WIS": 13
+    },
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "bab": 8
+   }
+  },
+  {
+   "id": "performance-weapon-mastery",
+   "nombre": "Performance Weapon Mastery",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "performing-combatant",
+   "nombre": "Performing Combatant",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "dazzling-display"
+    ],
+    "otros": [
+     "any one performance feat"
+    ]
+   }
+  },
+  {
+   "id": "persistent-spell",
+   "nombre": "Persistent Spell",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "persuasive",
+   "nombre": "Persuasive",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "piercing-spell",
+   "nombre": "Piercing Spell",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "pin-down",
+   "nombre": "Pin Down",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "combat-reflexes"
+    ],
+    "nivelClase": {
+     "clase": "fighter",
+     "nivel": 11
+    }
+   }
+  },
+  {
+   "id": "pinning-knockout",
+   "nombre": "Pinning Knockout",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "greater-grapple",
+     "improved-grapple",
+     "improved-unarmed-strike"
+    ],
+    "bab": 9,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 9
+    }
+   }
+  },
+  {
+   "id": "pinning-rend",
+   "nombre": "Pinning Rend",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "greater-grapple",
+     "improved-grapple",
+     "improved-unarmed-strike"
+    ],
+    "bab": 9,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 9
+    }
+   }
+  },
+  {
+   "id": "pinpoint-poisoner",
+   "nombre": "Pinpoint Poisoner",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "adder-strike",
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Poison use class feature",
+     "Craft (alchemy) 6 ranks",
+     "Two-Weapon Fighting or flurry of blows class feature"
+    ]
+   }
+  },
+  {
+   "id": "pinpoint-targeting",
+   "nombre": "Pinpoint Targeting",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "DEX": 19
+    },
+    "feats": [
+     "improved-precise-shot",
+     "point-blank-shot",
+     "precise-shot"
+    ],
+    "bab": 16
+   }
+  },
+  {
+   "id": "planar-preservationist",
+   "nombre": "Planar Preservationist",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Preservationist alchemist archetype"
+    ]
+   }
+  },
+  {
+   "id": "planar-wild-shape",
+   "nombre": "Planar Wild Shape",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Wild shape class feature",
+     "Knowledge (planes) 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "point-blank-master",
+   "nombre": "Point Blank Master",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "weapon-specialization"
+    ],
+    "otros": [
+     "Weapon Specialization with selected ranged weapon"
+    ]
+   }
+  },
+  {
+   "id": "point-blank-shot",
+   "nombre": "Point-Blank Shot",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "power-attack",
+   "nombre": "Power Attack",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "bab": 1
+   }
+  },
+  {
+   "id": "powerful-shape",
+   "nombre": "Powerful Shape",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "nivelClase": {
+     "clase": "druid",
+     "nivel": 8
+    },
+    "otros": [
+     "Wild shape class feature"
+    ]
+   }
+  },
+  {
+   "id": "practiced-tactician",
+   "nombre": "Practiced Tactician",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Tactician class feature"
+    ]
+   }
+  },
+  {
+   "id": "precise-shot",
+   "nombre": "Precise Shot",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "point-blank-shot"
+    ]
+   }
+  },
+  {
+   "id": "precise-strike",
+   "nombre": "Precise Strike",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "bab": 1
+   }
+  },
+  {
+   "id": "preferred-spell",
+   "nombre": "Preferred Spell",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "heighten-spell"
+    ],
+    "otros": [
+     "Spellcraft 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "prodigy",
+   "nombre": "Prodigy",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "prone-shooter",
+   "nombre": "Prone Shooter",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 1,
+    "otros": [
+     "Weapon Focus (crossbow or firearm)"
+    ]
+   }
+  },
+  {
+   "id": "prone-slinger",
+   "nombre": "Prone Slinger",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "prophetic-visionary",
+   "nombre": "Prophetic Visionary",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Mystery class feature"
+    ]
+   }
+  },
+  {
+   "id": "punishing-kick",
+   "nombre": "Punishing Kick",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "CON": 13,
+     "WIS": 13
+    },
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "bab": 8
+   }
+  },
+  {
+   "id": "pure-faith",
+   "nombre": "Pure Faith",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Divine health class feature"
+    ]
+   }
+  },
+  {
+   "id": "pushing-assault",
+   "nombre": "Pushing Assault",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 15
+    },
+    "feats": [
+     "power-attack"
+    ],
+    "bab": 1
+   }
+  },
+  {
+   "id": "quarterstaff-master",
+   "nombre": "Quarterstaff Master",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 5,
+    "otros": [
+     "Weapon Focus (quarterstaff)"
+    ]
+   }
+  },
+  {
+   "id": "quick-bull-rush",
+   "nombre": "Quick Bull Rush",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "improved-bull-rush",
+     "power-attack"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "quick-channel",
+   "nombre": "Quick Channel",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Knowledge (religion) 5 ranks",
+     "channel energy class feature"
+    ]
+   }
+  },
+  {
+   "id": "quick-dirty-trick",
+   "nombre": "Quick Dirty Trick",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-dirty-trick"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "quick-drag",
+   "nombre": "Quick Drag",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "improved-drag",
+     "power-attack"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "quick-draw",
+   "nombre": "Quick Draw",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "bab": 1
+   }
+  },
+  {
+   "id": "quick-reposition",
+   "nombre": "Quick Reposition",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-reposition"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "quick-steal",
+   "nombre": "Quick Steal",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-steal"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "quick-wild-shape",
+   "nombre": "Quick Wild Shape",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Wild shape class feature",
+     "caster level 8th"
+    ]
+   }
+  },
+  {
+   "id": "quicken-spell",
+   "nombre": "Quicken Spell",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "radiant-charge",
+   "nombre": "Radiant Charge",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Lay on hands class feature"
+    ]
+   }
+  },
+  {
+   "id": "raging-brutality",
+   "nombre": "Raging Brutality",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "power-attack"
+    ],
+    "bab": 12,
+    "otros": [
+     "rage class feature"
+    ]
+   }
+  },
+  {
+   "id": "raging-deathblow",
+   "nombre": "Raging Deathblow",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Greater rage class feature"
+    ]
+   }
+  },
+  {
+   "id": "raging-hurler",
+   "nombre": "Raging Hurler",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "throw-anything"
+    ],
+    "otros": [
+     "Rage class feature"
+    ]
+   }
+  },
+  {
+   "id": "raging-throw",
+   "nombre": "Raging Throw",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "STR": 13,
+     "CON": 13
+    },
+    "feats": [
+     "improved-bull-rush",
+     "power-attack"
+    ],
+    "bab": 6,
+    "otros": [
+     "rage class feature"
+    ]
+   }
+  },
+  {
+   "id": "raging-vitality",
+   "nombre": "Raging Vitality",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CON": 15
+    },
+    "otros": [
+     "rage class feature"
+    ]
+   }
+  },
+  {
+   "id": "rapid-grappler",
+   "nombre": "Rapid Grappler",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "greater-grapple",
+     "improved-grapple",
+     "improved-unarmed-strike"
+    ],
+    "bab": 9,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 9
+    }
+   }
+  },
+  {
+   "id": "rapid-shot",
+   "nombre": "Rapid Shot",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "point-blank-shot"
+    ]
+   }
+  },
+  {
+   "id": "ray-shield",
+   "nombre": "Ray Shield",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 15
+    },
+    "feats": [
+     "missile-shield",
+     "spellbreaker"
+    ]
+   }
+  },
+  {
+   "id": "reach-spell",
+   "nombre": "Reach Spell",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "rebounding-leap",
+   "nombre": "Rebounding Leap",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Leaping lance class feature",
+     "Acrobatics 5 ranks",
+     "Ride 11 ranks"
+    ]
+   }
+  },
+  {
+   "id": "rebuffing-reduction",
+   "nombre": "Rebuffing Reduction",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "improved-bull-rush",
+     "power-attack"
+    ],
+    "bab": 1,
+    "otros": [
+     "damage reduction"
+    ]
+   }
+  },
+  {
+   "id": "remote-bomb",
+   "nombre": "Remote Bomb",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Delayed bomb discovery"
+    ]
+   }
+  },
+  {
+   "id": "rending-claws",
+   "nombre": "Rending Claws",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "bab": 6,
+    "otros": [
+     "two claw natural weapon attacks"
+    ]
+   }
+  },
+  {
+   "id": "rending-fury",
+   "nombre": "Rending Fury",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 6,
+    "otros": [
+     "rend special attack"
+    ]
+   }
+  },
+  {
+   "id": "repositioning-strike",
+   "nombre": "Repositioning Strike",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-reposition"
+    ],
+    "bab": 9
+   }
+  },
+  {
+   "id": "resilient-eidolon",
+   "nombre": "Resilient Eidolon",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Eidolon class feature"
+    ]
+   }
+  },
+  {
+   "id": "revelation-strike",
+   "nombre": "Revelation Strike",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Revelation class feature"
+    ]
+   }
+  },
+  {
+   "id": "reward-of-grace",
+   "nombre": "Reward of Grace",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Lay on hands class feature"
+    ]
+   }
+  },
+  {
+   "id": "reward-of-life",
+   "nombre": "Reward of Life",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Lay on hands class feature"
+    ]
+   }
+  },
+  {
+   "id": "rhetorical-flourish",
+   "nombre": "Rhetorical Flourish",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CHA": 13
+    },
+    "feats": [
+     "persuasive"
+    ]
+   }
+  },
+  {
+   "id": "ricochet-shot-deed",
+   "nombre": "Ricochet Shot Deed",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "blind-fight"
+    ],
+    "otros": [
+     "Grit class feature or Amateur Gunslinger feat"
+    ]
+   }
+  },
+  {
+   "id": "ricochet-splash-weapon",
+   "nombre": "Ricochet Splash Weapon",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "throw-anything"
+    ]
+   }
+  },
+  {
+   "id": "ride-by-attack",
+   "nombre": "Ride-By Attack",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "mounted-combat"
+    ],
+    "otros": [
+     "Ride 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "righteous-healing",
+   "nombre": "Righteous Healing",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Judgment class feature"
+    ]
+   }
+  },
+  {
+   "id": "rime-spell",
+   "nombre": "Rime Spell",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "run",
+   "nombre": "Run",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "sacred-summons",
+   "nombre": "Sacred Summons",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Aura class feature",
+     "ability to cast summon monster"
+    ]
+   }
+  },
+  {
+   "id": "sap-adept",
+   "nombre": "Sap Adept",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Sneak attack +1d6"
+    ]
+   }
+  },
+  {
+   "id": "sap-master",
+   "nombre": "Sap Master",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "sap-adept"
+    ],
+    "otros": [
+     "Sneak attack +3d6"
+    ]
+   }
+  },
+  {
+   "id": "savage-display",
+   "nombre": "Savage Display",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "actuacion"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "dazzling-display"
+    ]
+   }
+  },
+  {
+   "id": "saving-shield",
+   "nombre": "Saving Shield",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "shield-proficiency"
+    ]
+   }
+  },
+  {
+   "id": "school-strike",
+   "nombre": "School Strike",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Wizard school class feature"
+    ]
+   }
+  },
+  {
+   "id": "scorpion-style",
+   "nombre": "Scorpion Style",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ]
+   }
+  },
+  {
+   "id": "scribe-scroll",
+   "nombre": "Scribe Scroll",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "creacion-de-objetos",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Caster level 1st"
+    ]
+   }
+  },
+  {
+   "id": "sea-legs",
+   "nombre": "Sea Legs",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Profession (sailor) 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "second-chance",
+   "nombre": "Second Chance",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "secret-stash-deed",
+   "nombre": "Secret Stash Deed",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Grit class feature or Amateur Gunslinger feat",
+     "Sleight of Hand 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "seize-the-moment",
+   "nombre": "Seize the Moment",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "combat-reflexes",
+     "improved-critical"
+    ]
+   }
+  },
+  {
+   "id": "selective-channeling",
+   "nombre": "Selective Channeling",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CHA": 13
+    },
+    "otros": [
+     "channel energy class feature"
+    ]
+   }
+  },
+  {
+   "id": "selective-spell",
+   "nombre": "Selective Spell",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Spellcraft 10 ranks"
+    ]
+   }
+  },
+  {
+   "id": "self-sufficient",
+   "nombre": "Self-Sufficient",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "sense-link",
+   "nombre": "Sense Link",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Bond senses class feature"
+    ]
+   }
+  },
+  {
+   "id": "shadow-strike",
+   "nombre": "Shadow Strike",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 1
+   }
+  },
+  {
+   "id": "shaitan-earthblast",
+   "nombre": "Shaitan Earthblast",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "CON": 15,
+     "WIS": 17
+    },
+    "feats": [
+     "elemental-fist",
+     "improved-unarmed-strike",
+     "shaitan-skin",
+     "shaitan-style"
+    ],
+    "bab": 13,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 11
+    }
+   }
+  },
+  {
+   "id": "shaitan-skin",
+   "nombre": "Shaitan Skin",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CON": 15,
+     "WIS": 15
+    },
+    "feats": [
+     "elemental-fist",
+     "improved-unarmed-strike",
+     "shaitan-style"
+    ],
+    "bab": 11,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 9
+    }
+   }
+  },
+  {
+   "id": "shaitan-style",
+   "nombre": "Shaitan Style",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "estilo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CON": 13,
+     "WIS": 15
+    },
+    "feats": [
+     "elemental-fist",
+     "improved-unarmed-strike"
+    ],
+    "bab": 9,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 5
+    }
+   }
+  },
+  {
+   "id": "shake-it-off",
+   "nombre": "Shake It Off",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "shapeshifter-foil",
+   "nombre": "Shapeshifter Foil",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Knowledge (arcana) 5 ranks or Knowledge (nature) 5 ranks",
+     "ability to use any polymorph effect"
+    ]
+   }
+  },
+  {
+   "id": "shapeshifting-hunter",
+   "nombre": "Shapeshifting Hunter",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Favored enemy class feature",
+     "wild shape class feature"
+    ]
+   }
+  },
+  {
+   "id": "shaping-focus",
+   "nombre": "Shaping Focus",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Wild shape class feature",
+     "Knowledge (nature) 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "shared-judgment",
+   "nombre": "Shared Judgment",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Second judgment class feature"
+    ]
+   }
+  },
+  {
+   "id": "sharp-senses",
+   "nombre": "Sharp Senses",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Keen senses racial trait"
+    ]
+   }
+  },
+  {
+   "id": "shatter-defenses",
+   "nombre": "Shatter Defenses",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "weapon-focus",
+     "dazzling-display"
+    ],
+    "bab": 6,
+    "otros": [
+     "proficiency with weapon"
+    ]
+   }
+  },
+  {
+   "id": "shield-focus",
+   "nombre": "Shield Focus",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "shield-proficiency"
+    ],
+    "bab": 1
+   }
+  },
+  {
+   "id": "shield-master",
+   "nombre": "Shield Master",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-shield-bash",
+     "shield-proficiency",
+     "shield-slam",
+     "two-weapon-fighting"
+    ],
+    "bab": 11
+   }
+  },
+  {
+   "id": "shield-of-swings",
+   "nombre": "Shield of Swings",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "power-attack"
+    ],
+    "bab": 1
+   }
+  },
+  {
+   "id": "shield-proficiency",
+   "nombre": "Shield Proficiency",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "shield-slam",
+   "nombre": "Shield Slam",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-shield-bash",
+     "shield-proficiency",
+     "two-weapon-fighting"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "shield-specialization",
+   "nombre": "Shield Specialization",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "shield-focus"
+    ],
+    "nivelClase": {
+     "clase": "fighter",
+     "nivel": 4
+    },
+    "otros": [
+     "Proficiency with selected shield"
+    ]
+   }
+  },
+  {
+   "id": "shield-wall",
+   "nombre": "Shield Wall",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "shield-proficiency"
+    ]
+   }
+  },
+  {
+   "id": "shielded-caster",
+   "nombre": "Shielded Caster",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "shot-on-the-run",
+   "nombre": "Shot on the Run",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "dodge",
+     "mobility",
+     "point-blank-shot"
+    ],
+    "bab": 4
+   }
+  },
+  {
+   "id": "sickening-critical",
+   "nombre": "Sickening Critical",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "etiquetas": [
+    "critico"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "critical-focus"
+    ],
+    "bab": 11
+   }
+  },
+  {
+   "id": "sickening-spell",
+   "nombre": "Sickening Spell",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "sidestep",
+   "nombre": "Sidestep",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "dodge",
+     "mobility"
+    ]
+   }
+  },
+  {
+   "id": "siege-commander",
+   "nombre": "Siege Commander",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Craft (siege weapon) 5 ranks",
+     "Knowledge (engineering) 5 ranks or Profession (siege engineer) 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "siege-engineer",
+   "nombre": "Siege Engineer",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Knowledge (engineering) 5 ranks or Profession (siege engineer) 5 ranks",
+     "proficiency with one siege engine"
+    ]
+   }
+  },
+  {
+   "id": "siege-gunner",
+   "nombre": "Siege Gunner",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "siege-engineer"
+    ],
+    "otros": [
+     "Profession (siege engineer) 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "signature-deed",
+   "nombre": "Signature Deed",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "nivelClase": {
+     "clase": "gunslinger",
+     "nivel": 11
+    },
+    "otros": [
+     "Grit class feature"
+    ]
+   }
+  },
+  {
+   "id": "silent-spell",
+   "nombre": "Silent Spell",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "simple-weapon-proficiency",
+   "nombre": "Simple Weapon Proficiency",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "sin-seer",
+   "nombre": "Sin Seer",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Detect undead paladin class feature"
+    ]
+   }
+  },
+  {
+   "id": "skeleton-summoner",
+   "nombre": "Skeleton Summoner",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Spell Focus (necromancy)",
+     "ability to cast summon monster"
+    ]
+   }
+  },
+  {
+   "id": "skill-focus",
+   "nombre": "Skill Focus",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "skilled-driver",
+   "nombre": "Skilled Driver",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "slayers-knack",
+   "nombre": "Slayer's Knack",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 6,
+    "otros": [
+     "Favored enemy class feature"
+    ]
+   }
+  },
+  {
+   "id": "sling-flail",
+   "nombre": "Sling Flail",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 1,
+    "otros": [
+     "Weapon Focus (sling)"
+    ]
+   }
+  },
+  {
+   "id": "snake-fang",
+   "nombre": "Snake Fang",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "combat-reflexes",
+     "improved-unarmed-strike",
+     "snake-style"
+    ],
+    "otros": [
+     "Snake Sidewind",
+     "Acrobatics 6 ranks",
+     "Sense Motive 9 ranks"
+    ]
+   }
+  },
+  {
+   "id": "snake-style",
+   "nombre": "Snake Style",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "estilo"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Acrobatics 1 rank",
+     "Sense Motive 3 ranks"
+    ]
+   }
+  },
+  {
+   "id": "snap-shot",
+   "nombre": "Snap Shot",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "point-blank-shot",
+     "rapid-shot",
+     "weapon-focus"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "snapping-turtle-clutch",
+   "nombre": "Snapping Turtle Clutch",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "snapping-turtle-style",
+     "improved-grapple",
+     "improved-unarmed-strike"
+    ],
+    "bab": 3,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 3
+    }
+   }
+  },
+  {
+   "id": "snapping-turtle-shell",
+   "nombre": "Snapping Turtle Shell",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "snapping-turtle-clutch",
+     "snapping-turtle-style",
+     "improved-grapple",
+     "improved-unarmed-strike"
+    ],
+    "bab": 5,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 5
+    }
+   }
+  },
+  {
+   "id": "snapping-turtle-style",
+   "nombre": "Snapping Turtle Style",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "estilo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "bab": 1,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 1
+    }
+   }
+  },
+  {
+   "id": "snatch-arrows",
+   "nombre": "Snatch Arrows",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 15
+    },
+    "feats": [
+     "deflect-arrows",
+     "improved-unarmed-strike"
+    ]
+   }
+  },
+  {
+   "id": "sneaking-precision",
+   "nombre": "Sneaking Precision",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "critical-focus"
+    ],
+    "bab": 9,
+    "otros": [
+     "Sneak attack class feature",
+     "any critical feat"
+    ]
+   }
+  },
+  {
+   "id": "sorcerous-bloodstrike",
+   "nombre": "Sorcerous Bloodstrike",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "CHA": 13
+    },
+    "otros": [
+     "sorcerer bloodline class feature"
+    ]
+   }
+  },
+  {
+   "id": "sorcerous-strike",
+   "nombre": "Sorcerous Strike",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "Sorcerer bloodline class feature"
+    ]
+   }
+  },
+  {
+   "id": "spell-bane",
+   "nombre": "Spell Bane",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Bane class feature"
+    ]
+   }
+  },
+  {
+   "id": "spell-bluff",
+   "nombre": "Spell Bluff",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Bluff 5 ranks",
+     "Spellcraft 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "spell-focus",
+   "nombre": "Spell Focus",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "spell-hex",
+   "nombre": "Spell Hex",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Major hex class feature"
+    ]
+   }
+  },
+  {
+   "id": "spell-mastery",
+   "nombre": "Spell Mastery",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "nivelClase": {
+     "clase": "wizard",
+     "nivel": 1
+    }
+   }
+  },
+  {
+   "id": "spell-penetration",
+   "nombre": "Spell Penetration",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "spell-perfection",
+   "nombre": "Spell Perfection",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Spellcraft 15 ranks",
+     "at least three metamagic feats"
+    ]
+   }
+  },
+  {
+   "id": "spell-specialization",
+   "nombre": "Spell Specialization",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "spell-focus"
+    ]
+   }
+  },
+  {
+   "id": "spellbreaker",
+   "nombre": "Spellbreaker",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "disruptive"
+    ],
+    "nivelClase": {
+     "clase": "fighter",
+     "nivel": 10
+    }
+   }
+  },
+  {
+   "id": "spellsong",
+   "nombre": "Spellsong",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "CHA": 13
+    },
+    "otros": [
+     "bardic performance class ability",
+     "able to cast 1st-level spells"
+    ]
+   }
+  },
+  {
+   "id": "spider-step",
+   "nombre": "Spider Step",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "nivelClase": {
+     "clase": "monk",
+     "nivel": 6
+    },
+    "otros": [
+     "Acrobatics 6 ranks",
+     "Climb 6 ranks"
+    ]
+   }
+  },
+  {
+   "id": "spinning-throw",
+   "nombre": "Spinning Throw",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "combat-expertise",
+     "improved-bull-rush",
+     "improved-trip",
+     "improved-unarmed-strike",
+     "ki-throw"
+    ]
+   }
+  },
+  {
+   "id": "spirited-charge",
+   "nombre": "Spirited Charge",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "mounted-combat",
+     "ride-by-attack"
+    ],
+    "otros": [
+     "Ride 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "splintering-weapon",
+   "nombre": "Splintering Weapon",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 1,
+    "otros": [
+     "proficient with weapon",
+     "weapon made of primitive material"
+    ]
+   }
+  },
+  {
+   "id": "split-hex",
+   "nombre": "Split Hex",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "nivelClase": {
+     "clase": "witch",
+     "nivel": 10
+    }
+   }
+  },
+  {
+   "id": "split-major-hex",
+   "nombre": "Split Major Hex",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "split-hex"
+    ],
+    "otros": [
+     "caster level 18th"
+    ]
+   }
+  },
+  {
+   "id": "spontaneous-metafocus",
+   "nombre": "Spontaneous Metafocus",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CHA": 13
+    },
+    "otros": [
+     "one metamagic feat",
+     "able to spontaneously cast spells"
+    ]
+   }
+  },
+  {
+   "id": "spring-attack",
+   "nombre": "Spring Attack",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "dodge",
+     "mobility"
+    ],
+    "bab": 4
+   }
+  },
+  {
+   "id": "stage-combatant",
+   "nombre": "Stage Combatant",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "weapon-focus"
+    ],
+    "bab": 5
+   }
+  },
+  {
+   "id": "staggering-critical",
+   "nombre": "Staggering Critical",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "etiquetas": [
+    "critico"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "critical-focus"
+    ],
+    "bab": 13
+   }
+  },
+  {
+   "id": "stalwart",
+   "nombre": "Stalwart",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "diehard",
+     "endurance"
+    ],
+    "bab": 4
+   }
+  },
+  {
+   "id": "stand-still",
+   "nombre": "Stand Still",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "combat-reflexes"
+    ]
+   }
+  },
+  {
+   "id": "starlight-summons",
+   "nombre": "Starlight Summons",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Spell Focus (conjuration)",
+     "able to cast summon nature's ally"
+    ]
+   }
+  },
+  {
+   "id": "stealth-synergy",
+   "nombre": "Stealth Synergy",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "stealthy",
+   "nombre": "Stealthy",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "step-up",
+   "nombre": "Step Up",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "bab": 1
+   }
+  },
+  {
+   "id": "step-up-and-strike",
+   "nombre": "Step Up and Strike",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "following-step",
+     "step-up"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "still-spell",
+   "nombre": "Still Spell",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "stone-sense",
+   "nombre": "Stone Sense",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Improved Stonecunning",
+     "Perception 10 ranks"
+    ]
+   }
+  },
+  {
+   "id": "strangler",
+   "nombre": "Strangler",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "improved-grapple",
+     "improved-unarmed-strike"
+    ],
+    "otros": [
+     "sneak attack +1d6"
+    ]
+   }
+  },
+  {
+   "id": "strike-back",
+   "nombre": "Strike Back",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 11
+   }
+  },
+  {
+   "id": "strong-comeback",
+   "nombre": "Strong Comeback",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "stunning-assault",
+   "nombre": "Stunning Assault",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "power-attack"
+    ],
+    "bab": 16
+   }
+  },
+  {
+   "id": "stunning-critical",
+   "nombre": "Stunning Critical",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "etiquetas": [
+    "critico"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "critical-focus",
+     "staggering-critical"
+    ],
+    "bab": 17
+   }
+  },
+  {
+   "id": "stunning-fist",
+   "nombre": "Stunning Fist",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "DEX": 13,
+     "WIS": 13
+    },
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "bab": 8
+   }
+  },
+  {
+   "id": "stunning-pin",
+   "nombre": "Stunning Pin",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-grapple",
+     "improved-unarmed-strike",
+     "stunning-fist"
+    ]
+   }
+  },
+  {
+   "id": "summoners-call",
+   "nombre": "Summoner's Call",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Eidolon class feature"
+    ]
+   }
+  },
+  {
+   "id": "sundering-strike",
+   "nombre": "Sundering Strike",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "improved-sunder",
+     "power-attack"
+    ],
+    "bab": 9
+   }
+  },
+  {
+   "id": "sunlight-summons",
+   "nombre": "Sunlight Summons",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Spell Focus (conjuration)",
+     "able to cast summon nature's ally"
+    ]
+   }
+  },
+  {
+   "id": "superior-summoning",
+   "nombre": "Superior Summoning",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "augment-summoning"
+    ],
+    "otros": [
+     "caster level 3rd"
+    ]
+   }
+  },
+  {
+   "id": "sure-grasp",
+   "nombre": "Sure Grasp",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Climb 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "swap-places",
+   "nombre": "Swap Places",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {}
+  },
+  {
+   "id": "swift-aid",
+   "nombre": "Swift Aid",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "sword-and-pistol",
+   "nombre": "Sword and Pistol",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13
+    },
+    "feats": [
+     "point-blank-shot",
+     "rapid-shot",
+     "snap-shot",
+     "two-weapon-fighting"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "tandem-trip",
+   "nombre": "Tandem Trip",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "target-of-opportunity",
+   "nombre": "Target of Opportunity",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "point-blank-shot"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "taunt",
+   "nombre": "Taunt",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CHA": 13
+    },
+    "otros": [
+     "Small size or smaller"
+    ]
+   }
+  },
+  {
+   "id": "team-pickpocketing",
+   "nombre": "Team Pickpocketing",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "etiquetas": [
+    "trabajo-en-equipo"
+   ],
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Bluff 1 rank",
+     "Sleight of Hand 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "team-up",
+   "nombre": "Team Up",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "gang-up"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "teleport-tactician",
+   "nombre": "Teleport Tactician",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "combat-reflexes",
+     "disruptive",
+     "spellbreaker"
+    ]
+   }
+  },
+  {
+   "id": "tenacious-transmutation",
+   "nombre": "Tenacious Transmutation",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Spell Focus (transmutation)"
+    ]
+   }
+  },
+  {
+   "id": "thanatopic-spell",
+   "nombre": "Thanatopic Spell",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Knowledge (religion) 6 ranks",
+     "Spell Focus (necromancy)"
+    ]
+   }
+  },
+  {
+   "id": "theurgy",
+   "nombre": "Theurgy",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "WIS": 13
+    },
+    "otros": [
+     "Int or Cha 13",
+     "able to cast 1st-level arcane spells",
+     "able to cast 1st-level divine spells"
+    ]
+   }
+  },
+  {
+   "id": "thoughtful-discernment",
+   "nombre": "Thoughtful Discernment",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Discern lies class feature"
+    ]
+   }
+  },
+  {
+   "id": "threnodic-spell",
+   "nombre": "Threnodic Spell",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Knowledge (religion) 6 ranks",
+     "Spell Focus (necromancy)"
+    ]
+   }
+  },
+  {
+   "id": "throw-anything",
+   "nombre": "Throw Anything",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "thundering-spell",
+   "nombre": "Thundering Spell",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "tiger-claws",
+   "nombre": "Tiger Claws",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "tiger-style"
+    ],
+    "bab": 6,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 5
+    }
+   }
+  },
+  {
+   "id": "tiger-pounce",
+   "nombre": "Tiger Pounce",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike",
+     "power-attack",
+     "tiger-claws",
+     "tiger-style"
+    ],
+    "bab": 9,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 8
+    }
+   }
+  },
+  {
+   "id": "tiger-style",
+   "nombre": "Tiger Style",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "etiquetas": [
+    "estilo"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "bab": 3,
+    "babAlt": {
+     "clase": "monk",
+     "nivel": 3
+    }
+   }
+  },
+  {
+   "id": "tiring-critical",
+   "nombre": "Tiring Critical",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "etiquetas": [
+    "critico"
+   ],
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "critical-focus"
+    ],
+    "bab": 13
+   }
+  },
+  {
+   "id": "toppling-spell",
+   "nombre": "Toppling Spell",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "touch-of-serenity",
+   "nombre": "Touch of Serenity",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "WIS": 18
+    },
+    "feats": [
+     "improved-unarmed-strike"
+    ],
+    "bab": 8
+   }
+  },
+  {
+   "id": "toughness",
+   "nombre": "Toughness",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "tower-shield-proficiency",
+   "nombre": "Tower Shield Proficiency",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "shield-proficiency"
+    ]
+   }
+  },
+  {
+   "id": "trample",
+   "nombre": "Trample",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "mounted-combat"
+    ],
+    "otros": [
+     "Ride 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "trappers-setup",
+   "nombre": "Trapper's Setup",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Craft (traps) 5 ranks"
+    ]
+   }
+  },
+  {
+   "id": "trick-riding",
+   "nombre": "Trick Riding",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "mounted-combat"
+    ],
+    "otros": [
+     "Ride 9 ranks"
+    ]
+   }
+  },
+  {
+   "id": "tripping-staff",
+   "nombre": "Tripping Staff",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-trip"
+    ],
+    "bab": 6,
+    "otros": [
+     "Weapon Focus (quarterstaff)"
+    ]
+   }
+  },
+  {
+   "id": "tripping-strike",
+   "nombre": "Tripping Strike",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-trip"
+    ],
+    "bab": 9
+   }
+  },
+  {
+   "id": "tripping-twirl",
+   "nombre": "Tripping Twirl",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "improved-trip",
+     "tripping-staff"
+    ],
+    "bab": 12,
+    "otros": [
+     "Weapon Focus (quarterstaff)",
+     "Weapon Specialization (quarterstaff)"
+    ]
+   }
+  },
+  {
+   "id": "turn-undead",
+   "nombre": "Turn Undead",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Channel positive energy class feature"
+    ]
+   }
+  },
+  {
+   "id": "two-handed-thrower",
+   "nombre": "Two-Handed Thrower",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 15
+    }
+   }
+  },
+  {
+   "id": "two-weapon-defense",
+   "nombre": "Two-Weapon Defense",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 15
+    },
+    "feats": [
+     "two-weapon-fighting"
+    ]
+   }
+  },
+  {
+   "id": "two-weapon-feint",
+   "nombre": "Two-Weapon Feint",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 15,
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "two-weapon-fighting"
+    ]
+   }
+  },
+  {
+   "id": "two-weapon-fighting",
+   "nombre": "Two-Weapon Fighting",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 15
+    }
+   }
+  },
+  {
+   "id": "two-weapon-rend",
+   "nombre": "Two-Weapon Rend",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 17
+    },
+    "feats": [
+     "double-slice",
+     "improved-two-weapon-fighting",
+     "two-weapon-fighting"
+    ],
+    "bab": 11
+   }
+  },
+  {
+   "id": "ultimate-mercy",
+   "nombre": "Ultimate Mercy",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CHA": 19
+    },
+    "feats": [
+     "greater-mercy"
+    ],
+    "otros": [
+     "lay on hands",
+     "mercy class feature"
+    ]
+   }
+  },
+  {
+   "id": "ultimate-resolve",
+   "nombre": "Ultimate Resolve",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Aura of resolve class feature"
+    ]
+   }
+  },
+  {
+   "id": "uncanny-alertness",
+   "nombre": "Uncanny Alertness",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "alertness"
+    ]
+   }
+  },
+  {
+   "id": "uncanny-concentration",
+   "nombre": "Uncanny Concentration",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "combat-casting"
+    ]
+   }
+  },
+  {
+   "id": "undead-master",
+   "nombre": "Undead Master",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Spell focus (necromancy)",
+     "the ability to cast animate dead or command undead"
+    ]
+   }
+  },
+  {
+   "id": "under-and-over",
+   "nombre": "Under and Over",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "feats": [
+     "agile-maneuvers"
+    ],
+    "otros": [
+     "Small size or smaller"
+    ]
+   }
+  },
+  {
+   "id": "underfoot",
+   "nombre": "Underfoot",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "dodge",
+     "mobility"
+    ],
+    "otros": [
+     "Small size or smaller"
+    ]
+   }
+  },
+  {
+   "id": "unsanctioned-detection",
+   "nombre": "Unsanctioned Detection",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Detect evil class feature"
+    ]
+   }
+  },
+  {
+   "id": "unsanctioned-knowledge",
+   "nombre": "Unsanctioned Knowledge",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "INT": 13
+    },
+    "otros": [
+     "ability to cast 1st-level paladin spells"
+    ]
+   }
+  },
+  {
+   "id": "unseat",
+   "nombre": "Unseat",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "STR": 13
+    },
+    "feats": [
+     "mounted-combat",
+     "power-attack",
+     "improved-bull-rush"
+    ],
+    "bab": 1,
+    "otros": [
+     "Ride 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "vermin-heart",
+   "nombre": "Vermin Heart",
+   "fuente": "pf1",
+   "libro": "APG",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Wild empathy class feature"
+    ]
+   }
+  },
+  {
+   "id": "versatile-channeler",
+   "nombre": "Versatile Channeler",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Channel energy class feature",
+     "necromancer or neutrally aligned cleric (see below)"
+    ]
+   }
+  },
+  {
+   "id": "vicious-stomp",
+   "nombre": "Vicious Stomp",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "combat-reflexes",
+     "improved-unarmed-strike"
+    ]
+   }
+  },
+  {
+   "id": "vigilant-eidolon",
+   "nombre": "Vigilant Eidolon",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Eidolon class feature"
+    ]
+   }
+  },
+  {
+   "id": "vital-strike",
+   "nombre": "Vital Strike",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 6
+   }
+  },
+  {
+   "id": "voice-of-the-sibyl",
+   "nombre": "Voice of the Sibyl",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "CHA": 15
+    }
+   }
+  },
+  {
+   "id": "warrior-priest",
+   "nombre": "Warrior Priest",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Ability to cast divine spells",
+     "domain or mystery class feature"
+    ]
+   }
+  },
+  {
+   "id": "wave-strike",
+   "nombre": "Wave Strike",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Weapon expertise class feature or Quick Draw",
+     "Bluff 1 rank"
+    ]
+   }
+  },
+  {
+   "id": "weapon-finesse",
+   "nombre": "Weapon Finesse",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "weapon-focus",
+   "nombre": "Weapon Focus",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 1,
+    "otros": [
+     "Proficiency with selected weapon"
+    ]
+   }
+  },
+  {
+   "id": "weapon-specialization",
+   "nombre": "Weapon Specialization",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "multiple": true,
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "feats": [
+     "weapon-focus"
+    ],
+    "nivelClase": {
+     "clase": "fighter",
+     "nivel": 4
+    },
+    "otros": [
+     "Proficiency with selected weapon",
+     "Weapon Focus with selected weapon"
+    ]
+   }
+  },
+  {
+   "id": "whip-mastery",
+   "nombre": "Whip Mastery",
+   "fuente": "pf1",
+   "libro": "UC",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "bab": 2,
+    "otros": [
+     "Weapon Focus (whip)"
+    ]
+   }
+  },
+  {
+   "id": "whirlwind-attack",
+   "nombre": "Whirlwind Attack",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 13,
+     "INT": 13
+    },
+    "feats": [
+     "combat-expertise",
+     "dodge",
+     "mobility",
+     "spring-attack"
+    ],
+    "bab": 4
+   }
+  },
+  {
+   "id": "widen-spell",
+   "nombre": "Widen Spell",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "metamagia",
+   "ejecucion": "pasivo",
+   "requisitos": {}
+  },
+  {
+   "id": "wild-speech",
+   "nombre": "Wild Speech",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "nivelClase": {
+     "clase": "druid",
+     "nivel": 6
+    },
+    "otros": [
+     "wild shape class feature"
+    ]
+   }
+  },
+  {
+   "id": "wind-stance",
+   "nombre": "Wind Stance",
+   "fuente": "pf1",
+   "libro": "CRB",
+   "tipo": "combate",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "atributos": {
+     "DEX": 15
+    },
+    "feats": [
+     "dodge"
+    ],
+    "bab": 6
+   }
+  },
+  {
+   "id": "witch-knife",
+   "nombre": "Witch Knife",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "requisitos": {
+    "otros": [
+     "Witch class"
+    ]
+   }
+  },
+  {
+   "id": "word-of-healing",
+   "nombre": "Word of Healing",
+   "fuente": "pf1",
+   "libro": "UM",
+   "tipo": "general",
+   "ejecucion": "pasivo",
+   "candidatoActivo": true,
+   "requisitos": {
+    "otros": [
+     "Lay on hands class feature"
+    ]
+   }
+  }
+ ]
 }

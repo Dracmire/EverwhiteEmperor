@@ -1,10 +1,265 @@
 {
-  "version": "0.6",
+  "version": "0.7",
+  "nota": "bab: completa = nivel, media = 3/4 del nivel (redondeo hacia abajo), baja = 1/2 (redondeo hacia abajo). Fuente de la lista: pixelkeep/pathfinder1e-sheet (MIT).",
   "clases": [
+    {
+      "id": "alchemist",
+      "nombre": "Alchemist",
+      "fuente": "pf1",
+      "libro": "APG",
+      "bab": "media"
+    },
+    {
+      "id": "arcanist",
+      "nombre": "Arcanist",
+      "fuente": "pf1",
+      "libro": "ACG",
+      "bab": "baja"
+    },
+    {
+      "id": "barbarian",
+      "nombre": "Barbarian",
+      "fuente": "pf1",
+      "libro": "CRB",
+      "bab": "completa"
+    },
+    {
+      "id": "bard",
+      "nombre": "Bard",
+      "fuente": "pf1",
+      "libro": "CRB",
+      "bab": "media"
+    },
+    {
+      "id": "bloodrager",
+      "nombre": "Bloodrager",
+      "fuente": "pf1",
+      "libro": "ACG",
+      "bab": "completa"
+    },
+    {
+      "id": "brawler",
+      "nombre": "Brawler",
+      "fuente": "pf1",
+      "libro": "ACG",
+      "bab": "completa"
+    },
+    {
+      "id": "cavalier",
+      "nombre": "Cavalier",
+      "fuente": "pf1",
+      "libro": "APG",
+      "bab": "completa"
+    },
+    {
+      "id": "cleric",
+      "nombre": "Cleric",
+      "fuente": "pf1",
+      "libro": "CRB",
+      "bab": "media"
+    },
+    {
+      "id": "druid",
+      "nombre": "Druid",
+      "fuente": "pf1",
+      "libro": "CRB",
+      "bab": "media"
+    },
     {
       "id": "fighter",
       "nombre": "Fighter",
-      "fuente": "pf1"
+      "fuente": "pf1",
+      "libro": "CRB",
+      "bab": "completa"
+    },
+    {
+      "id": "gunslinger",
+      "nombre": "Gunslinger",
+      "fuente": "pf1",
+      "libro": "UC",
+      "bab": "completa"
+    },
+    {
+      "id": "hunter",
+      "nombre": "Hunter",
+      "fuente": "pf1",
+      "libro": "ACG",
+      "bab": "media"
+    },
+    {
+      "id": "inquisitor",
+      "nombre": "Inquisitor",
+      "fuente": "pf1",
+      "libro": "APG",
+      "bab": "media"
+    },
+    {
+      "id": "investigator",
+      "nombre": "Investigator",
+      "fuente": "pf1",
+      "libro": "ACG",
+      "bab": "media"
+    },
+    {
+      "id": "kineticist",
+      "nombre": "Kineticist",
+      "fuente": "pf1",
+      "libro": "OA",
+      "bab": "media"
+    },
+    {
+      "id": "magus",
+      "nombre": "Magus",
+      "fuente": "pf1",
+      "libro": "UM",
+      "bab": "media"
+    },
+    {
+      "id": "mesmerist",
+      "nombre": "Mesmerist",
+      "fuente": "pf1",
+      "libro": "OA",
+      "bab": "media"
+    },
+    {
+      "id": "monk",
+      "nombre": "Monk",
+      "fuente": "pf1",
+      "libro": "CRB",
+      "bab": "media"
+    },
+    {
+      "id": "ninja",
+      "nombre": "Ninja",
+      "fuente": "pf1",
+      "libro": "UC",
+      "bab": "media"
+    },
+    {
+      "id": "occultist",
+      "nombre": "Occultist",
+      "fuente": "pf1",
+      "libro": "OA",
+      "bab": "media"
+    },
+    {
+      "id": "oracle",
+      "nombre": "Oracle",
+      "fuente": "pf1",
+      "libro": "APG",
+      "bab": "media"
+    },
+    {
+      "id": "paladin",
+      "nombre": "Paladin",
+      "fuente": "pf1",
+      "libro": "CRB",
+      "bab": "completa"
+    },
+    {
+      "id": "psychic",
+      "nombre": "Psychic",
+      "fuente": "pf1",
+      "libro": "OA",
+      "bab": "baja"
+    },
+    {
+      "id": "ranger",
+      "nombre": "Ranger",
+      "fuente": "pf1",
+      "libro": "CRB",
+      "bab": "completa"
+    },
+    {
+      "id": "rogue",
+      "nombre": "Rogue",
+      "fuente": "pf1",
+      "libro": "CRB",
+      "bab": "media"
+    },
+    {
+      "id": "samurai",
+      "nombre": "Samurai",
+      "fuente": "pf1",
+      "libro": "UC",
+      "bab": "completa"
+    },
+    {
+      "id": "shaman",
+      "nombre": "Shaman",
+      "fuente": "pf1",
+      "libro": "ACG",
+      "bab": "media"
+    },
+    {
+      "id": "skald",
+      "nombre": "Skald",
+      "fuente": "pf1",
+      "libro": "ACG",
+      "bab": "media"
+    },
+    {
+      "id": "slayer",
+      "nombre": "Slayer",
+      "fuente": "pf1",
+      "libro": "ACG",
+      "bab": "completa"
+    },
+    {
+      "id": "sorcerer",
+      "nombre": "Sorcerer",
+      "fuente": "pf1",
+      "libro": "CRB",
+      "bab": "baja"
+    },
+    {
+      "id": "spiritualist",
+      "nombre": "Spiritualist",
+      "fuente": "pf1",
+      "libro": "OA",
+      "bab": "media"
+    },
+    {
+      "id": "summoner",
+      "nombre": "Summoner",
+      "fuente": "pf1",
+      "libro": "APG",
+      "bab": "media"
+    },
+    {
+      "id": "swashbuckler",
+      "nombre": "Swashbuckler",
+      "fuente": "pf1",
+      "libro": "ACG",
+      "bab": "completa"
+    },
+    {
+      "id": "vigilante",
+      "nombre": "Vigilante",
+      "fuente": "pf1",
+      "libro": "UI",
+      "bab": "media"
+    },
+    {
+      "id": "warpriest",
+      "nombre": "Warpriest",
+      "fuente": "pf1",
+      "libro": "ACG",
+      "bab": "media"
+    },
+    {
+      "id": "witch",
+      "nombre": "Witch",
+      "fuente": "pf1",
+      "libro": "APG",
+      "bab": "baja"
+    },
+    {
+      "id": "wizard",
+      "nombre": "Wizard",
+      "fuente": "pf1",
+      "libro": "CRB",
+      "bab": "baja"
     }
   ]
 }

@@ -1,0 +1,10 @@
+{
+  "version": "0.7",
+  "nota": "Decisiones de diseño sobre feats de Pathfinder 1e, aplicadas encima de data/feats.pf1.json al cargar. Sobrevive a volver a ejecutar el importador. Campos admitidos: ejecucion (pasivo o activo; los activos se convierten en habilidades tipo conjuro), excepcion (true = se queda como feat aunque sea activo), resumen (texto propio, en tus palabras, que el visor muestra en lugar de enlazar) y nota. En el catálogo, candidatoActivo marca los feats que conviene revisar.",
+  "conversiones": {
+    "power-attack": {
+      "ejecucion": "activo",
+      "nota": "Ejemplo del personaje de muestra: un feat que se declara cada turno se trata como habilidad tipo conjuro."
+    }
+  }
+}

@@ -8,12 +8,13 @@ Estado: borrador. La especificación está en [`docs/ESPECIFICACION.md`](docs/ES
 
 | Ruta | Contenido |
 |---|---|
-| `data/` | Reglas y catálogos en JSON: curva y tags de XP, zeo, razas, méritos y defectos, feats, objetos, achievements, traits. Los catálogos de ejemplo están marcados. |
+| `data/` | Reglas y catálogos en JSON: curva y tags de XP, zeo, razas, méritos y defectos, objetos, achievements, traits, y el catálogo de Pathfinder 1e (665 feats y 37 clases, importados). Los catálogos de ejemplo están marcados. |
 | `characters/` | Un JSON por personaje (el registro por sesión). `ejemplo.json` es un personaje inventado de nivel 7. |
 | `src/core.js` | Motor de cálculo: reproduce el registro y devuelve XP, nivel, zeo, mana, fate, feats, méritos, equipo y avisos. |
-| `viewer/` | Visor de solo lectura (HTML, CSS y JS sin dependencias). |
+| `viewer/` | Visor (HTML, CSS y JS sin dependencias) con vistas Jugar y Construir y un selector de feats. No escribe en los personajes: el borrador se copia como JSON. |
 | `tests/` | Pruebas del motor con los casos de la sección 12 de la especificación. |
 | `scripts/build-standalone.js` | Empaqueta el visor y los datos en un solo HTML. |
+| `scripts/import-*.js` | Importan clases y feats de Pathfinder 1e desde otros repos (ver `docs/FUENTES.md`). |
 
 ## Usarlo
 
@@ -37,8 +38,8 @@ node scripts/build-standalone.js
 # dist/visor.html
 ```
 
-En el visor, «Abrir otro personaje» carga cualquier `.json` con el mismo formato que `characters/ejemplo.json`; las entradas del registro que rompen una regla se listan como avisos y no se aplican.
+En la cabecera del visor, **Jugar** es la versión reducida para la mesa y **Construir** la amplia, con el selector de feats. Zeo, Mana y Magia se pliegan. «Abrir otro personaje» carga cualquier `.json` con el mismo formato que `characters/ejemplo.json`; las entradas del registro que rompen una regla se listan como avisos y no se aplican.
 
 ## Licencia y avisos
 
-MIT. Las reglas de Pathfinder 1e se usan bajo la OGL 1.0a. El proyecto es gratuito y no tiene afiliación con Paizo.
+MIT. Las reglas de Pathfinder 1e se usan bajo la OGL 1.0a. El proyecto es gratuito y no tiene afiliación con Paizo. Los feats se importaron sin su texto, y el texto de la OGL y los avisos de copyright de cada libro siguen pendientes: ver [`docs/FUENTES.md`](docs/FUENTES.md).

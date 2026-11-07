@@ -1,6 +1,6 @@
-# EverwhiteEmperor — Especificación del tracker de personajes (v0.6)
+# EverwhiteEmperor — Especificación del tracker de personajes (v0.7)
 
-Estado: borrador del 2026-11-07. La v0.6 define los feats mayores como *traits* (colecciones de ventajas o feats), separa el combate en tags específicos (sin un tag global de combate) y añade el motor de cálculo y el visor funcionando (ver "Cambios respecto a versiones anteriores" al final).
+Estado: borrador del 2026-11-07. La v0.7 carga el catálogo de feats y de clases de Pathfinder 1e, fija los slots de feats, añade al visor las vistas Jugar y Construir con un selector de feats, y documenta las notas de jugadores y del GM (ver "Cambios respecto a versiones anteriores" al final).
 
 Convención del documento:
 - **[PENDIENTE]**: falta un dato o una decisión del diseñador.
@@ -366,26 +366,31 @@ La raza se conserva como un **perfil racial**, no como los rasgos de raza de Pat
 
 ### 6.1 Catálogo de feats
 
-**[DECIDIDO]** El catálogo son los feats de Pathfinder 1e (`fuente: "pf1"`) más los homebrew (`fuente: "homebrew"`). Los requisitos pasan a un formato estructurado, validable:
+**[DECIDIDO]** El catálogo son los feats de Pathfinder 1e (`fuente: "pf1"`) más los homebrew (`fuente: "homebrew"`). Los requisitos tienen un formato estructurado y validable:
 
 ```json
 {
   "id": "great-cleave",
   "nombre": "Great Cleave",
-  "ejecucion": "pasivo | activo",
+  "fuente": "pf1",
+  "libro": "CRB",
+  "tipo": "combate",
+  "ejecucion": "pasivo",
   "requisitos": {
     "atributos": { "STR": 13 },
     "bab": 4,
-    "feats": ["cleave", "power-attack"],
-    "nivelDeClase": { "fighter": 0 }
-  },
-  "efectos": [ { "tipo": "nota", "texto": "..." } ]
+    "feats": ["cleave", "power-attack"]
+  }
 }
 ```
 
-- Los feats con efecto numérico (ataque, daño, salvaciones, CA, iniciativa) aportan a las estadísticas derivadas. Los demás se muestran como notas.
-- El tracker calcula, para cada personaje: **feats activos**, **feats disponibles** (los que cumple por requisitos) y los efectos acumulados.
-- **[SUPUESTO]** Slots de feats como en Pathfinder 1e: uno a los niveles 1, 3, 5, 7, 9, 11, 13, 15, 17 y 19 (un personaje de nivel 7 tiene 4), más los feats adicionales que dé cada clase. **[PENDIENTE confirmar]**
+Campos de `requisitos` (todos opcionales): `atributos`, `bab` (ataque base), `babAlt` (`{clase, nivel}`: "ataque base +6 **o** monje nivel 5"), `nivelPj` (nivel de personaje), `nivelClase` (`{clase, nivel}`), `feats` (ids de feats previos) y `otros` (lista de textos que el motor no evalúa: rangos de habilidad, nivel de lanzador, rasgos de clase…).
+
+- **[DECIDIDO]** Slots de feats: **uno en el nivel 1 y uno más cada 2 niveles** (nivel 1 → 1, nivel 3 → 2, nivel 7 → 4, nivel 19 → 10). Un personaje de nivel 7 tiene 4. **No hay feats extra por clase.** El motor usa `floor((nivel + 1) / 2)`.
+- El motor comprueba, al ganar un feat: que exista, que no esté repetido, que haya un slot libre y los requisitos estructurados. El ataque base sale de la progresión de la clase (`data/classes.json`: `completa` = nivel, `media` = 3/4, `baja` = 1/2, redondeo hacia abajo). Los requisitos de `otros` no bloquean: el feat ganado los lleva en `sinVerificar` y el visor los muestra con «?» para que el diseñador los revise a mano.
+- **Feats repetibles:** un feat con `multiple: true` se puede ganar varias veces; la entrada del registro lleva `eleccion` (arma, escuela, etc.): `{ "tipo": "feat", "id": "weapon-focus", "eleccion": "espada larga" }`. No se puede repetir la misma elección. Un feat sin `multiple` no se repite. **[SUPUESTO]** Un requisito de feat previo se cumple con cualquier elección de ese feat; "con el arma elegida" queda en `otros`.
+- Los feats con efecto numérico (ataque, daño, salvaciones, CA, iniciativa) aportarían a las estadísticas derivadas, y el tracker calcularía los efectos acumulados. **[DIFERIDO]** Hoy el catálogo no lleva efectos ni texto de beneficios (ver 9 y `docs/FUENTES.md`); el visor enlaza al texto en Archives of Nethys, o muestra el `resumen` propio que el diseñador escriba en `data/feats.conversiones.json`.
+- **Alcance de la importación (v0.7):** 665 feats de Core Rulebook, Advanced Player's Guide, Ultimate Magic y Ultimate Combat, de los tipos general, combate, metamagia y creación de objetos. Quedan fuera los feats raciales (la raza se sustituye por méritos raciales), los míticos, los de historia, los de monstruo y los achievement de Pathfinder (el proyecto tiene los suyos). **[PENDIENTE]** Si se quiere incluir otros libros.
 
 ### 6.2 Feats activos → habilidades tipo conjuro [DECIDIDO]
 
@@ -394,7 +399,7 @@ La mayoría de los feats de Pathfinder que representan una **ejecución activa**
 - Cada feat lleva `ejecucion: "pasivo"` o `"activo"`.
 - Un feat activo reclasificado se guarda como `tipo: "habilidad-tipo-conjuro"` con `convertidoDe: "<id del feat>"`.
 - Hay excepciones: un feat activo puede quedar como feat con `excepcion: true` y un motivo.
-- Procedimiento: el importador marca como *candidatos* los feats con texto de acción ("as a standard action", "as a swift action", "when you attack…"); el diseñador revisa la lista y confirma las conversiones (`data/feats.conversiones.json`).
+- Procedimiento: el importador marca como `candidatoActivo` los feats cuyo texto menciona una acción (estándar, de movimiento, rápida, inmediata, gratuita o de asalto completo) o usos por día; hoy son 173 de 665. El texto no se guarda: solo la marca. El diseñador revisa la lista y confirma las conversiones en `data/feats.conversiones.json`, que se aplica encima del catálogo al cargarlo y no se pierde al volver a importar. Cada entrada admite `ejecucion`, `excepcion`, `resumen` (texto propio) y `nota`. Hoy solo `power-attack` está convertido, como ejemplo.
 - **[SUPUESTO]** Las habilidades tipo conjuro gastan mana (sección 4.2). **[PENDIENTE]** Costo de cada una y cómo se aprenden.
 
 ### 6.3 Traits (feats mayores) [DECIDIDO; el detalle está DIFERIDO]
@@ -476,6 +481,7 @@ Es el núcleo del tracker. Es la **fuente de verdad**: el estado del personaje (
         { "tipo": "xp-subsistema", "subsistema": "mana", "cantidad": 250 },
         { "tipo": "zeo-linea", "linea": "L01", "niveles": 2 },
         { "tipo": "feat", "id": "power-attack" },
+        { "tipo": "feat", "id": "weapon-focus", "eleccion": "espada larga" },
         { "tipo": "achievement", "id": "slug", "fate": 1 },
         { "tipo": "fate", "cantidad": -1, "motivo": "gasto" },
         { "tipo": "rasgo", "id": "slug", "accion": "ganar | perder" },
@@ -499,7 +505,7 @@ Reglas:
    - `zeo-linea` solo con líneas existentes; los pisos 4 y 5 de una línea solo se usan con 10 y 20 niveles acumulados en ella;
    - `pct` de un grado `cumple` entre 0.25 y 0.30;
    - un racial solo lo puede tener un personaje de la raza a la que pertenece;
-   - los feats cumplen sus requisitos en el momento de ganarlos y no superan los slots del nivel;
+   - los feats cumplen sus requisitos estructurados en el momento de ganarlos (atributos, ataque base, nivel y feats previos) y no superan los slots del nivel (1 en el nivel 1, uno más cada 2 niveles);
    - un `trait` solo se gana si existe en `data/traits.json` y todos sus componentes (feats o méritos) existen en el catálogo;
    - todo tag de una entrada `xp` existe en `data/xp-config.json`;
    - límites de equipo (1 armadura, 1 arma, 3 objetos) y un solo objeto por extremidad;
@@ -519,11 +525,11 @@ Estructura propuesta:
 ```
 data/
   xp-config.json            # fórmula, base, multiplicadores, grados y tags de actividad (ya creado)
-  classes.json
+  classes.json              # clases de Pathfinder 1e con su progresión de ataque base (importado)
   razas.json                # perfiles raciales: atributos preferidos, racials, descuentos
-  feats.pf1.json            # importado
+  feats.pf1.json            # importado: 665 feats, sin texto de beneficios
   feats.homebrew.json
-  feats.conversiones.json   # feats activos reclasificados como habilidades tipo conjuro
+  feats.conversiones.json   # decisiones del diseñador sobre feats: activos → habilidades tipo conjuro, resúmenes propios
   meritos.json              # méritos y defectos (incluye los raciales)
   traits.json               # traits (feats mayores): colecciones de ventajas o feats
   items.json
@@ -537,7 +543,8 @@ characters/
 
 - Cada registro tiene `id` estable (slug) y `fuente` (`pf1` | `homebrew`).
 - Un **validador** (script de Node) comprueba referencias entre archivos, requisitos de feats y la consistencia de cada personaje. Se ejecuta en GitHub Actions en cada push.
-- Fuentes para la importación inicial: `data/feats.js` de pixelkeep (171 feats) y `src/db/feats.csv` de awesomeSheet (~1,500 filas, incluye duplicados entre categorías).
+- Importadores (v0.7): `scripts/import-classes.js` lee `data/classes.js` de pixelkeep/pathfinder1e-sheet (37 clases) y `scripts/import-feats.js` lee `src/db/feats.csv` de awesomeSheet (1,478 filas). Ninguno de los dos orígenes vive en este repo: se pasan como argumento. Detalles, alcance y estado de licencias en `docs/FUENTES.md`.
+- **[PENDIENTE]** Texto de los feats: no se copia hasta incluir el texto completo de la OGL 1.0a y los avisos de copyright (sección 15) de cada libro. Mientras tanto el visor enlaza a Archives of Nethys.
 - Opcional: autoría de homebrew en CSV con conversor y validador, igual que el flujo que ya existe en el feat builder de Spiral.
 
 ---
@@ -595,13 +602,61 @@ El visor de solo lectura ya existe en `viewer/` y se construye dentro del repo (
 - `src/core.js` reproduce el registro y devuelve el estado derivado; `viewer/app.js` lo dibuja con el diseño de la maqueta, en tema claro y oscuro, y se lee bien en el celular.
 - Lee `data/*.json` y `characters/index.json` con `fetch`, así que se sirve desde la raíz del repo (o desde GitHub Pages); `scripts/build-standalone.js` lo empaqueta en un solo HTML.
 - Permite abrir otro personaje desde un archivo `.json`. Las entradas del registro que rompen una regla (tag inexistente, achievement repetido en un nivel, equipo fuera de los límites, saldo negativo, etc.) se listan como avisos y no se aplican.
-- De los requisitos de un feat, el motor evalúa solo los atributos y los feats previos; `bab` y `nivelDeClase` quedan sin evaluar hasta tener `data/classes.json` completo.
+- De los requisitos de un feat, el motor evalúa atributos, ataque base (según la clase), nivel de personaje, nivel de clase y feats previos; lo demás queda como «sin verificar» (ver 6.1).
 - **[SUPUESTO]** El nivel para Δ se evalúa por entrada, en el orden del registro; el saldo de puntos y de fate se comprueba al cierre de cada sesión; los puntos iniciales se calculan con el nivel al cierre de la primera sesión.
 - No importa pixelkeep: el visor no edita. La importación de pixelkeep (M0) queda para el editor.
 
+### 10.5 Vistas Jugar y Construir, y selector de feats (v0.7) [DECIDIDO]
+
+El visor tiene dos vistas (botón en la cabecera; la última elegida se recuerda en el navegador):
+
+- **Jugar**: la versión reducida para la mesa. Nombre, nivel, barra de XP y atributos; cifras de mana, fate, nivel zeo y slots libres; feats y equipo en listas cortas (con las cargas); y plegados: Zeo, Mana, Magia y Méritos y defectos.
+- **Construir**: la versión amplia, con todo lo anterior más fate y achievement feats, el detalle de méritos, el **selector de feats**, el equipo por extremidad y la línea de tiempo de sesiones.
+
+**Zeo, Mana y Magia** son secciones plegables en las dos vistas. Cada una muestra en su cabecera la cifra que importa (nivel zeo y sx por rama; mana ganado; número de habilidades tipo conjuro) y recuerda si estaba abierta. **Magia** lista las habilidades tipo conjuro (los feats activos convertidos, 6.2) con el costo en mana marcado como pendiente.
+
+**Selector de feats** (vista Construir):
+
+1. Búsqueda por nombre, filtro por tipo y «solo los que puedo tomar».
+2. Cada feat muestra sus requisitos como chips: «✓» se cumple, «✗» no se cumple y «?» el visor no lo puede comprobar. «Elegir» se habilita solo si se cumplen los requisitos comprobables y hay un slot libre; los feats repetibles piden una elección.
+3. Lo elegido va a un **borrador**: una sesión provisional que el motor calcula como si ya estuviera en el personaje (slots, feats previos, habilidades tipo conjuro). Se puede quitar cualquier entrada; si una entrada deja de ser válida se marca con su error.
+4. El borrador se copia como JSON y se pega en la lista `entradas` de una sesión de `characters/<id>.json`. **El visor no escribe en los personajes**: el borrador solo vive en el navegador (`localStorage`), por personaje.
+
+### 10.6 Notas de jugadores y del GM, y guardado simultáneo [PENDIENTE decidir el almacenamiento]
+
+**Necesidad (dicha por el diseñador):** cada jugador toma notas, el GM también, y después el GM arma un resumen de la sesión a partir de las notas.
+
+**Diseño propuesto:**
+
+- Cada autor (jugador o GM) escribe **solo en sus propias notas**. Hay un archivo de notas por autor y personaje o campaña:
+
+```json
+{
+  "autor": "ana",
+  "rol": "jugador | gm",
+  "notas": [
+    { "sesion": "2026-11-06-01", "fecha": "2026-11-06", "texto": "..." }
+  ]
+}
+```
+
+- Las notas son **material de trabajo, no fuente de verdad**. La contabilidad (XP, feats, objetos) sigue en el registro de la sesión (sección 8), y la escribe una sola persona: el GM.
+- El **resumen** lo arma el GM leyendo las notas de todos y se guarda dentro de la sesión, en su campo `notas` (el motor y el visor ya lo conservan). Así el resumen queda versionado con el resto del registro.
+- Una sesión puede referirse a las notas por su `id`, de modo que cada nota sabe a qué sesión pertenece aunque se escriba antes de cerrarla.
+
+**¿Pueden guardar cambios simultáneamente si cada jugador tiene el visor abierto?** Con la arquitectura actual, **no hay un almacenamiento compartido**: el visor es una página estática y cada navegador solo ve lo suyo. Cada uno puede guardar a la vez sin pisar a nadie, porque cada autor toca únicamente su archivo y el registro lo toca solo el GM; pero nadie ve en vivo lo que escribe otro, y las notas llegan al GM por un paso explícito. Para ver y editar en vivo en común hace falta un almacenamiento compartido. Opciones:
+
+| Opción | Cómo llegan las notas al GM | Costo | En vivo |
+|---|---|---|---|
+| A. Exportar e importar archivos | Cada jugador exporta su archivo de notas y se lo pasa al GM, que lo abre en el visor | Ninguno; el visor ya abre archivos `.json` | No |
+| B. Git | Cada jugador sube su archivo al repo (commit directo o PR); el GM junta y resume | Cuenta de GitHub por jugador y un poco de práctica con Git | No (cada subida es un paso) |
+| C. Base de datos compartida | Todos escriben en la misma base; el GM ve todo y arma el resumen | Un backend (por ejemplo Firebase o Supabase), o la base compartida que pueden tener los Artifacts de claude.ai; esta última exige que cada jugador abra el visor con acceso a claude.ai y **no se ha comprobado** para esta cuenta | Sí |
+
+**[PENDIENTE]** Elegir A, B o C. Recomendación para empezar: A (no cuesta nada y el modelo por autor ya evita los conflictos); pasar a C solo si hace falta ver las notas en vivo.
+
 ## 11. Hitos
 
-Estado en v0.6: el motor (M1, salvo los feats con requisitos de `bab` y clase) y el visor de solo lectura (M2) están implementados y probados localmente; falta activar GitHub Pages. M0 (importar pixelkeep) sigue pendiente.
+Estado en v0.7: el motor (M1) y el visor (M2) están implementados y probados localmente; M3 está avanzado (catálogo de 665 feats con requisitos estructurados, achievement feats y conversión de activos; faltan revisar los candidatos a activo y los efectos). Falta activar GitHub Pages. M0 (importar pixelkeep) sigue pendiente.
 
 | Hito | Contenido | Criterio de aceptación |
 |---|---|---|
@@ -664,11 +719,14 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 
 ### Puntos de méritos y slots de feats
 
-| Nivel | Puntos iniciales `floor(n/2)+1` | Slots de feats (PF1) |
+| Nivel | Puntos iniciales `floor(n/2)+1` | Slots de feats (1 en el nivel 1, +1 cada 2 niveles) |
 |---|---|---|
 | 1 | 1 | 1 |
 | 2 | 2 | 1 |
+| 3 | 2 | 2 |
+| 5 | 3 | 3 |
 | 7 | 4 | 4 |
+| 9 | 5 | 5 |
 | 15 | 8 | 8 |
 | 20 | 11 | 10 |
 
@@ -696,15 +754,30 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 7. Razas: lista de razas, sus atributos preferidos, sus racials, cuánto descuenta cada rareza y qué cuenta como tener el perfil racial.
 8. **[DIFERIDO]** Traits (feats mayores): si sus componentes ocupan slots y puntos, quién los otorga y cuáles existen. Ya se sabe que son ilimitados por personaje.
 9. Habilidades tipo conjuro: criterio y lista de feats convertidos y cómo se aprenden.
-10. Lista y condiciones de los achievement feats; confirmar los slots de feats de Pathfinder.
+10. Lista y condiciones de los achievement feats. Los slots de feats están **[DECIDIDO]**: 1 en el nivel 1 y uno más cada 2 niveles, sin extras por clase.
 11. Extremidades de un personaje por defecto, armas a dos manos y escudos.
 12. Revisar la maqueta del visor (sección 10.3) y confirmar que se construye dentro del repo.
 13. XP sobre 20,000, redondeo, evaluación del nivel por entrada o por sesión, y reparto de XP en grupo.
 14. Alcance de estadísticas derivadas (HP, skills, hechizos).
+15. **[PENDIENTE]** Texto de los feats: incluir la OGL 1.0a completa y los avisos de la sección 15 de cada libro antes de copiar los beneficios, o escribir resúmenes propios en `data/feats.conversiones.json`.
+16. Revisar los 173 feats marcados `candidatoActivo` y decidir cuáles pasan a habilidad tipo conjuro (6.2).
+17. Feats repetibles: decidir si la elección (arma, escuela) debe exigirse siempre y si un requisito "con el arma elegida" debe comprobarse.
+18. Otros libros de feats (fuera de Core, APG, Ultimate Magic y Ultimate Combat), y qué hacer con los feats raciales de Pathfinder.
+19. Notas de jugadores y del GM: elegir cómo se guardan y comparten (10.6, opciones A, B o C).
+20. Clases: el catálogo trae las 37 clases de Pathfinder 1e con su progresión de ataque base; decidir cuáles se permiten en el sistema y si hay clases propias.
 
 ---
 
 ## Cambios respecto a versiones anteriores
+
+### v0.7
+
+- **Slots de feats [DECIDIDO]:** 1 en el nivel 1 y uno más cada 2 niveles (4 en el nivel 7), sin feats extra por clase. Ya no es un supuesto.
+- Catálogo de Pathfinder 1e cargado: `data/feats.pf1.json` (665 feats de Core, APG, Ultimate Magic y Ultimate Combat, sin texto de beneficios) y `data/classes.json` (37 clases con progresión de ataque base), generados por `scripts/import-feats.js` y `scripts/import-classes.js`. Nuevo `docs/FUENTES.md` con orígenes, alcance y estado de licencias.
+- Requisitos de feats evaluados por el motor: atributos, ataque base según la clase, `babAlt`, nivel de personaje, nivel de clase y feats previos; el resto queda como «sin verificar». Feats repetibles con `eleccion`. Nuevo `data/feats.conversiones.json` (decisiones del diseñador sobre feats, aplicadas al cargar). El personaje de ejemplo usa ahora `weapon-focus` con `eleccion: "espada larga"`.
+- Visor: Zeo, Mana y Magia plegables; vistas Jugar y Construir; selector de feats con borrador copiable (10.5).
+- Notas de jugadores y del GM, y respuesta sobre el guardado simultáneo (10.6); el almacenamiento queda **[PENDIENTE]**.
+- 32 pruebas del motor (antes 24).
 
 ### v0.6
 
