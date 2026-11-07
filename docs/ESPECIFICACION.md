@@ -1,6 +1,6 @@
-# EverwhiteEmperor — Especificación del tracker de personajes (v0.5)
+# EverwhiteEmperor — Especificación del tracker de personajes (v0.6)
 
-Estado: borrador del 2026-11-07. La v0.5 incorpora la definición de zeo (tres ramas, tabla de sx, líneas de técnica y pisos), un personaje de ejemplo y la maqueta visual del visor (ver "Cambios respecto a versiones anteriores" al final).
+Estado: borrador del 2026-11-07. La v0.6 define los feats mayores como *traits* (colecciones de ventajas o feats), separa el combate en tags específicos (sin un tag global de combate) y añade el motor de cálculo y el visor funcionando (ver "Cambios respecto a versiones anteriores" al final).
 
 Convención del documento:
 - **[PENDIENTE]**: falta un dato o una decisión del diseñador.
@@ -21,7 +21,7 @@ Características del sistema que el tracker debe soportar:
 - Experiencia con curva propia y reglas propias de ganancia, con tags de actividad y grados de cumplimiento (sección 3).
 - Dos subsistemas con experiencia propia (zeo y mana), la regla de magia por mana, y una ganancia adicional que no es XP (achievement y fate) (sección 4).
 - Sistema extendido de méritos y defectos, que incluye los rasgos raciales exclusivos de cada raza (sección 5).
-- Feats de Pathfinder (con las habilidades activas reclasificadas como habilidades tipo conjuro), feats mayores y *achievement feats*, con un máximo de 1 achievement feat por nivel (sección 6).
+- Feats de Pathfinder (con las habilidades activas reclasificadas como habilidades tipo conjuro), traits (feats mayores: colecciones de ventajas o feats) y *achievement feats*, con un máximo de 1 achievement feat por nivel (sección 6).
 - Equipo limitado: 1 armadura, 1 arma y 3 objetos mágicos, con la regla de una extremidad por objeto (sección 7).
 - Un visor de personajes simple y atractivo (sección 10).
 - Mucho material homebrew (sección 9).
@@ -103,7 +103,7 @@ Notas:
 
 ### 3.3 Tags de actividad y grados [DECIDIDO]
 
-Una **actividad** se describe con **tags**, no con un tipo único. La lista de tags está inspirada en la lista de habilidades de Pathfinder 1e: los 35 nombres de habilidades más 4 tags propios (`combat`, `exploration`, `quest`, `rest`). Se guarda en `data/xp-config.json`; añadir, quitar o cambiar un tag no toca el código.
+Una **actividad** se describe con **tags**, no con un tipo único. La lista de tags está inspirada en la lista de habilidades de Pathfinder 1e: los 35 nombres de habilidades, 3 tags propios generales (`exploration`, `quest`, `rest`) y los **tags de combate**. El combate **no es un tag global**: cada estilo o rol de combate es su propio tag (por ejemplo `combat-healer` es distinto de `close-quarter-combat`). Se guarda en `data/xp-config.json`; añadir, quitar o cambiar un tag no toca el código.
 
 | Grupo | Tags |
 |---|---|
@@ -114,7 +114,8 @@ Una **actividad** se describe con **tags**, no con un tipo único. La lista de t
 | supervivencia | `handle-animal`, `heal`, `survival` |
 | conocimiento | `knowledge-arcana`, `knowledge-dungeoneering`, `knowledge-engineering`, `knowledge-geography`, `knowledge-history`, `knowledge-local`, `knowledge-nature`, `knowledge-nobility`, `knowledge-planes`, `knowledge-religion`, `linguistics` |
 | magia | `spellcraft`, `use-magic-device` |
-| general (propios) | `combat`, `exploration`, `quest`, `rest` |
+| combate (propios) | `close-quarter-combat`, `combat-healer`; la lista completa está pendiente |
+| general (propios) | `exploration`, `quest`, `rest` |
 
 **Grados de cumplimiento.** Cada tag de una entrada se cumple en un grado:
 
@@ -126,7 +127,8 @@ Una **actividad** se describe con **tags**, no con un tipo único. La lista de t
 - Una actividad que cumple un tag recibe el 25–30% de la XP; si lo cumple de manera heroica, recibe el 100%.
 - **[SUPUESTO]** El porcentaje se aplica sobre la XP completa de la entrada (`base × mult_dif`). En `cumple` la configuración usa 0.25 y cada entrada puede subirlo hasta 0.30 con `pct`. Ejemplo con una criatura de nivel igual (40 XP): `cumple` da 10 XP (hasta 12) y `heroico` da 40 XP.
 - **[SUPUESTO]** Con varios tags se aplica el **mayor** de (multiplicador del tag × porcentaje del grado) (`combinarTags: "max"`), para que no se sumen ni se multipliquen entre sí. Se puede cambiar a `producto` o `promedio` en la configuración.
-- **[PENDIENTE]** Si el 25–30% / 100% aplica a todas las actividades, incluido el combate, o solo a las no combativas.
+- **[DECIDIDO]** El 25–30% / 100% también aplica al combate, pero **por tag de combate, no de manera global**: una pelea que cumple `close-quarter-combat` no cumple por eso `combat-healer`. Una entrada de combate lleva el tag específico (o varios) que realmente se cumplió.
+- **[PENDIENTE]** Lista completa de tags de combate (hoy solo `close-quarter-combat` y `combat-healer`).
 - **[PENDIENTE]** Multiplicador propio de cada tag (`mult`): todos están en 1.0 hasta que el diseñador los defina.
 
 ### 3.4 Tabla base de XP [SUPUESTO]
@@ -171,11 +173,11 @@ Valores de `data/xp-config.json`:
     "cumple": { "nombre": "Cumple el tag", "mult": 0.25, "max": 0.30 },
     "heroico": { "nombre": "Cumple el tag de manera heroica", "mult": 1.0 }
   },
-  "tags": [ { "id": "combat", "nombre": "Combate", "grupo": "general", "mult": 1.0, "origen": "propio" } ]
+  "tags": [ { "id": "close-quarter-combat", "nombre": "Close quarter combat", "grupo": "combate", "mult": 1.0, "origen": "propio" } ]
 }
 ```
 
-(El archivo real incluye los 39 tags de 3.3.)
+(El archivo real incluye los 40 tags de 3.3.)
 
 ### 3.5 Alternativas a la tabla base
 
@@ -352,7 +354,8 @@ La raza se conserva como un **perfil racial**, no como los rasgos de raza de Pat
 }
 ```
 
-- Los valores de `descuentoPorRareza` del ejemplo son marcadores en 0 hasta que el diseñador los defina.
+- Los valores de `descuentoPorRareza` son de ejemplo hasta que el diseñador los defina (`data/razas.json` usa 1 punto de descuento para la rareza `raro` y 0 para el resto).
+- **[SUPUESTO]** El motor considera que un personaje "tiene el perfil" cuando el más bajo de sus atributos preferidos no es menor que el más alto de los demás (con STR 17 y CON 15 contra 13, 12, 10 y 8, el perfil se cumple).
 - **[SUPUESTO]** El descuento solo se aplica a los racials que *reducen* su costo; hay racials que no lo tienen.
 - **[PENDIENTE]** Cuánto descuenta cada rareza, qué cuenta como "tener el perfil" (todos los atributos preferidos, un mínimo de cada uno, los más altos del personaje…), qué razas existen y cuáles son sus racials.
 
@@ -393,11 +396,27 @@ La mayoría de los feats de Pathfinder que representan una **ejecución activa**
 - Procedimiento: el importador marca como *candidatos* los feats con texto de acción ("as a standard action", "as a swift action", "when you attack…"); el diseñador revisa la lista y confirma las conversiones (`data/feats.conversiones.json`).
 - **[SUPUESTO]** Las habilidades tipo conjuro gastan mana (sección 4.2). **[PENDIENTE]** Costo de cada una y cómo se aprenden.
 
-### 6.3 Feats mayores
+### 6.3 Traits (feats mayores) [DECIDIDO]
 
-- Tipo especial `mayor`, dictado por el diseñador. Se pensaron como habilidades raciales.
+- Un **feat mayor** se llama **trait**. Un trait **no es un feat suelto: es una colección de ventajas o feats** agrupados bajo un nombre, dictada por el diseñador. Se pensaron como habilidades raciales.
 - Los feats normales son los del catálogo de Pathfinder (6.1); el término "menor" no se usa en este documento.
-- **[PENDIENTE]** Con lo racial integrado en méritos y defectos (sección 5.2): ¿los feats mayores pasan a ser racials (méritos de categoría `racial`), o siguen siendo un tipo de feat aparte? Y cuántos tiene cada personaje, cuándo se otorgan y cuáles existen.
+- Formato en `data/traits.json`:
+
+```json
+{
+  "id": "slug-del-trait",
+  "nombre": "Nombre",
+  "fuente": "homebrew",
+  "incluye": [
+    { "tipo": "feat", "id": "id-de-feat" },
+    { "tipo": "merito", "id": "id-de-merito" }
+  ]
+}
+```
+
+- En el registro se anota con `{ "tipo": "trait", "id": "...", "accion": "ganar | perder" }`; el visor lista el trait y, debajo, sus componentes.
+- **[SUPUESTO]** Ganar un trait da todos sus componentes a la vez y el motor no les cobra puntos ni slots por separado.
+- **[PENDIENTE]** Si los componentes de un trait ocupan slots de feats o puntos de méritos, quién otorga los traits (¿la raza?), cuántos tiene cada personaje, cuándo se ganan y cuáles existen.
 
 ### 6.4 Achievement feats
 
@@ -421,12 +440,12 @@ Límites por personaje **[DECIDIDO]**: **1 armadura, 1 arma y 3 objetos mágicos
   "id": "slug",
   "tipo": "armadura | arma | objeto",
   "extremidad": "mano-derecha",
-  "cargas": { "max": 3, "actuales": 3, "recarga": "diaria" },
+  "cargas": { "max": 3, "recarga": "diaria" },
   "habilidades": [ ]
 }
 ```
 
-- Los objetos mágicos pueden tener cargas y habilidades; el registro por sesión anota usos, recargas y cambios.
+- Los objetos mágicos pueden tener cargas y habilidades; el registro por sesión anota usos, recargas y cambios. Las cargas actuales no se guardan en el catálogo: se derivan del registro (parten en `max`, `usar-carga` resta 1 y `recargar` vuelve a `max`).
 - El tracker impide superar los límites y rechaza equipar dos objetos en la misma extremidad.
 - Cada personaje tiene una lista de extremidades (`extremidades: [...]`) que define dónde puede llevar objetos.
 - **[SUPUESTO]** El arma ocupa una extremidad (una mano); los 3 objetos ocupan una extremidad cada uno.
@@ -449,7 +468,7 @@ Es el núcleo del tracker. Es la **fuente de verdad**: el estado del personaje (
       "titulo": "Título de la sesión",
       "notas": "",
       "entradas": [
-        { "tipo": "xp", "tags": [ { "id": "combat", "grado": "heroico" }, { "id": "stealth", "grado": "cumple", "pct": 0.30 } ], "nivelContenido": 9, "cantidad": 1, "nota": "" },
+        { "tipo": "xp", "tags": [ { "id": "close-quarter-combat", "grado": "heroico" }, { "id": "stealth", "grado": "cumple", "pct": 0.30 } ], "nivelContenido": 9, "cantidad": 1, "nota": "" },
         { "tipo": "xp-subsistema", "subsistema": "zeo", "rama": "heaven", "cantidad": 10 },
         { "tipo": "xp-subsistema", "subsistema": "mana", "cantidad": 250 },
         { "tipo": "zeo-linea", "linea": "L01", "niveles": 2 },
@@ -457,6 +476,7 @@ Es el núcleo del tracker. Es la **fuente de verdad**: el estado del personaje (
         { "tipo": "achievement", "id": "slug", "fate": 1 },
         { "tipo": "fate", "cantidad": -1, "motivo": "gasto" },
         { "tipo": "rasgo", "id": "slug", "accion": "ganar | perder" },
+        { "tipo": "trait", "id": "slug", "accion": "ganar | perder" },
         { "tipo": "objeto", "id": "slug", "accion": "equipar | desequipar | usar-carga | recargar", "extremidad": "mano-izquierda" },
         { "tipo": "ajuste", "campo": "xp", "cantidad": -100, "motivo": "..." }
       ]
@@ -477,6 +497,8 @@ Reglas:
    - `pct` de un grado `cumple` entre 0.25 y 0.30;
    - un racial solo lo puede tener un personaje de la raza a la que pertenece;
    - los feats cumplen sus requisitos en el momento de ganarlos y no superan los slots del nivel;
+   - un `trait` solo se gana si existe en `data/traits.json` y todos sus componentes (feats o méritos) existen en el catálogo;
+   - todo tag de una entrada `xp` existe en `data/xp-config.json`;
    - límites de equipo (1 armadura, 1 arma, 3 objetos) y un solo objeto por extremidad;
    - saldo de puntos de méritos y defectos no negativo;
    - saldo de fate no negativo;
@@ -499,7 +521,8 @@ data/
   feats.pf1.json            # importado
   feats.homebrew.json
   feats.conversiones.json   # feats activos reclasificados como habilidades tipo conjuro
-  traits.json               # méritos y defectos (incluye los raciales)
+  meritos.json              # méritos y defectos (incluye los raciales)
+  traits.json               # traits (feats mayores): colecciones de ventajas o feats
   items.json
   achievements.json
   zeo.json                  # tabla de sx, ramas, pisos y desbloqueos (ya creado)
@@ -562,7 +585,20 @@ Hay una maqueta visual con datos de ejemplo, construida sobre `characters/ejempl
 
 ---
 
+### 10.4 Visor funcionando (v0.6)
+
+El visor de solo lectura ya existe en `viewer/` y se construye dentro del repo (decisión de 10.2 aplicada):
+
+- `src/core.js` reproduce el registro y devuelve el estado derivado; `viewer/app.js` lo dibuja con el diseño de la maqueta, en tema claro y oscuro, y se lee bien en el celular.
+- Lee `data/*.json` y `characters/index.json` con `fetch`, así que se sirve desde la raíz del repo (o desde GitHub Pages); `scripts/build-standalone.js` lo empaqueta en un solo HTML.
+- Permite abrir otro personaje desde un archivo `.json`. Las entradas del registro que rompen una regla (tag inexistente, achievement repetido en un nivel, equipo fuera de los límites, saldo negativo, etc.) se listan como avisos y no se aplican.
+- De los requisitos de un feat, el motor evalúa solo los atributos y los feats previos; `bab` y `nivelDeClase` quedan sin evaluar hasta tener `data/classes.json` completo.
+- **[SUPUESTO]** El nivel para Δ se evalúa por entrada, en el orden del registro; el saldo de puntos y de fate se comprueba al cierre de cada sesión; los puntos iniciales se calculan con el nivel al cierre de la primera sesión.
+- No importa pixelkeep: el visor no edita. La importación de pixelkeep (M0) queda para el editor.
+
 ## 11. Hitos
+
+Estado en v0.6: el motor (M1, salvo los feats con requisitos de `bab` y clase) y el visor de solo lectura (M2) están implementados y probados localmente; falta activar GitHub Pages. M0 (importar pixelkeep) sigue pendiente.
 
 | Hito | Contenido | Criterio de aceptación |
 |---|---|---|
@@ -605,7 +641,7 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 | `stealth` en `cumple` con `pct` 0.30 | 12 |
 | `stealth` en `cumple` con `pct` 0.35 | rechazado |
 | `stealth` en `heroico` | 40 |
-| `combat` en `cumple` y `stealth` en `heroico` (regla `max`) | 40 |
+| `close-quarter-combat` en `cumple` y `stealth` en `heroico` (regla `max`) | 40 |
 
 ### Zeo (lectura `umbral-acumulado`)
 
@@ -649,13 +685,13 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 ## 13. Lista de pendientes
 
 1. Valor de un dungeon o una misión completos (tabla de criatura según su nivel, o escala por tamaño), confirmar la base de 40 y cuántas sesiones por nivel se quieren.
-2. Grados de tag: si aplican también al combate, qué valor entre 25% y 30% usar por defecto, y el multiplicador propio de cada tag.
+2. Tags de combate: la lista completa (hoy `close-quarter-combat` y `combat-healer`), qué valor entre 25% y 30% usar por defecto en `cumple`, y el multiplicador propio de cada tag.
 3. Zeo: confirmar la lectura de la tabla de sx, a qué rama pertenece cada línea o técnica, cómo se ganan los niveles de técnica y los sx, y la lista de las 10 líneas base. Mana: su tabla de XP.
 4. Mana: confirmar que es un atributo que se gasta; costo de las habilidades tipo conjuro, tamaño del fondo y regeneración.
 5. Fate y achievement: cuánto fate da cada achievement, tope y en qué se gasta.
 6. Méritos y defectos: significado exacto de los puntos iniciales, costo de los méritos comunes, valor de cada defecto, tope de defectos y si la rareza cambia el costo.
 7. Razas: lista de razas, sus atributos preferidos, sus racials, cuánto descuenta cada rareza y qué cuenta como tener el perfil racial.
-8. Feats mayores: si pasan a ser racials o siguen aparte, cuántos y cuáles.
+8. Traits (feats mayores): si sus componentes ocupan slots y puntos, quién los otorga, cuántos tiene cada personaje y cuáles existen.
 9. Habilidades tipo conjuro: criterio y lista de feats convertidos y cómo se aprenden.
 10. Lista y condiciones de los achievement feats; confirmar los slots de feats de Pathfinder.
 11. Extremidades de un personaje por defecto, armas a dos manos y escudos.
@@ -666,6 +702,13 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 ---
 
 ## Cambios respecto a versiones anteriores
+
+### v0.6
+
+- Un feat mayor se llama **trait** y es una colección de ventajas o feats. Nueva sección 6.3, archivo `data/traits.json` y entrada `trait` en el registro. El catálogo de méritos y defectos pasa a `data/meritos.json`.
+- Los tags de combate son específicos y no globales: se elimina el tag `combat` y se añaden `close-quarter-combat` y `combat-healer`. Los grados (25–30% / 100%) aplican también al combate, por tag. `data/xp-config.json` pasa a 40 tags.
+- El personaje de ejemplo usa `close-quarter-combat` (la XP no cambia).
+- Motor de cálculo (`src/core.js`), pruebas y visor funcionando (`viewer/`), con el catálogo de ejemplo en `data/`.
 
 ### v0.5
 

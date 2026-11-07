@@ -1,0 +1,10 @@
+{
+  "version": "0.6",
+  "achievements": [
+    {
+      "id": "guardian-del-paso",
+      "nombre": "Guardián del paso",
+      "fuente": "ejemplo"
+    }
+  ]
+}

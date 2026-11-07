@@ -1,0 +1,49 @@
+'use strict';
+// Genera dist/visor.html: el visor en un solo archivo, con CSS, JS y datos embebidos.
+// Sirve para abrirlo con doble clic o publicarlo como página única.
+// Uso: node scripts/build-standalone.js [salida]
+const fs = require('node:fs');
+const path = require('node:path');
+const Core = require('../src/core.js');
+
+const raiz = path.join(__dirname, '..');
+const leer = (rel) => fs.readFileSync(path.join(raiz, rel), 'utf8');
+
+const data = {};
+Object.keys(Core.ARCHIVOS).forEach((k) => { data[k] = JSON.parse(leer('data/' + Core.ARCHIVOS[k])); });
+const indice = JSON.parse(leer('characters/index.json'));
+const personajes = {};
+indice.personajes.forEach((id) => { personajes[id] = JSON.parse(leer('characters/' + id + '.json')); });
+
+// Evita que un "</script>" o "<!--" dentro de los datos cierre el bloque.
+const embebido = JSON.stringify({ data, personajes }).replace(/</g, '\\u003c');
+
+const css = '<style>\n' + leer('viewer/style.css') + '</style>';
+const scripts = '<script>window.EWE_DATA = ' + embebido + ';</script>\n<script>\n' + leer('src/core.js') + '</script>\n<script>\n' + leer('viewer/app.js') + '</script>';
+const tipografia = /<link href="https:\/\/fonts\.googleapis\.com\/css2[^>]*>/.exec(leer('viewer/index.html'))[0];
+
+// Documento completo (dist/visor.html): se abre con doble clic.
+let html = leer('viewer/index.html');
+html = html.replace('<link rel="stylesheet" href="style.css">', () => css);
+html = html.replace('<script src="../src/core.js"></script>', () => scripts.split('\n<script>\n' + leer('viewer/app.js'))[0]);
+html = html.replace('<script src="app.js"></script>', () => '<script>\n' + leer('viewer/app.js') + '</script>');
+if (/(href|src)="(style\.css|app\.js|\.\.\/)/.test(html)) throw new Error('quedó una referencia local sin inlinear');
+
+// Fragmento para publicar como página (dist/visor.fragmento.html): sin <html>, <head> ni <body>.
+const fragmento = [
+  '<title>Visor de EverwhiteEmperor</title>',
+  '<meta name="claude:viewport-fit-sides" content="cover">',
+  tipografia,
+  css,
+  '<div id="app"><noscript>El visor necesita JavaScript.</noscript></div>',
+  scripts,
+  '',
+].join('\n');
+
+const salida = process.argv[2] || path.join(raiz, 'dist', 'visor.html');
+fs.mkdirSync(path.dirname(salida), { recursive: true });
+fs.writeFileSync(salida, html);
+const salidaFrag = salida.replace(/\.html$/, '.fragmento.html');
+fs.writeFileSync(salidaFrag, fragmento);
+console.log('Escrito ' + salida + ' (' + Math.round(html.length / 1024) + ' KB)');
+console.log('Escrito ' + salidaFrag + ' (' + Math.round(fragmento.length / 1024) + ' KB)');

@@ -1,0 +1,44 @@
+{
+  "version": "0.6",
+  "nota": "Objetos inventados para el ejemplo. Las cargas máximas son de ejemplo; las cargas actuales se derivan del registro.",
+  "items": [
+    {
+      "id": "cota-de-mallas-1",
+      "nombre": "Cota de mallas +1",
+      "fuente": "ejemplo",
+      "tipo": "armadura"
+    },
+    {
+      "id": "espada-larga-1",
+      "nombre": "Espada larga +1",
+      "fuente": "ejemplo",
+      "tipo": "arma"
+    },
+    {
+      "id": "varita-curar-leves",
+      "nombre": "Varita de curar heridas leves",
+      "fuente": "ejemplo",
+      "tipo": "objeto",
+      "cargas": {
+        "max": 10,
+        "recarga": "ninguna"
+      }
+    },
+    {
+      "id": "botas-paso-silencioso",
+      "nombre": "Botas de paso silencioso",
+      "fuente": "ejemplo",
+      "tipo": "objeto"
+    },
+    {
+      "id": "tobillera-del-corredor",
+      "nombre": "Tobillera del corredor",
+      "fuente": "ejemplo",
+      "tipo": "objeto",
+      "cargas": {
+        "max": 3,
+        "recarga": "diaria"
+      }
+    }
+  ]
+}

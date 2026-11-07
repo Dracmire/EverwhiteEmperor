@@ -1,0 +1,630 @@
+/*
+ * EverwhiteEmperor: motor de cálculo.
+ *
+ * Funciones puras. Reproducen el registro por sesión (ledger) de un personaje y
+ * devuelven el estado derivado: XP, nivel, zeo, mana, fate, achievements,
+ * feats, méritos y defectos, traits y equipo, más la lista de avisos.
+ * Funciona en el navegador (window.Core) y en Node (require).
+ *
+ * Especificación: docs/ESPECIFICACION.md (secciones 3 a 8).
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.Core = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  // ---------------------------------------------------------------- utilidades
+
+  function rotulo(id) {
+    const t = String(id).replace(/-/g, ' ');
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
+
+  function esEntero(n) {
+    return typeof n === 'number' && Number.isInteger(n);
+  }
+
+  function redondear(valor, modo) {
+    if (modo === 'floor') return Math.floor(valor);
+    if (modo === 'ceil') return Math.ceil(valor);
+    return Math.round(valor);
+  }
+
+  // ------------------------------------------------------------ XP y niveles
+
+  /** Nivel, rango del nivel y progreso a partir de la XP total (sección 3.1). */
+  function nivelDeXp(xp, cfg) {
+    const por = cfg.xpPorNivel;
+    const max = cfg.nivelMax;
+    const nivel = Math.max(1, Math.min(max, Math.floor(xp / por) + 1));
+    const inicio = (nivel - 1) * por;
+    const fin = nivel * por;
+    const progreso = Math.max(0, Math.min(1, (xp - inicio) / por));
+    return { nivel, inicio, fin, progreso, faltan: Math.max(0, fin - xp), maximo: nivel === max };
+  }
+
+  function buscarMultDif(delta, lista) {
+    for (const r of lista) {
+      const d = r.delta;
+      if (typeof d === 'number' && d === delta) return r;
+      if (typeof d === 'string') {
+        const m = /^(>=|<=)\s*(-?\d+)$/.exec(d.trim());
+        if (m) {
+          const n = Number(m[2]);
+          if (m[1] === '>=' && delta >= n) return r;
+          if (m[1] === '<=' && delta <= n) return r;
+        }
+      }
+    }
+    return null;
+  }
+
+  function combinarFactores(factores, modo) {
+    if (modo === 'producto') return factores.reduce((a, b) => a * b, 1);
+    if (modo === 'promedio') return factores.reduce((a, b) => a + b, 0) / factores.length;
+    return Math.max.apply(null, factores);
+  }
+
+  /**
+   * XP de una entrada de tipo "xp" (sección 3.2).
+   * Lanza Error con un mensaje en español si la entrada no es válida.
+   */
+  function calcularXpEntrada(cfg, nivelPersonaje, entrada) {
+    if (!esEntero(entrada.nivelContenido) || entrada.nivelContenido < 1 || entrada.nivelContenido > cfg.nivelMax) {
+      throw new Error('nivelContenido debe ser un entero entre 1 y ' + cfg.nivelMax);
+    }
+    if (!esEntero(entrada.cantidad) || entrada.cantidad < 1) {
+      throw new Error('cantidad debe ser un entero positivo');
+    }
+    if (!Array.isArray(entrada.tags) || entrada.tags.length === 0) {
+      throw new Error('la entrada necesita al menos un tag');
+    }
+
+    const delta = entrada.nivelContenido - nivelPersonaje;
+    const regla = buscarMultDif(delta, cfg.multDif);
+    if (!regla) throw new Error('no hay regla de multiplicador para Δ ' + delta);
+
+    const tags = entrada.tags.map(function (t) {
+      const def = cfg.tags.find(function (x) { return x.id === t.id; });
+      if (!def) throw new Error('el tag "' + t.id + '" no existe en xp-config.json');
+      const grado = cfg.gradosTag[t.grado];
+      if (!grado) throw new Error('el grado "' + t.grado + '" no existe (usa cumple o heroico)');
+      let pct = grado.mult;
+      if (t.pct !== undefined) {
+        if (t.grado !== 'cumple') throw new Error('pct solo se usa con el grado cumple');
+        if (typeof t.pct !== 'number' || t.pct < grado.mult || t.pct > grado.max) {
+          throw new Error('pct ' + t.pct + ' fuera del rango ' + grado.mult + '–' + grado.max);
+        }
+        pct = t.pct;
+      }
+      const factor = def.mult * pct;
+      return { id: t.id, nombre: def.nombre, grupo: def.grupo, grado: t.grado, pct: pct, factor: factor };
+    });
+
+    const factor = combinarFactores(tags.map(function (t) { return t.factor; }), cfg.combinarTags || 'max');
+    const decisivo = tags.reduce(function (a, b) { return b.factor > a.factor ? b : a; }, tags[0]);
+
+    let unidad;
+    if (regla.xpFija !== undefined) unidad = regla.xpFija;
+    else unidad = redondear(cfg.recompensaBase * regla.mult * factor, cfg.redondeo);
+
+    return {
+      delta: delta,
+      mult: regla.xpFija !== undefined ? null : regla.mult,
+      xpFija: regla.xpFija !== undefined ? regla.xpFija : null,
+      factor: factor,
+      tags: tags,
+      decisivo: decisivo.id,
+      unidad: unidad,
+      total: unidad * entrada.cantidad,
+    };
+  }
+
+  // -------------------------------------------------------------------- zeo
+
+  function umbralesZeo(zeo) {
+    const base = zeo.niveles.map(function (n) { return n.sx; });
+    if (zeo.lectura === 'costo-por-nivel') {
+      let acum = 0;
+      return base.map(function (v) { acum += v; return acum; });
+    }
+    return base;
+  }
+
+  /** Nivel de una rama según sus sx. Con umbral i el nivel i+1 termina en umbral[i]. */
+  function nivelDeSx(sx, zeo) {
+    const um = umbralesZeo(zeo);
+    const max = zeo.nivelMax;
+    let nivel = 1;
+    for (let i = 0; i < max - 1; i++) {
+      if (sx >= um[i]) nivel = i + 2;
+    }
+    return Math.min(max, nivel);
+  }
+
+  function detalleRama(nombre, sx, zeo) {
+    const um = umbralesZeo(zeo);
+    const nivel = nivelDeSx(sx, zeo);
+    const fin = um[nivel - 1];
+    const inicios = [0].concat(um.slice(0, um.length - 1));
+    const segs = um.map(function (f, i) {
+      const ancho = f - inicios[i];
+      return {
+        nivel: i + 1,
+        inicio: inicios[i],
+        fin: f,
+        ancho: ancho,
+        llenado: Math.max(0, Math.min(1, (sx - inicios[i]) / ancho)),
+      };
+    });
+    return { rama: nombre, sx: sx, nivel: nivel, fin: fin, falta: Math.max(0, fin - sx), segs: segs, limita: false };
+  }
+
+  function detalleLinea(id, niveles, zeo) {
+    const p = zeo.pisos;
+    let abiertos = p.iniciales;
+    let siguiente = null;
+    p.desbloqueo.forEach(function (d) {
+      if (niveles >= d.nivelesAcumulados) abiertos = Math.max(abiertos, d.piso);
+      else if (!siguiente) siguiente = { piso: d.piso, nivelesAcumulados: d.nivelesAcumulados, falta: d.nivelesAcumulados - niveles };
+    });
+    const tope = p.desbloqueo.length ? p.desbloqueo[p.desbloqueo.length - 1].nivelesAcumulados : 1;
+    return {
+      id: id,
+      niveles: niveles,
+      pisosAbiertos: Math.min(abiertos, p.max),
+      pisosMax: p.max,
+      siguiente: siguiente,
+      llenado: Math.min(1, niveles / tope),
+      tope: tope,
+      marcas: p.desbloqueo.map(function (d) { return d.nivelesAcumulados / tope; }),
+    };
+  }
+
+  // ----------------------------------------------------------------- feats
+
+  function slotsDeFeats(nivel) {
+    return Math.floor((nivel + 1) / 2);
+  }
+
+  function proximoSlot(nivel, nivelMax) {
+    const sig = nivel % 2 === 1 ? nivel + 2 : nivel + 1;
+    return sig <= nivelMax - 1 ? sig : null;
+  }
+
+  // ----------------------------------------------------- perfil racial (5.2)
+
+  /**
+   * [SUPUESTO] El personaje "tiene el perfil" si el más bajo de sus atributos
+   * preferidos no es menor que el más alto de los demás. La definición exacta
+   * está pendiente (sección 5.2).
+   */
+  function tienePerfilRacial(raza, atributos) {
+    if (!raza || !raza.atributosPreferidos || raza.atributosPreferidos.length === 0) return false;
+    const pref = raza.atributosPreferidos;
+    const valoresPref = pref.map(function (k) { return atributos[k] || 0; });
+    const otros = Object.keys(atributos).filter(function (k) { return pref.indexOf(k) < 0; }).map(function (k) { return atributos[k]; });
+    const minPref = Math.min.apply(null, valoresPref);
+    const maxOtros = otros.length ? Math.max.apply(null, otros) : -Infinity;
+    return minPref >= maxOtros;
+  }
+
+  function costoMerito(merito, raza, perfil) {
+    const base = merito.costo;
+    let descuento = 0;
+    if (merito.categoria === 'racial' && perfil && raza && raza.descuentoPorRareza) {
+      descuento = raza.descuentoPorRareza[merito.rareza] || 0;
+    }
+    return { base: base, descuento: descuento, costo: Math.max(0, base - descuento) };
+  }
+
+  // ------------------------------------------------------------- el registro
+
+  function indexar(lista) {
+    const m = {};
+    (lista || []).forEach(function (x) { m[x.id] = x; });
+    return m;
+  }
+
+  /**
+   * Reproduce el registro del personaje en orden y devuelve el estado derivado.
+   * ctx = { config, zeo, razas, meritos, feats, items, traits, achievements, classes }
+   */
+  function calcularPersonaje(ctx, pj) {
+    const cfg = ctx.config;
+    const zeo = ctx.zeo;
+    const razas = indexar(ctx.razas);
+    const meritos = indexar(ctx.meritos);
+    const feats = indexar(ctx.feats);
+    const items = indexar(ctx.items);
+    const traitsCat = indexar(ctx.traits);
+    const logros = indexar(ctx.achievements);
+    const clases = indexar(ctx.classes);
+
+    const raza = razas[pj.raza] || null;
+    const atributos = pj.atributos || {};
+    const extremidades = pj.extremidades || [];
+    const perfil = tienePerfilRacial(raza, atributos);
+
+    const avisos = [];
+    const estado = {
+      xp: 0,
+      sx: {},
+      lineas: {},
+      mana: 0,
+      fate: 0,
+      feats: [],
+      logros: [],
+      logrosPorNivel: {},
+      rasgos: [],
+      traits: [],
+      equipado: {},
+      cargas: {},
+      puntosIniciales: null,
+    };
+    zeo.ramas.forEach(function (r) { estado.sx[r] = 0; });
+
+    const sesionesOut = [];
+
+    pj.sesiones.forEach(function (ses, si) {
+      const nivelAntes = nivelDeXp(estado.xp, cfg).nivel;
+      const xpAntes = estado.xp;
+      const s = {
+        id: ses.id,
+        fecha: ses.fecha,
+        titulo: ses.titulo,
+        notas: ses.notas || '',
+        nivelAntes: nivelAntes,
+        filasXp: [],
+        zeo: {},
+        lineas: {},
+        mana: 0,
+        fate: 0,
+        feats: [],
+        logros: [],
+        rasgos: [],
+        traits: [],
+        objetos: [],
+        ajustes: [],
+      };
+
+      function error(i, msg) {
+        avisos.push({ nivel: 'error', sesion: ses.id, indice: i, mensaje: msg });
+      }
+
+      (ses.entradas || []).forEach(function (e, i) {
+        try {
+          aplicarEntrada(e);
+        } catch (err) {
+          error(i, err.message);
+        }
+      });
+
+      function nivelActual() { return nivelDeXp(estado.xp, cfg).nivel; }
+
+      function aplicarEntrada(e) {
+        switch (e.tipo) {
+          case 'xp': {
+            const r = calcularXpEntrada(cfg, nivelActual(), e);
+            estado.xp += r.total;
+            s.filasXp.push({
+              tipo: 'xp', nota: e.nota || '', nivelPersonaje: nivelActual(), nivelContenido: e.nivelContenido,
+              cantidad: e.cantidad, delta: r.delta, mult: r.mult, xpFija: r.xpFija, factor: r.factor,
+              tags: r.tags, decisivo: r.decisivo, unidad: r.unidad, total: r.total,
+            });
+            return;
+          }
+          case 'ajuste': {
+            if (e.campo !== 'xp') throw new Error('ajuste: solo se admite el campo xp');
+            if (!e.motivo) throw new Error('un ajuste manual exige un motivo');
+            if (!esEntero(e.cantidad)) throw new Error('ajuste: cantidad debe ser un entero');
+            estado.xp += e.cantidad;
+            if (estado.xp < 0) { estado.xp -= e.cantidad; throw new Error('el ajuste dejaría la XP en negativo'); }
+            s.filasXp.push({ tipo: 'ajuste', nota: e.motivo, total: e.cantidad });
+            s.ajustes.push({ campo: 'xp', cantidad: e.cantidad, motivo: e.motivo });
+            return;
+          }
+          case 'xp-subsistema': {
+            if (e.subsistema !== 'zeo' && e.subsistema !== 'mana') throw new Error('xp-subsistema solo admite zeo y mana');
+            if (!esEntero(e.cantidad) || e.cantidad < 1) throw new Error('cantidad debe ser un entero positivo');
+            if (e.subsistema === 'zeo') {
+              if (zeo.ramas.indexOf(e.rama) < 0) throw new Error('zeo exige rama: ' + zeo.ramas.join(', '));
+              estado.sx[e.rama] += e.cantidad;
+              s.zeo[e.rama] = (s.zeo[e.rama] || 0) + e.cantidad;
+            } else {
+              estado.mana += e.cantidad;
+              s.mana += e.cantidad;
+            }
+            return;
+          }
+          case 'zeo-linea': {
+            const m = /^L(\d{2})$/.exec(e.linea || '');
+            if (!m || Number(m[1]) < 1 || Number(m[1]) > zeo.lineasBase) throw new Error('la línea "' + e.linea + '" no existe (L01 a L' + String(zeo.lineasBase).padStart(2, '0') + ')');
+            if (!esEntero(e.niveles) || e.niveles < 1) throw new Error('niveles debe ser un entero positivo');
+            estado.lineas[e.linea] = (estado.lineas[e.linea] || 0) + e.niveles;
+            s.lineas[e.linea] = (s.lineas[e.linea] || 0) + e.niveles;
+            return;
+          }
+          case 'feat': {
+            const f = feats[e.id];
+            if (!f) throw new Error('el feat "' + e.id + '" no existe en el catálogo');
+            if (estado.feats.some(function (x) { return x.id === e.id; })) throw new Error('el feat "' + f.nombre + '" ya está ganado');
+            const nivel = nivelActual();
+            if (estado.feats.length + 1 > slotsDeFeats(nivel)) {
+              throw new Error('no hay slot de feat libre en el nivel ' + nivel + ' (' + slotsDeFeats(nivel) + ' slots)');
+            }
+            const req = f.requisitos || {};
+            Object.keys(req.atributos || {}).forEach(function (k) {
+              if ((atributos[k] || 0) < req.atributos[k]) throw new Error(f.nombre + ' exige ' + k + ' ' + req.atributos[k]);
+            });
+            (req.feats || []).forEach(function (pre) {
+              if (!estado.feats.some(function (x) { return x.id === pre; })) {
+                throw new Error(f.nombre + ' exige el feat ' + (feats[pre] ? feats[pre].nombre : pre));
+              }
+            });
+            const activo = f.ejecucion === 'activo' && !f.excepcion;
+            const reg = {
+              id: f.id, nombre: f.nombre, ejecucion: f.ejecucion || 'pasivo',
+              tipo: activo ? 'habilidad-tipo-conjuro' : 'feat', convertidoDe: activo ? f.id : null, nivel: nivel,
+            };
+            estado.feats.push(reg);
+            s.feats.push(reg);
+            return;
+          }
+          case 'achievement': {
+            const a = logros[e.id];
+            if (!a) throw new Error('el achievement "' + e.id + '" no existe en el catálogo');
+            const nivel = nivelActual();
+            if (estado.logrosPorNivel[nivel]) throw new Error('ya hay un achievement feat en el nivel ' + nivel + ' (máximo 1 por nivel)');
+            if (estado.logros.some(function (x) { return x.id === e.id; })) throw new Error('el achievement "' + a.nombre + '" ya está ganado');
+            const fate = e.fate === undefined ? 0 : e.fate;
+            if (!esEntero(fate) || fate < 0) throw new Error('fate debe ser un entero mayor o igual a 0');
+            estado.logrosPorNivel[nivel] = true;
+            estado.fate += fate;
+            s.fate += fate;
+            const reg = { id: a.id, nombre: a.nombre, nivel: nivel, fate: fate, sesion: ses.id };
+            estado.logros.push(reg);
+            s.logros.push(reg);
+            return;
+          }
+          case 'fate': {
+            if (!esEntero(e.cantidad) || e.cantidad === 0) throw new Error('fate: cantidad debe ser un entero distinto de 0');
+            if (e.cantidad < 0 && !e.motivo) throw new Error('gastar fate exige un motivo');
+            estado.fate += e.cantidad;
+            s.fate += e.cantidad;
+            return;
+          }
+          case 'rasgo': {
+            const m = meritos[e.id];
+            if (!m) throw new Error('el mérito o defecto "' + e.id + '" no existe en el catálogo');
+            if (e.accion !== 'ganar' && e.accion !== 'perder') throw new Error('rasgo: accion debe ser ganar o perder');
+            const tiene = estado.rasgos.indexOf(e.id) >= 0;
+            if (e.accion === 'ganar') {
+              if (tiene) throw new Error('"' + m.nombre + '" ya está ganado');
+              if (m.categoria === 'racial' && m.raza !== pj.raza) throw new Error('"' + m.nombre + '" es un racial de otra raza');
+              estado.rasgos.push(e.id);
+              s.rasgos.push({ id: e.id, nombre: m.nombre, accion: 'ganar' });
+            } else {
+              if (!tiene) throw new Error('"' + m.nombre + '" no está ganado');
+              estado.rasgos.splice(estado.rasgos.indexOf(e.id), 1);
+              s.rasgos.push({ id: e.id, nombre: m.nombre, accion: 'perder' });
+            }
+            return;
+          }
+          case 'trait': {
+            const t = traitsCat[e.id];
+            if (!t) throw new Error('el trait "' + e.id + '" no existe en data/traits.json');
+            if (e.accion !== 'ganar' && e.accion !== 'perder') throw new Error('trait: accion debe ser ganar o perder');
+            (t.incluye || []).forEach(function (c) {
+              const cat = c.tipo === 'feat' ? feats : c.tipo === 'merito' ? meritos : null;
+              if (!cat || !cat[c.id]) throw new Error('el trait "' + t.nombre + '" incluye "' + c.id + '", que no existe');
+            });
+            const tiene = estado.traits.indexOf(e.id) >= 0;
+            if (e.accion === 'ganar') {
+              if (tiene) throw new Error('"' + t.nombre + '" ya está ganado');
+              estado.traits.push(e.id);
+            } else {
+              if (!tiene) throw new Error('"' + t.nombre + '" no está ganado');
+              estado.traits.splice(estado.traits.indexOf(e.id), 1);
+            }
+            s.traits.push({ id: e.id, nombre: t.nombre, accion: e.accion });
+            return;
+          }
+          case 'objeto': {
+            aplicarObjeto(e);
+            return;
+          }
+          default:
+            throw new Error('tipo de entrada desconocido: "' + e.tipo + '"');
+        }
+      }
+
+      function aplicarObjeto(e) {
+        const it = items[e.id];
+        if (!it) throw new Error('el objeto "' + e.id + '" no existe en el catálogo');
+        const nombre = it.nombre;
+        const puesto = estado.equipado[e.id];
+        if (e.accion === 'equipar') {
+          if (puesto) throw new Error('"' + nombre + '" ya está equipado');
+          const equipados = Object.keys(estado.equipado).map(function (k) { return estado.equipado[k]; });
+          const delTipo = equipados.filter(function (x) { return items[x.id].tipo === it.tipo; });
+          const limite = it.tipo === 'objeto' ? 3 : 1;
+          if (delTipo.length >= limite) {
+            throw new Error('límite de ' + (it.tipo === 'armadura' ? 'armadura (1)' : it.tipo === 'arma' ? 'arma (1)' : 'objetos mágicos (3)') + ' superado al equipar "' + nombre + '"');
+          }
+          let extremidad = null;
+          if (it.tipo !== 'armadura') {
+            if (!e.extremidad) throw new Error('equipar "' + nombre + '" exige una extremidad');
+            if (extremidades.indexOf(e.extremidad) < 0) throw new Error('el personaje no tiene la extremidad "' + e.extremidad + '"');
+            const ocupante = equipados.find(function (x) { return x.extremidad === e.extremidad; });
+            if (ocupante) throw new Error('la extremidad "' + e.extremidad + '" ya sostiene "' + items[ocupante.id].nombre + '"');
+            extremidad = e.extremidad;
+          }
+          estado.equipado[e.id] = { id: e.id, extremidad: extremidad };
+          if (it.cargas && estado.cargas[e.id] === undefined) estado.cargas[e.id] = it.cargas.max;
+          s.objetos.push({ id: e.id, nombre: nombre, accion: 'equipar' });
+        } else if (e.accion === 'desequipar') {
+          if (!puesto) throw new Error('"' + nombre + '" no está equipado');
+          delete estado.equipado[e.id];
+          s.objetos.push({ id: e.id, nombre: nombre, accion: 'desequipar' });
+        } else if (e.accion === 'usar-carga') {
+          if (!it.cargas) throw new Error('"' + nombre + '" no tiene cargas');
+          if (!puesto) throw new Error('"' + nombre + '" no está equipado');
+          if (estado.cargas[e.id] < 1) throw new Error('"' + nombre + '" no tiene cargas disponibles');
+          estado.cargas[e.id] -= 1;
+          s.objetos.push({ id: e.id, nombre: nombre, accion: 'usar-carga' });
+        } else if (e.accion === 'recargar') {
+          if (!it.cargas) throw new Error('"' + nombre + '" no tiene cargas');
+          estado.cargas[e.id] = it.cargas.max;
+          s.objetos.push({ id: e.id, nombre: nombre, accion: 'recargar' });
+        } else {
+          throw new Error('objeto: accion desconocida "' + e.accion + '"');
+        }
+      }
+
+      // Saldos al cierre de la sesión (la sesión es atómica).
+      if (si === 0) estado.puntosIniciales = Math.floor(nivelDeXp(estado.xp, cfg).nivel / 2) + 1;
+      const saldo = saldoMeritos();
+      if (saldo.total < 0) avisos.push({ nivel: 'error', sesion: ses.id, indice: null, mensaje: 'el saldo de puntos de méritos y defectos quedó en ' + saldo.total });
+      if (estado.fate < 0) avisos.push({ nivel: 'error', sesion: ses.id, indice: null, mensaje: 'el saldo de fate quedó en ' + estado.fate });
+
+      s.nivelDespues = nivelDeXp(estado.xp, cfg).nivel;
+      s.xpGanada = estado.xp - xpAntes;
+      s.xpAcumulada = estado.xp;
+      sesionesOut.push(s);
+    });
+
+    function saldoMeritos() {
+      const iniciales = estado.puntosIniciales === null ? 0 : estado.puntosIniciales;
+      let defectos = 0;
+      let gastado = 0;
+      const lista = [];
+      estado.rasgos.forEach(function (id) {
+        const m = meritos[id];
+        const c = costoMerito(m, raza, perfil);
+        if (m.tipo === 'defecto') defectos += m.valor;
+        else gastado += c.costo;
+        lista.push({
+          id: m.id, nombre: m.nombre, tipo: m.tipo, categoria: m.categoria || 'normal', rareza: m.rareza || null,
+          costoBase: m.tipo === 'defecto' ? m.valor : c.base, descuento: m.tipo === 'defecto' ? 0 : c.descuento,
+          puntos: m.tipo === 'defecto' ? m.valor : c.costo,
+        });
+      });
+      return { iniciales: iniciales, defectos: defectos, meritos: gastado, total: iniciales + defectos - gastado, lista: lista };
+    }
+
+    // ---- resultado final
+
+    const nivelInfo = nivelDeXp(estado.xp, cfg);
+
+    const ramas = zeo.ramas.map(function (r) { return detalleRama(r, estado.sx[r], zeo); });
+    const minimo = Math.min.apply(null, ramas.map(function (r) { return r.nivel; }));
+    ramas.forEach(function (r) { r.limita = r.nivel === minimo; });
+    const lineas = [];
+    for (let n = 1; n <= zeo.lineasBase; n++) {
+      const id = 'L' + String(n).padStart(2, '0');
+      lineas.push(detalleLinea(id, estado.lineas[id] || 0, zeo));
+    }
+
+    const equipados = Object.keys(estado.equipado).map(function (k) { return estado.equipado[k]; });
+    function vista(eq) {
+      const it = items[eq.id];
+      return {
+        id: it.id, nombre: it.nombre, tipo: it.tipo, extremidad: eq.extremidad,
+        cargas: it.cargas ? { max: it.cargas.max, actuales: estado.cargas[it.id], recarga: it.cargas.recarga || 'ninguna' } : null,
+      };
+    }
+    const vistas = equipados.map(vista);
+    const armadura = vistas.find(function (v) { return v.tipo === 'armadura'; }) || null;
+    const arma = vistas.find(function (v) { return v.tipo === 'arma'; }) || null;
+    const objetos = vistas.filter(function (v) { return v.tipo === 'objeto'; });
+    const porExtremidad = extremidades.map(function (x) {
+      return { id: x, etiqueta: rotulo(x), item: vistas.find(function (v) { return v.extremidad === x; }) || null };
+    });
+
+    const sl = slotsDeFeats(nivelInfo.nivel);
+
+    return {
+      personaje: {
+        id: pj.personaje, nombre: pj.nombre, raza: pj.raza, razaNombre: raza ? raza.nombre : rotulo(pj.raza || '—'),
+        clase: pj.clase, claseNombre: clases[pj.clase] ? clases[pj.clase].nombre : rotulo(pj.clase || '—'),
+        atributos: atributos, extremidades: extremidades,
+        preferidos: raza ? raza.atributosPreferidos || [] : [], perfilRacial: perfil,
+      },
+      xp: estado.xp,
+      nivel: nivelInfo,
+      sesiones: sesionesOut,
+      zeo: { unidad: zeo.unidad, lectura: zeo.lectura, nivel: minimo, ramas: ramas, lineas: lineas, niveles: umbralesZeo(zeo) },
+      mana: { total: estado.mana, tabla: null },
+      fate: estado.fate,
+      feats: {
+        lista: estado.feats,
+        slotsTotales: sl,
+        slotsUsados: estado.feats.length,
+        niveles: Array.from({ length: Math.ceil(cfg.nivelMax / 2) }, function (_, i) { return i * 2 + 1; }).filter(function (n) { return n <= Math.max(nivelInfo.nivel + 2, 9); }),
+        proximoSlot: proximoSlot(nivelInfo.nivel, cfg.nivelMax),
+      },
+      logros: estado.logros,
+      meritos: saldoMeritos(),
+      traits: estado.traits.map(function (id) {
+        const t = traitsCat[id];
+        return {
+          id: t.id, nombre: t.nombre,
+          incluye: (t.incluye || []).map(function (c) {
+            const cat = c.tipo === 'feat' ? feats : meritos;
+            return { tipo: c.tipo, id: c.id, nombre: cat[c.id] ? cat[c.id].nombre : c.id };
+          }),
+        };
+      }),
+      equipo: {
+        armadura: armadura, arma: arma, objetos: objetos, porExtremidad: porExtremidad,
+        conteo: { armadura: armadura ? 1 : 0, arma: arma ? 1 : 0, objetos: objetos.length },
+        limites: { armadura: 1, arma: 1, objetos: 3 },
+      },
+      avisos: avisos,
+    };
+  }
+
+  /** Archivos de data/ que lee el motor, por clave de contexto. */
+  const ARCHIVOS = {
+    config: 'xp-config.json',
+    zeo: 'zeo.json',
+    razas: 'razas.json',
+    meritos: 'meritos.json',
+    feats: 'feats.pf1.json',
+    items: 'items.json',
+    achievements: 'achievements.json',
+    traits: 'traits.json',
+    classes: 'classes.json',
+  };
+
+  /** Convierte los JSON de data/ (ya parseados, por clave de ARCHIVOS) en el contexto del motor. */
+  function armarContexto(raw) {
+    return {
+      config: raw.config,
+      zeo: raw.zeo,
+      razas: raw.razas.razas,
+      meritos: raw.meritos.meritos,
+      feats: raw.feats.feats,
+      items: raw.items.items,
+      achievements: raw.achievements.achievements,
+      traits: raw.traits.traits,
+      classes: raw.classes.clases,
+    };
+  }
+
+  return {
+    ARCHIVOS: ARCHIVOS,
+    armarContexto: armarContexto,
+    rotulo: rotulo,
+    nivelDeXp: nivelDeXp,
+    calcularXpEntrada: calcularXpEntrada,
+    nivelDeSx: nivelDeSx,
+    umbralesZeo: umbralesZeo,
+    detalleLinea: detalleLinea,
+    slotsDeFeats: slotsDeFeats,
+    tienePerfilRacial: tienePerfilRacial,
+    calcularPersonaje: calcularPersonaje,
+  };
+});

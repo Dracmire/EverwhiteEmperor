@@ -1,0 +1,26 @@
+{
+  "version": "0.6",
+  "nota": "Raza inventada para el personaje de ejemplo. El descuento de rareza 'raro' = 1 es un valor de ejemplo; los reales los define el diseñador.",
+  "razas": [
+    {
+      "id": "raza-ejemplo",
+      "nombre": "Raza de ejemplo",
+      "fuente": "ejemplo",
+      "atributosPreferidos": [
+        "STR",
+        "CON"
+      ],
+      "racials": [
+        "sangre-helada"
+      ],
+      "descuentoPorRareza": {
+        "normal": 0,
+        "raro": 1,
+        "extraordinario": 0,
+        "epico": 0,
+        "heroico": 0,
+        "legendario": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "version": "0.6",
+  "nota": "Méritos y defectos inventados para el ejemplo. Los costos y valores son de ejemplo.",
+  "meritos": [
+    {
+      "id": "sangre-helada",
+      "nombre": "Sangre helada",
+      "fuente": "ejemplo",
+      "tipo": "merito",
+      "categoria": "racial",
+      "raza": "raza-ejemplo",
+      "rareza": "raro",
+      "costo": 4
+    },
+    {
+      "id": "reflejos-de-veterano",
+      "nombre": "Reflejos de veterano",
+      "fuente": "ejemplo",
+      "tipo": "merito",
+      "categoria": "normal",
+      "rareza": "normal",
+      "costo": 2
+    },
+    {
+      "id": "deuda-de-honor",
+      "nombre": "Deuda de honor",
+      "fuente": "ejemplo",
+      "tipo": "defecto",
+      "valor": 2
+    },
+    {
+      "id": "cicatriz-que-no-sana",
+      "nombre": "Cicatriz que no sana",
+      "fuente": "ejemplo",
+      "tipo": "defecto",
+      "valor": 1
+    }
+  ]
+}

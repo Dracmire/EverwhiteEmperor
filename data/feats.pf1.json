@@ -1,0 +1,41 @@
+{
+  "version": "0.6",
+  "nota": "Catálogo parcial: solo los feats que usa el personaje de ejemplo. La importación completa de Pathfinder 1e está pendiente.",
+  "feats": [
+    {
+      "id": "toughness",
+      "nombre": "Toughness",
+      "fuente": "pf1",
+      "ejecucion": "pasivo",
+      "requisitos": {}
+    },
+    {
+      "id": "iron-will",
+      "nombre": "Iron Will",
+      "fuente": "pf1",
+      "ejecucion": "pasivo",
+      "requisitos": {}
+    },
+    {
+      "id": "weapon-focus-longsword",
+      "nombre": "Weapon Focus (Longsword)",
+      "fuente": "pf1",
+      "ejecucion": "pasivo",
+      "requisitos": {
+        "bab": 1
+      }
+    },
+    {
+      "id": "power-attack",
+      "nombre": "Power Attack",
+      "fuente": "pf1",
+      "ejecucion": "activo",
+      "requisitos": {
+        "atributos": {
+          "STR": 13
+        },
+        "bab": 1
+      }
+    }
+  ]
+}

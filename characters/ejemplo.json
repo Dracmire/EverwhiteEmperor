@@ -1,5 +1,6 @@
 {
   "personaje": "ejemplo",
+  "datosDeEjemplo": true,
   "nombre": "Aldric Vael",
   "raza": "raza-ejemplo",
   "clase": "fighter",
@@ -170,7 +171,7 @@
           "tipo": "xp",
           "tags": [
             {
-              "id": "combat",
+              "id": "close-quarter-combat",
               "grado": "heroico"
             }
           ],
@@ -218,7 +219,7 @@
           "tipo": "xp",
           "tags": [
             {
-              "id": "combat",
+              "id": "close-quarter-combat",
               "grado": "heroico"
             }
           ],
@@ -306,7 +307,7 @@
           "tipo": "xp",
           "tags": [
             {
-              "id": "combat",
+              "id": "close-quarter-combat",
               "grado": "heroico"
             }
           ],
@@ -331,7 +332,7 @@
           "tipo": "xp",
           "tags": [
             {
-              "id": "combat",
+              "id": "close-quarter-combat",
               "grado": "heroico"
             }
           ],
@@ -343,7 +344,7 @@
           "tipo": "xp",
           "tags": [
             {
-              "id": "combat",
+              "id": "close-quarter-combat",
               "grado": "heroico"
             }
           ],
@@ -408,7 +409,7 @@
           "tipo": "xp",
           "tags": [
             {
-              "id": "combat",
+              "id": "close-quarter-combat",
               "grado": "heroico"
             }
           ],
