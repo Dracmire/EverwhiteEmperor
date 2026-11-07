@@ -6,6 +6,7 @@ Convención del documento:
 - **[PENDIENTE]**: falta un dato o una decisión del diseñador.
 - **[SUPUESTO]**: interpretación que se tomó para poder avanzar; se puede corregir.
 - **[DECIDIDO]**: confirmado por el diseñador.
+- **[DIFERIDO]**: el diseñador decidió resolverlo más adelante (pulido); no bloquea nada.
 
 ---
 
@@ -128,12 +129,12 @@ Una **actividad** se describe con **tags**, no con un tipo único. La lista de t
 - **[SUPUESTO]** El porcentaje se aplica sobre la XP completa de la entrada (`base × mult_dif`). En `cumple` la configuración usa 0.25 y cada entrada puede subirlo hasta 0.30 con `pct`. Ejemplo con una criatura de nivel igual (40 XP): `cumple` da 10 XP (hasta 12) y `heroico` da 40 XP.
 - **[SUPUESTO]** Con varios tags se aplica el **mayor** de (multiplicador del tag × porcentaje del grado) (`combinarTags: "max"`), para que no se sumen ni se multipliquen entre sí. Se puede cambiar a `producto` o `promedio` en la configuración.
 - **[DECIDIDO]** El 25–30% / 100% también aplica al combate, pero **por tag de combate, no de manera global**: una pelea que cumple `close-quarter-combat` no cumple por eso `combat-healer`. Una entrada de combate lleva el tag específico (o varios) que realmente se cumplió.
-- **[PENDIENTE]** Lista completa de tags de combate (hoy solo `close-quarter-combat` y `combat-healer`).
+- **[DIFERIDO]** Lista completa de tags de combate (hoy solo `close-quarter-combat` y `combat-healer`): se deja para el pulido.
 - **[PENDIENTE]** Multiplicador propio de cada tag (`mult`): todos están en 1.0 hasta que el diseñador los defina.
 
-### 3.4 Tabla base de XP [SUPUESTO]
+### 3.4 Tabla base de XP [DECIDIDO como valor inicial]
 
-La tabla base viene de **Pathfinder 2e**, que usa la misma regla de 1000 XP por nivel: la XP de una criatura depende solo de la diferencia entre su nivel y el del grupo. A nivel igual da 40 XP. Se toma **40** como valor inicial de `base` (editable).
+La tabla base viene de **Pathfinder 2e**, que usa la misma regla de 1000 XP por nivel: la XP de una criatura depende solo de la diferencia entre su nivel y el del grupo. A nivel igual da 40 XP. **[DECIDIDO]** Se parte con **40** como valor de `base` (editable en `data/xp-config.json`); calibrarlo con las sesiones por nivel que se quieran no es importante por ahora **[DIFERIDO]**.
 
 Cifras del Core Rulebook de Pathfinder 2e según dos calculadoras en línea que coinciden entre sí ([pf2calc](https://pf2calc.pages.dev/gm-guide) y [West Games](https://west-games.com/pathfinder-2e-experience-calculator/)); no se pudo abrir Archives of Nethys para compararlas con la fuente oficial.
 
@@ -396,9 +397,11 @@ La mayoría de los feats de Pathfinder que representan una **ejecución activa**
 - Procedimiento: el importador marca como *candidatos* los feats con texto de acción ("as a standard action", "as a swift action", "when you attack…"); el diseñador revisa la lista y confirma las conversiones (`data/feats.conversiones.json`).
 - **[SUPUESTO]** Las habilidades tipo conjuro gastan mana (sección 4.2). **[PENDIENTE]** Costo de cada una y cómo se aprenden.
 
-### 6.3 Traits (feats mayores) [DECIDIDO]
+### 6.3 Traits (feats mayores) [DECIDIDO; el detalle está DIFERIDO]
 
 - Un **feat mayor** se llama **trait**. Un trait **no es un feat suelto: es una colección de ventajas o feats** agrupados bajo un nombre, dictada por el diseñador. Se pensaron como habilidades raciales.
+- **[DECIDIDO]** Un trait es como un feat, pero de mayor calibre, y **un personaje puede tener un número ilimitado** de traits (no hay tope ni slots propios).
+- **[DIFERIDO]** El resto del diseño de los traits se resuelve más adelante. El motor y el visor ya los admiten como lista, sin reglas de costo.
 - Los feats normales son los del catálogo de Pathfinder (6.1); el término "menor" no se usa en este documento.
 - Formato en `data/traits.json`:
 
@@ -416,7 +419,7 @@ La mayoría de los feats de Pathfinder que representan una **ejecución activa**
 
 - En el registro se anota con `{ "tipo": "trait", "id": "...", "accion": "ganar | perder" }`; el visor lista el trait y, debajo, sus componentes.
 - **[SUPUESTO]** Ganar un trait da todos sus componentes a la vez y el motor no les cobra puntos ni slots por separado.
-- **[PENDIENTE]** Si los componentes de un trait ocupan slots de feats o puntos de méritos, quién otorga los traits (¿la raza?), cuántos tiene cada personaje, cuándo se ganan y cuáles existen.
+- **[DIFERIDO]** Si los componentes de un trait ocupan slots de feats o puntos de méritos, quién otorga los traits (¿la raza?), cuándo se ganan y cuáles existen.
 
 ### 6.4 Achievement feats
 
@@ -684,14 +687,14 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 
 ## 13. Lista de pendientes
 
-1. Valor de un dungeon o una misión completos (tabla de criatura según su nivel, o escala por tamaño), confirmar la base de 40 y cuántas sesiones por nivel se quieren.
-2. Tags de combate: la lista completa (hoy `close-quarter-combat` y `combat-healer`), qué valor entre 25% y 30% usar por defecto en `cumple`, y el multiplicador propio de cada tag.
+1. Valor de un dungeon o una misión completos (tabla de criatura según su nivel, o escala por tamaño). La base 40 está decidida como valor inicial; calibrarla con las sesiones por nivel es **[DIFERIDO]**.
+2. **[DIFERIDO]** Tags de combate: la lista completa (hoy `close-quarter-combat` y `combat-healer`), qué valor entre 25% y 30% usar por defecto en `cumple`, y el multiplicador propio de cada tag.
 3. Zeo: confirmar la lectura de la tabla de sx, a qué rama pertenece cada línea o técnica, cómo se ganan los niveles de técnica y los sx, y la lista de las 10 líneas base. Mana: su tabla de XP.
 4. Mana: confirmar que es un atributo que se gasta; costo de las habilidades tipo conjuro, tamaño del fondo y regeneración.
 5. Fate y achievement: cuánto fate da cada achievement, tope y en qué se gasta.
 6. Méritos y defectos: significado exacto de los puntos iniciales, costo de los méritos comunes, valor de cada defecto, tope de defectos y si la rareza cambia el costo.
 7. Razas: lista de razas, sus atributos preferidos, sus racials, cuánto descuenta cada rareza y qué cuenta como tener el perfil racial.
-8. Traits (feats mayores): si sus componentes ocupan slots y puntos, quién los otorga, cuántos tiene cada personaje y cuáles existen.
+8. **[DIFERIDO]** Traits (feats mayores): si sus componentes ocupan slots y puntos, quién los otorga y cuáles existen. Ya se sabe que son ilimitados por personaje.
 9. Habilidades tipo conjuro: criterio y lista de feats convertidos y cómo se aprenden.
 10. Lista y condiciones de los achievement feats; confirmar los slots de feats de Pathfinder.
 11. Extremidades de un personaje por defecto, armas a dos manos y escudos.
@@ -709,6 +712,7 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 - Los tags de combate son específicos y no globales: se elimina el tag `combat` y se añaden `close-quarter-combat` y `combat-healer`. Los grados (25–30% / 100%) aplican también al combate, por tag. `data/xp-config.json` pasa a 40 tags.
 - El personaje de ejemplo usa `close-quarter-combat` (la XP no cambia).
 - Motor de cálculo (`src/core.js`), pruebas y visor funcionando (`viewer/`), con el catálogo de ejemplo en `data/`.
+- Decisiones de la tarde del 2026-11-07: la base de XP parte en 40 (calibrarla es secundario); los tags de combate y el diseño detallado de los traits quedan como pulido **[DIFERIDO]**; los traits son como feats de mayor calibre y un personaje puede tener un número ilimitado. Nueva marca **[DIFERIDO]** en la convención del documento.
 
 ### v0.5
 
