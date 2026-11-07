@@ -1,0 +1,53 @@
+{
+  "version": "0.5",
+  "unidad": "sx",
+  "ramas": [
+    "heaven",
+    "void",
+    "earth"
+  ],
+  "nivelZeo": "min",
+  "nivelMax": 5,
+  "lectura": "umbral-acumulado",
+  "niveles": [
+    {
+      "nivel": 1,
+      "sx": 10
+    },
+    {
+      "nivel": 2,
+      "sx": 20
+    },
+    {
+      "nivel": 3,
+      "sx": 30
+    },
+    {
+      "nivel": 4,
+      "sx": 50
+    },
+    {
+      "nivel": 5,
+      "sx": 80
+    }
+  ],
+  "lineasBase": 10,
+  "pisos": {
+    "iniciales": 3,
+    "max": 5,
+    "desbloqueo": [
+      {
+        "piso": 4,
+        "nivelesAcumulados": 10
+      },
+      {
+        "piso": 5,
+        "nivelesAcumulados": 20
+      }
+    ]
+  },
+  "notas": {
+    "lectura": "umbral-acumulado: cada número es el sx donde termina el nivel (como la XP principal). Alternativa: costo-por-nivel (acumulado 10, 30, 60, 110, 190). Por confirmar.",
+    "pisos": "Texto original truncado ('lv 5 a'); se interpreta como que el piso 5 se desbloquea con 20 niveles acumulados."
+  }
+}

@@ -1,6 +1,6 @@
-# EverwhiteEmperor — Especificación del tracker de personajes (v0.4)
+# EverwhiteEmperor — Especificación del tracker de personajes (v0.5)
 
-Estado: borrador del 2026-11-06. La v0.4 incorpora las razas con racials exclusivos, los grados de los tags (25–30% y 100%), que zeo no es Xeno, que el visor es necesario y las alternativas de tabla de XP (ver "Cambios respecto a versiones anteriores" al final).
+Estado: borrador del 2026-11-07. La v0.5 incorpora la definición de zeo (tres ramas, tabla de sx, líneas de técnica y pisos), un personaje de ejemplo y la maqueta visual del visor (ver "Cambios respecto a versiones anteriores" al final).
 
 Convención del documento:
 - **[PENDIENTE]**: falta un dato o una decisión del diseñador.
@@ -203,7 +203,7 @@ No hay otro sistema conocido que tenga a la vez 1000 XP fijos por nivel y una ta
 
 | id | Qué es | XP propia |
 |---|---|---|
-| `zeo` | Subsistema de crecimiento (por definir) | Sí, tabla independiente |
+| `zeo` | Técnicas en tres ramas: heaven, void y earth (sección 4.1.1) | Sí, tabla independiente (en sx) |
 | `mana` | Subsistema de crecimiento; atributo gastable | Sí, tabla independiente |
 | `magic` | Reemplaza el sistema de casteo por mana | No |
 | `racial` | Se integra en méritos y defectos (sección 5) | No |
@@ -212,9 +212,9 @@ No hay otro sistema conocido que tenga a la vez 1000 XP fijos por nivel y una ta
 ### 4.1 Zeo y mana
 
 - Cada uno tiene su propia tabla de XP y su propio nivel, independientes de la XP principal.
-- **[DECIDIDO]** `zeo` no es el sistema Xeno de los documentos del proyecto. **[PENDIENTE]** Qué es zeo.
+- **[DECIDIDO]** `zeo` no es el sistema Xeno de los documentos del proyecto. Su estructura está en 4.1.1.
 - **[SUPUESTO]** "Atributo expensive" de mana significa un atributo que se **gasta** al usarlo (un fondo de puntos que baja y se recupera). **[PENDIENTE confirmar]**
-- **[PENDIENTE]** Las tablas de XP de zeo y de mana, qué desbloquea cada nivel y si reciben XP de las mismas actividades que la principal.
+- **[PENDIENTE]** La tabla de XP de mana, qué desbloquea cada nivel de mana y de zeo, y si reciben XP de las mismas actividades que la principal.
 
 ```json
 {
@@ -222,6 +222,59 @@ No hay otro sistema conocido que tenga a la vez 1000 XP fijos por nivel y una ta
   "nombre": "Mana",
   "xp": { "tabla": [ { "nivel": 1, "desde": 0 } ] },
   "recompensas": [ { "nivel": 1, "otorga": ["id-de-feat-o-merito"] } ]
+}
+```
+
+### 4.1.1 Zeo [DECIDIDO salvo lo marcado]
+
+- **Unidad:** sx (la XP de zeo).
+- **Tres ramas:** las técnicas se dividen en `heaven`, `void` y `earth`. Cada rama acumula sus propios sx y tiene su propio nivel.
+- **El nivel zeo es el menor de los niveles de las tres ramas.**
+- **Tabla de sx por nivel** (niveles 1 a 5):
+
+| Nivel | sx |
+|---|---|
+| 1 (base) | 10 |
+| 2 | 20 |
+| 3 | 30 |
+| 4 | 50 |
+| 5 | 80 |
+
+- **[SUPUESTO]** La tabla se lee igual que la XP principal: cada número es el sx acumulado donde *termina* el nivel (nivel 1: 0 a 10; nivel 2: 10 a 20; nivel 3: 20 a 30; nivel 4: 30 a 50; nivel 5: 50 en adelante, con 80 como cierre). La alternativa es leerla como el costo de cada nivel (acumulado 10, 30, 60, 110, 190). El archivo `data/zeo.json` tiene el campo `lectura` para cambiar de una a otra. **[PENDIENTE confirmar]**
+- **[SUPUESTO]** El nivel máximo de cada rama es 5.
+
+**Líneas de técnica:**
+
+- Un personaje parte con **10 líneas de técnica base**.
+- Cada línea es una **cadena de técnicas** con requisitos enlazados. Cada **piso** de la cadena tiene varias técnicas.
+- Los pisos 1 a 3 suelen estar disponibles desde el inicio (los requisitos suelen estar restringidos hasta el nivel 3).
+- Al acumular **10 niveles** en una misma línea se desbloquea el piso 4; con **20 niveles**, el piso 5.
+- **[SUPUESTO]** El texto original quedó cortado ("lv 5 a"); se interpreta como que el piso 5 también se desbloquea con 20 niveles acumulados.
+- **[SUPUESTO]** Los "niveles acumulados" de una línea son los niveles ganados en las técnicas de esa línea. En el registro se anotan con la entrada `zeo-linea` (sección 8).
+- **[PENDIENTE]** A qué rama pertenece cada línea o técnica, cómo se ganan los niveles de técnica, qué actividades dan sx, y la lista de las 10 líneas base.
+
+Valores de `data/zeo.json`:
+
+```json
+{
+  "unidad": "sx",
+  "ramas": ["heaven", "void", "earth"],
+  "nivelZeo": "min",
+  "nivelMax": 5,
+  "lectura": "umbral-acumulado",
+  "niveles": [
+    { "nivel": 1, "sx": 10 }, { "nivel": 2, "sx": 20 }, { "nivel": 3, "sx": 30 },
+    { "nivel": 4, "sx": 50 }, { "nivel": 5, "sx": 80 }
+  ],
+  "lineasBase": 10,
+  "pisos": {
+    "iniciales": 3,
+    "max": 5,
+    "desbloqueo": [
+      { "piso": 4, "nivelesAcumulados": 10 },
+      { "piso": 5, "nivelesAcumulados": 20 }
+    ]
+  }
 }
 ```
 
@@ -397,7 +450,9 @@ Es el núcleo del tracker. Es la **fuente de verdad**: el estado del personaje (
       "notas": "",
       "entradas": [
         { "tipo": "xp", "tags": [ { "id": "combat", "grado": "heroico" }, { "id": "stealth", "grado": "cumple", "pct": 0.30 } ], "nivelContenido": 9, "cantidad": 1, "nota": "" },
+        { "tipo": "xp-subsistema", "subsistema": "zeo", "rama": "heaven", "cantidad": 10 },
         { "tipo": "xp-subsistema", "subsistema": "mana", "cantidad": 250 },
+        { "tipo": "zeo-linea", "linea": "L01", "niveles": 2 },
         { "tipo": "feat", "id": "power-attack" },
         { "tipo": "achievement", "id": "slug", "fate": 1 },
         { "tipo": "fate", "cantidad": -1, "motivo": "gasto" },
@@ -417,7 +472,8 @@ Reglas:
 3. Cada sesión muestra un resumen: XP ganada, nivel antes y después, y feats, achievements, fate y rasgos ganados.
 4. Validaciones al reproducir el registro:
    - achievement feats: máximo 1 por nivel;
-   - `xp-subsistema` solo para zeo y mana;
+   - `xp-subsistema` solo para zeo y mana; para zeo exige `rama` (`heaven`, `void` o `earth`);
+   - `zeo-linea` solo con líneas existentes; los pisos 4 y 5 de una línea solo se usan con 10 y 20 niveles acumulados en ella;
    - `pct` de un grado `cumple` entre 0.25 y 0.30;
    - un racial solo lo puede tener un personaje de la raza a la que pertenece;
    - los feats cumplen sus requisitos en el momento de ganarlos y no superan los slots del nivel;
@@ -446,9 +502,11 @@ data/
   traits.json               # méritos y defectos (incluye los raciales)
   items.json
   achievements.json
-  subsystems.json           # zeo y mana (tablas de XP propias)
+  zeo.json                  # tabla de sx, ramas, pisos y desbloqueos (ya creado)
+  subsystems.json           # mana (tabla de XP propia, pendiente)
 characters/
   <id>.json
+  ejemplo.json              # personaje de ejemplo (ya creado)
 ```
 
 - Cada registro tiene `id` estable (slug) y `fuente` (`pf1` | `homebrew`).
@@ -488,7 +546,19 @@ Se buscó un visor existente. Ninguno cumple a la vez: estático, licencia compa
 
 ### 10.2 Propuesta
 
-**[SUPUESTO]** Construir el visor dentro de este repo, como página estática que lee los JSON del propio tracker. Así el diseño se adapta a los datos del sistema (zeo, mana, fate, méritos, extremidades) en lugar de adaptar los datos a una hoja de D&D. **[PENDIENTE]** Una referencia visual (una hoja o app cuyo estilo te guste) para fijar el diseño.
+**[SUPUESTO]** Construir el visor dentro de este repo, como página estática que lee los JSON del propio tracker. Así el diseño se adapta a los datos del sistema (zeo, mana, fate, méritos, extremidades) en lugar de adaptar los datos a una hoja de D&D. La maqueta de 10.3 ocupa el lugar de una referencia visual hasta que el diseñador la revise.
+
+### 10.3 Maqueta
+
+Hay una maqueta visual con datos de ejemplo, construida sobre `characters/ejemplo.json` (un personaje de nivel 7 con 6 sesiones). Todos los números de la maqueta salen de la fórmula de la sección 3 y de `data/zeo.json`; los nombres de razas, méritos, objetos y logros son inventados. Muestra:
+
+- nivel, progreso al siguiente nivel y XP;
+- zeo con sus tres ramas, el nivel zeo como el menor de las tres y las 10 líneas de técnica con sus pisos;
+- mana (su tabla está pendiente) y fate;
+- méritos y defectos con el saldo de puntos, y el racial con el descuento de perfil de ejemplo;
+- equipo por extremidad, con cargas, y la armadura aparte;
+- feats con los slots usados y las habilidades tipo conjuro;
+- la línea de tiempo de sesiones.
 
 ---
 
@@ -537,6 +607,22 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 | `stealth` en `heroico` | 40 |
 | `combat` en `cumple` y `stealth` en `heroico` (regla `max`) | 40 |
 
+### Zeo (lectura `umbral-acumulado`)
+
+| sx de la rama | Nivel de la rama |
+|---|---|
+| 0 | 1 |
+| 9 | 1 |
+| 10 | 2 |
+| 20 | 3 |
+| 30 | 4 |
+| 49 | 4 |
+| 50 | 5 |
+| 80 o más | 5 |
+
+- Nivel zeo: heaven 34 sx (nivel 4), void 22 sx (nivel 3), earth 15 sx (nivel 2) → nivel zeo 2, el menor de los tres.
+- Pisos de una línea: con 9 niveles acumulados el piso 4 sigue cerrado; con 10 se abre; con 19 el piso 5 sigue cerrado; con 20 se abre.
+
 ### Puntos de méritos y slots de feats
 
 | Nivel | Puntos iniciales `floor(n/2)+1` | Slots de feats (PF1) |
@@ -564,7 +650,7 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 
 1. Valor de un dungeon o una misión completos (tabla de criatura según su nivel, o escala por tamaño), confirmar la base de 40 y cuántas sesiones por nivel se quieren.
 2. Grados de tag: si aplican también al combate, qué valor entre 25% y 30% usar por defecto, y el multiplicador propio de cada tag.
-3. Qué es zeo; tablas de XP de zeo y de mana y qué desbloquea cada nivel.
+3. Zeo: confirmar la lectura de la tabla de sx, a qué rama pertenece cada línea o técnica, cómo se ganan los niveles de técnica y los sx, y la lista de las 10 líneas base. Mana: su tabla de XP.
 4. Mana: confirmar que es un atributo que se gasta; costo de las habilidades tipo conjuro, tamaño del fondo y regeneración.
 5. Fate y achievement: cuánto fate da cada achievement, tope y en qué se gasta.
 6. Méritos y defectos: significado exacto de los puntos iniciales, costo de los méritos comunes, valor de cada defecto, tope de defectos y si la rareza cambia el costo.
@@ -573,13 +659,20 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 9. Habilidades tipo conjuro: criterio y lista de feats convertidos y cómo se aprenden.
 10. Lista y condiciones de los achievement feats; confirmar los slots de feats de Pathfinder.
 11. Extremidades de un personaje por defecto, armas a dos manos y escudos.
-12. Referencia visual para el visor y confirmar que se construye dentro del repo.
+12. Revisar la maqueta del visor (sección 10.3) y confirmar que se construye dentro del repo.
 13. XP sobre 20,000, redondeo, evaluación del nivel por entrada o por sesión, y reparto de XP en grupo.
 14. Alcance de estadísticas derivadas (HP, skills, hechizos).
 
 ---
 
 ## Cambios respecto a versiones anteriores
+
+### v0.5
+
+- Zeo definido: unidad sx, tres ramas (heaven, void, earth), nivel zeo = el menor de las tres, tabla de sx de 5 niveles, 10 líneas de técnica base con pisos y desbloqueos a 10 y 20 niveles acumulados. Nuevo archivo `data/zeo.json` y sección 4.1.1.
+- Registro por sesión: `xp-subsistema` de zeo exige `rama`; nueva entrada `zeo-linea`.
+- Personaje de ejemplo `characters/ejemplo.json` y maqueta visual del visor (sección 10.3).
+- Casos de prueba de zeo.
 
 ### v0.4
 

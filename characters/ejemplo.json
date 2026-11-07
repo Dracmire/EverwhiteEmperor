@@ -1,0 +1,451 @@
+{
+  "personaje": "ejemplo",
+  "nombre": "Aldric Vael",
+  "raza": "raza-ejemplo",
+  "clase": "fighter",
+  "atributos": {
+    "STR": 17,
+    "DEX": 13,
+    "CON": 15,
+    "INT": 10,
+    "WIS": 12,
+    "CHA": 8
+  },
+  "extremidades": [
+    "mano-derecha",
+    "mano-izquierda",
+    "pie-derecho",
+    "pie-izquierdo"
+  ],
+  "sesiones": [
+    {
+      "id": "2026-09-26-00",
+      "fecha": "2026-09-26",
+      "titulo": "Creación del personaje (nivel 7)",
+      "notas": "Inicio de campaña en nivel 7.",
+      "entradas": [
+        {
+          "tipo": "ajuste",
+          "campo": "xp",
+          "cantidad": 6000,
+          "motivo": "Inicio de campaña en nivel 7"
+        },
+        {
+          "tipo": "feat",
+          "id": "toughness"
+        },
+        {
+          "tipo": "feat",
+          "id": "iron-will"
+        },
+        {
+          "tipo": "feat",
+          "id": "weapon-focus-longsword"
+        },
+        {
+          "tipo": "feat",
+          "id": "power-attack"
+        },
+        {
+          "tipo": "rasgo",
+          "id": "sangre-helada",
+          "accion": "ganar"
+        },
+        {
+          "tipo": "rasgo",
+          "id": "reflejos-de-veterano",
+          "accion": "ganar"
+        },
+        {
+          "tipo": "rasgo",
+          "id": "deuda-de-honor",
+          "accion": "ganar"
+        },
+        {
+          "tipo": "rasgo",
+          "id": "cicatriz-que-no-sana",
+          "accion": "ganar"
+        },
+        {
+          "tipo": "objeto",
+          "id": "cota-de-mallas-1",
+          "accion": "equipar"
+        },
+        {
+          "tipo": "objeto",
+          "id": "espada-larga-1",
+          "accion": "equipar",
+          "extremidad": "mano-derecha"
+        },
+        {
+          "tipo": "objeto",
+          "id": "varita-curar-leves",
+          "accion": "equipar",
+          "extremidad": "mano-izquierda"
+        },
+        {
+          "tipo": "objeto",
+          "id": "botas-paso-silencioso",
+          "accion": "equipar",
+          "extremidad": "pie-derecho"
+        },
+        {
+          "tipo": "objeto",
+          "id": "tobillera-del-corredor",
+          "accion": "equipar",
+          "extremidad": "pie-izquierdo"
+        },
+        {
+          "tipo": "xp-subsistema",
+          "subsistema": "zeo",
+          "rama": "heaven",
+          "cantidad": 25
+        },
+        {
+          "tipo": "xp-subsistema",
+          "subsistema": "zeo",
+          "rama": "void",
+          "cantidad": 15
+        },
+        {
+          "tipo": "xp-subsistema",
+          "subsistema": "zeo",
+          "rama": "earth",
+          "cantidad": 10
+        },
+        {
+          "tipo": "zeo-linea",
+          "linea": "L01",
+          "niveles": 8
+        },
+        {
+          "tipo": "zeo-linea",
+          "linea": "L02",
+          "niveles": 5
+        },
+        {
+          "tipo": "zeo-linea",
+          "linea": "L03",
+          "niveles": 4
+        },
+        {
+          "tipo": "zeo-linea",
+          "linea": "L04",
+          "niveles": 3
+        },
+        {
+          "tipo": "zeo-linea",
+          "linea": "L05",
+          "niveles": 2
+        },
+        {
+          "tipo": "zeo-linea",
+          "linea": "L06",
+          "niveles": 2
+        },
+        {
+          "tipo": "zeo-linea",
+          "linea": "L07",
+          "niveles": 1
+        },
+        {
+          "tipo": "zeo-linea",
+          "linea": "L08",
+          "niveles": 1
+        },
+        {
+          "tipo": "xp-subsistema",
+          "subsistema": "mana",
+          "cantidad": 70
+        }
+      ]
+    },
+    {
+      "id": "2026-10-03-01",
+      "fecha": "2026-10-03",
+      "titulo": "El paso helado",
+      "notas": "Cruce de la sierra con tormenta.",
+      "entradas": [
+        {
+          "tipo": "xp",
+          "tags": [
+            {
+              "id": "combat",
+              "grado": "heroico"
+            }
+          ],
+          "nivelContenido": 7,
+          "cantidad": 6,
+          "nota": "Lobos de escarcha en el desfiladero"
+        },
+        {
+          "tipo": "xp",
+          "tags": [
+            {
+              "id": "survival",
+              "grado": "cumple"
+            }
+          ],
+          "nivelContenido": 7,
+          "cantidad": 2,
+          "nota": "Refugio y fuego bajo la ventisca"
+        },
+        {
+          "tipo": "xp-subsistema",
+          "subsistema": "zeo",
+          "rama": "heaven",
+          "cantidad": 4
+        },
+        {
+          "tipo": "zeo-linea",
+          "linea": "L01",
+          "niveles": 2
+        },
+        {
+          "tipo": "xp-subsistema",
+          "subsistema": "mana",
+          "cantidad": 10
+        }
+      ]
+    },
+    {
+      "id": "2026-10-10-02",
+      "fecha": "2026-10-10",
+      "titulo": "Los hornos de escarcha",
+      "notas": "",
+      "entradas": [
+        {
+          "tipo": "xp",
+          "tags": [
+            {
+              "id": "combat",
+              "grado": "heroico"
+            }
+          ],
+          "nivelContenido": 8,
+          "cantidad": 5,
+          "nota": "Golems de ceniza (nivel 8)"
+        },
+        {
+          "tipo": "xp",
+          "tags": [
+            {
+              "id": "disable-device",
+              "grado": "heroico"
+            }
+          ],
+          "nivelContenido": 8,
+          "cantidad": 1,
+          "nota": "Cerradura de la cámara de fundición"
+        },
+        {
+          "tipo": "xp-subsistema",
+          "subsistema": "zeo",
+          "rama": "void",
+          "cantidad": 4
+        },
+        {
+          "tipo": "zeo-linea",
+          "linea": "L01",
+          "niveles": 1
+        },
+        {
+          "tipo": "zeo-linea",
+          "linea": "L02",
+          "niveles": 1
+        },
+        {
+          "tipo": "achievement",
+          "id": "guardian-del-paso",
+          "fate": 1
+        },
+        {
+          "tipo": "objeto",
+          "id": "varita-curar-leves",
+          "accion": "usar-carga"
+        },
+        {
+          "tipo": "objeto",
+          "id": "tobillera-del-corredor",
+          "accion": "usar-carga"
+        }
+      ]
+    },
+    {
+      "id": "2026-10-17-03",
+      "fecha": "2026-10-17",
+      "titulo": "Mercado de sombras",
+      "notas": "Sesión de intriga.",
+      "entradas": [
+        {
+          "tipo": "xp",
+          "tags": [
+            {
+              "id": "bluff",
+              "grado": "heroico"
+            }
+          ],
+          "nivelContenido": 7,
+          "cantidad": 2,
+          "nota": "Engañó a dos recaudadores"
+        },
+        {
+          "tipo": "xp",
+          "tags": [
+            {
+              "id": "diplomacy",
+              "grado": "cumple",
+              "pct": 0.3
+            }
+          ],
+          "nivelContenido": 7,
+          "cantidad": 3,
+          "nota": "Negociaciones menores"
+        },
+        {
+          "tipo": "xp",
+          "tags": [
+            {
+              "id": "combat",
+              "grado": "heroico"
+            }
+          ],
+          "nivelContenido": 5,
+          "cantidad": 4,
+          "nota": "Matones de callejón (nivel 5)"
+        },
+        {
+          "tipo": "objeto",
+          "id": "tobillera-del-corredor",
+          "accion": "recargar"
+        }
+      ]
+    },
+    {
+      "id": "2026-10-24-04",
+      "fecha": "2026-10-24",
+      "titulo": "Esqueletos del faro",
+      "notas": "Limpieza del faro abandonado.",
+      "entradas": [
+        {
+          "tipo": "xp",
+          "tags": [
+            {
+              "id": "combat",
+              "grado": "heroico"
+            }
+          ],
+          "nivelContenido": 4,
+          "cantidad": 30,
+          "nota": "Esqueletos (nivel 4): Δ −3 da 1 XP cada uno"
+        },
+        {
+          "tipo": "xp",
+          "tags": [
+            {
+              "id": "combat",
+              "grado": "heroico"
+            }
+          ],
+          "nivelContenido": 3,
+          "cantidad": 10,
+          "nota": "Esqueletos (nivel 3): Δ −4 no da XP"
+        },
+        {
+          "tipo": "xp",
+          "tags": [
+            {
+              "id": "exploration",
+              "grado": "heroico"
+            }
+          ],
+          "nivelContenido": 9,
+          "cantidad": 1,
+          "nota": "Cripta bajo el faro (nivel 9)"
+        },
+        {
+          "tipo": "xp-subsistema",
+          "subsistema": "zeo",
+          "rama": "earth",
+          "cantidad": 5
+        },
+        {
+          "tipo": "xp-subsistema",
+          "subsistema": "zeo",
+          "rama": "heaven",
+          "cantidad": 5
+        },
+        {
+          "tipo": "xp-subsistema",
+          "subsistema": "zeo",
+          "rama": "void",
+          "cantidad": 3
+        },
+        {
+          "tipo": "zeo-linea",
+          "linea": "L03",
+          "niveles": 2
+        },
+        {
+          "tipo": "zeo-linea",
+          "linea": "L01",
+          "niveles": 1
+        },
+        {
+          "tipo": "xp-subsistema",
+          "subsistema": "mana",
+          "cantidad": 15
+        }
+      ]
+    },
+    {
+      "id": "2026-11-01-05",
+      "fecha": "2026-11-01",
+      "titulo": "La cumbre sin nombre",
+      "notas": "",
+      "entradas": [
+        {
+          "tipo": "xp",
+          "tags": [
+            {
+              "id": "combat",
+              "grado": "heroico"
+            }
+          ],
+          "nivelContenido": 9,
+          "cantidad": 2,
+          "nota": "Guardianes de la cumbre (nivel 9)"
+        },
+        {
+          "tipo": "xp",
+          "tags": [
+            {
+              "id": "quest",
+              "grado": "heroico"
+            }
+          ],
+          "nivelContenido": 8,
+          "cantidad": 1,
+          "nota": "Reliquia recuperada"
+        },
+        {
+          "tipo": "xp",
+          "tags": [
+            {
+              "id": "rest",
+              "grado": "cumple"
+            }
+          ],
+          "nivelContenido": 7,
+          "cantidad": 1,
+          "nota": "Descanso en el campamento"
+        },
+        {
+          "tipo": "xp-subsistema",
+          "subsistema": "mana",
+          "cantidad": 25
+        }
+      ]
+    }
+  ]
+}
