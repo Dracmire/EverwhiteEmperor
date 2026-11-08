@@ -1,0 +1,27 @@
+{
+  "version": "0.8.2",
+  "nota": "Reglas de HP actual: fatiga, estados y descansos. Los porcentajes de fatiga y de estados vienen del diseñador; la curación de los descansos y el bono de cuerpo son supuestos (ver docs/ESPECIFICACION.md, sección 10.7) y se cambian aquí sin tocar el código.",
+  "fatiga": {
+    "nota": "Penalizador acumulativo: cada umbral alcanzado suma el suyo. Con HP ≤ 50 % es −2, con HP ≤ 25 % es −6 en total (−2 y otro −4) y con HP ≤ 10 % es −10 en total (otro −4).",
+    "umbrales": [
+      { "pct": 50, "penalizador": -2 },
+      { "pct": 25, "penalizador": -4 },
+      { "pct": 10, "penalizador": -4 }
+    ]
+  },
+  "estados": [
+    { "id": "down", "nombre": "DOWN", "pct": 0, "detalle": "HP en 0 o menos: fuera de combate." },
+    { "id": "ko", "nombre": "K.O.", "pct": -25, "detalle": "HP en −25 % del máximo o menos." },
+    { "id": "deadly", "nombre": "Deadly", "pct": -50, "detalle": "HP en −50 % del máximo o menos." }
+  ],
+  "descanso": {
+    "nota": "Pathfinder 1e cura 1 HP por nivel tras 8 h de descanso y no tiene descanso corto; el corto se calcula proporcional a las horas. El bono de cuerpo suma el modificador del atributo (mínimo 0) por nivel. No recupera MP: su relación con el mana sigue abierta.",
+    "horasLargo": 8,
+    "curacionPorNivel": 1,
+    "bonoCuerpo": { "atributo": "CON", "porNivel": true },
+    "tipos": [
+      { "id": "corto", "nombre": "Descanso corto", "horas": 2 },
+      { "id": "largo", "nombre": "Descanso largo", "horas": 8 }
+    ]
+  }
+}

@@ -124,6 +124,19 @@
 
   function chip(texto, tono) { return '<span class="chip ' + (tono || '') + '">' + esc(texto) + '</span>'; }
 
+  /** Atributos de un elemento con tooltip: se enfoca con el teclado y con el toque, y el texto sale en #tooltip. */
+  function tip(texto) { return texto ? ' tabindex="0" data-tip="' + esc(texto) + '"' : ''; }
+  function chipTip(texto, tono, ayuda) {
+    return '<span class="chip ' + (tono || '') + '"' + tip(ayuda) + '>' + esc(texto) + '</span>';
+  }
+  /** Fila de una línea de una lista: etiqueta opcional, nombre, relleno (chips) y valor o enlace a la derecha. */
+  function fila(o) {
+    return '<li class="ren' + (o.clase ? ' ' + o.clase : '') + '"' + tip(o.tip) + '>' +
+      (o.etiqueta ? '<span class="et">' + esc(o.etiqueta) + '</span>' : '') +
+      '<span class="nm">' + esc(o.nombre) + '</span>' + (o.medio || '') +
+      (o.der ? '<span class="der">' + o.der + '</span>' : '') + '</li>';
+  }
+
   /** Sección plegable. El estado abierto o cerrado se recuerda entre dibujos y entre visitas. */
   function desplegable(id, titulo, resumen, cuerpo) {
     return '<details class="desp" data-id="' + id + '"' + (estado.abiertos[id] ? ' open' : '') + '><summary><h2>' + esc(titulo) + '</h2>' +
@@ -232,9 +245,15 @@
     }
     return estado.actuales[id];
   }
+  /** El HP puede quedar bajo cero (K.O., Deadly) hasta −máximo; el MP se detiene en 0. */
+  function minimoVital(rec, max) { return rec === 'hp' ? -max : 0; }
   function valorActual(pj, rec, max) {
     var v = actualesDe(pj)[rec];
-    return typeof v === 'number' ? Math.max(0, Math.min(max, Math.round(v))) : max;
+    return typeof v === 'number' ? Math.max(minimoVital(rec, max), Math.min(max, Math.round(v))) : max;
+  }
+  function conSigno(n) { return n < 0 ? '−' + Math.abs(n) : String(n); }
+  function valorAtributo(calc, k) {
+    return calc.personaje.derivados[k] !== undefined ? calc.personaje.derivados[k] : calc.personaje.atributos[k];
   }
   function fijarActual(pj, rec, valor, max) {
     var a = actualesDe(pj);
@@ -242,24 +261,79 @@
     guardar('ewe-actual-' + idPj(pj), JSON.stringify(a));
   }
 
-  function htmlVital(rec, etiqueta, r, pj) {
+  /** Texto del tooltip de fatiga y estados, con los umbrales ya convertidos a HP del máximo actual. */
+  function textoUmbrales(max) {
+    var u = Core.umbralesVitales(max, estado.ctx.vitalidad);
+    var lineas = ['Fatiga: penalizador acumulado según el HP actual'];
+    u.fatiga.forEach(function (t) {
+      lineas.push('HP ≤ ' + t.hp + ' (' + t.pct + ' %): ' + signo(t.penalizador) + (t.acumulado !== t.penalizador ? ' más, ' + signo(t.acumulado) + ' en total' : ''));
+    });
+    lineas.push('', 'Estados');
+    u.estados.forEach(function (e) {
+      lineas.push(e.nombre + ': HP ≤ ' + conSigno(e.hp) + (e.pct !== 0 ? ' (' + conSigno(e.pct) + ' %)' : ''));
+    });
+    return lineas.join('\n');
+  }
+
+  /** `juego` añade a HP la fatiga, el estado y las marcas de los umbrales (vista Jugar). */
+  function htmlVital(rec, etiqueta, r, pj, juego) {
     var max = r.maximo;
     var act = valorActual(pj, rec, max);
-    var ancho = max > 0 ? Math.round(act / max * 100) : 0;
+    var ancho = max > 0 ? Math.round(Math.max(0, act) / max * 100) : 0;
+    var cfg = estado.ctx.vitalidad;
+    var ev = rec === 'hp' && juego && max > 0 ? Core.estadoVital(act, max, cfg) : null;
     var btn = function (delta, texto, accesible) {
       return '<button class="btn mini" type="button" data-accion="rec" data-recurso="' + rec + '" data-delta="' + delta + '" aria-label="' + accesible + '">' + texto + '</button>';
     };
+    var marcas = ev ? '<span class="marcas" aria-hidden="true">' + cfg.fatiga.umbrales.map(function (u) { return '<i style="left:' + u.pct + '%"></i>'; }).join('') + '</span>' : '';
+    var ayuda = ev ? textoUmbrales(max) : '';
+    var chips = ev
+      ? '<div class="vital-estado" aria-live="polite">' + (ev.fatiga ? chipTip('Fatiga ' + signo(ev.fatiga), 'warn', ayuda) : chipTip('Sin fatiga', 'soft', ayuda)) +
+        (ev.estado ? chipTip(ev.estado.nombre, 'estado', ayuda) : '') + '</div>'
+      : '';
+    var texto = conSigno(act) + ' de ' + max + (ev && ev.estado ? ', ' + ev.estado.nombre : '');
     return '<div class="vital ' + rec + '"><div class="vital-top"><span><b>' + etiqueta + '</b> <span class="mute">dado + ' + r.atributo + ' ' + r.valor + ' (' + signo(r.mod) + ')</span></span>' +
-      '<span class="vital-num num" aria-live="polite"><b>' + act + '</b> / ' + max + '</span></div>' +
-      '<div class="bar" role="progressbar" aria-label="' + etiqueta + ' actuales" aria-valuemin="0" aria-valuemax="' + max + '" aria-valuenow="' + act + '"><i style="width:' + ancho + '%"></i></div>' +
+      '<span class="vital-num num' + (act < 0 ? ' neg' : '') + '" aria-live="polite"><b>' + conSigno(act) + '</b> / ' + max + '</span></div>' +
+      '<div class="barra"><div class="bar" role="progressbar" aria-label="' + etiqueta + ' actuales" aria-valuemin="0" aria-valuemax="' + max + '" aria-valuenow="' + Math.max(0, act) + '" aria-valuetext="' + esc(texto) + '"><i style="width:' + ancho + '%"></i></div>' + marcas + '</div>' +
+      chips +
       '<div class="vital-ctl">' + btn(-5, '−5', 'Restar 5 de ' + etiqueta) + btn(-1, '−1', 'Restar 1 de ' + etiqueta) + btn(1, '+1', 'Sumar 1 a ' + etiqueta) + btn(5, '+5', 'Sumar 5 a ' + etiqueta) +
       btn('max', 'Máx', 'Llevar ' + etiqueta + ' al máximo') + '</div>' +
       (r.pendientes.length ? '<span class="chip warn">Faltan tiradas: ' + (r.pendientes.length === 1 ? 'nivel ' : 'niveles ') + esc(r.pendientes.join(', ')) + '</span>' : '') + '</div>';
   }
 
-  function htmlVitales(calcB, pj) {
+  function nombreCorto(c) {
+    var n = c.nombre.replace('Descanso ', '');
+    return n.charAt(0).toUpperCase() + n.slice(1);
+  }
+
+  /** Fórmula legible de un descanso: la del largo desglosada, y los demás como parte proporcional de él. */
+  function textoDescanso(c, cfg) {
+    var d = cfg.descanso;
+    if (c.horas === d.horasLargo) {
+      var cuerpo = c.porNivel ? c.nivel + ' niv × (' + d.curacionPorNivel + ' + ' + c.mod + ' ' + c.atributo + ')' : c.nivel + ' niv × ' + d.curacionPorNivel + ' + ' + c.mod + ' ' + c.atributo;
+      return nombreCorto(c) + ' ' + c.horas + ' h: ' + cuerpo + ' = ' + c.hp + ' HP';
+    }
+    return nombreCorto(c) + ' ' + c.horas + ' h: ' + c.horas + '/' + d.horasLargo + ' del largo (' + c.largo + ') = ' + c.hp + ' HP';
+  }
+
+  /** Recuperación (vista Jugar): cada descanso suma HP hasta el máximo; el MP no se toca. */
+  function bloqueRecuperacion(calcB, pj) {
+    var cfg = estado.ctx.vitalidad;
+    var max = calcB.recursos.hp.maximo;
+    var lleno = valorActual(pj, 'hp', max) >= max;
+    var attr = cfg.descanso.bonoCuerpo.atributo;
+    var cs = cfg.descanso.tipos.map(function (t) { return Core.curacionDescanso(cfg, t.id, calcB.nivel.nivel, valorAtributo(calcB, attr)); });
+    var botones = cs.map(function (c) {
+      return '<button class="btn" type="button" data-accion="descanso" data-id="' + c.tipo + '"' + (lleno ? ' disabled' : '') + '><span>' + esc(c.nombre) + ' · ' + c.horas + ' h</span><b class="num">+' + c.hp + ' HP</b></button>';
+    }).join('');
+    return '<div class="recup"><span class="eyebrow">Recuperación</span><div class="recup-btns">' + botones + '</div>' +
+      '<span class="mute pie-vital">' + esc(cs.map(function (c) { return textoDescanso(c, cfg); }).join(' · ')) + (lleno ? '. HP ya está al máximo' : '') + '. El descanso no recupera MP.</span></div>';
+  }
+
+  function htmlVitales(calcB, pj, juego) {
     var hayBorrador = calcB.sesiones.some(function (s) { return s.id === 'borrador' && s.tiradas.length; });
-    return htmlVital('hp', 'HP', calcB.recursos.hp, pj) + htmlVital('mp', 'MP', calcB.recursos.mp, pj) +
+    return htmlVital('hp', 'HP', calcB.recursos.hp, pj, juego) + htmlVital('mp', 'MP', calcB.recursos.mp, pj, juego) +
+      (juego ? bloqueRecuperacion(calcB, pj) : '') +
       (hayBorrador ? '<span class="chip gold" style="align-self:flex-start">Los máximos incluyen tiradas del borrador</span>' : '') +
       '<span class="mute pie-vital">El valor actual se guarda solo en este navegador; el máximo sale de las tiradas del registro.</span>';
   }
@@ -279,7 +353,7 @@
       '<div class="xp-block"><div class="row-between"><span class="xp-big num">' + f(calc.xp) + ' <small>XP</small></span>' +
       '<span class="mute num" style="font-size:13px">Nivel ' + n.nivel + ': ' + f(n.inicio) + ' – ' + f(n.fin) + '</span></div>' +
       barraXp(calc) + '<span style="font-size:14px">' + textoProgreso(calc) + '</span></div></div>' +
-      '<div class="vitales" id="vitales">' + htmlVitales(calcB, pj) + '</div></div>' +
+      '<div class="vitales" id="vitales">' + htmlVitales(calcB, pj, !con) + '</div></div>' +
       bloqueAtributos(calc) + perfilTexto + '</section>';
   }
 
@@ -407,48 +481,61 @@
     return desplegable('logros', 'Achievements y fate', resumen, cuerpo);
   }
 
-  // ---- méritos y defectos
+  // ---- méritos y defectos: un solo bloque de filas de una línea, con el detalle en el tooltip
 
-  function listaMeritos(m, tipo) {
-    return m.lista.filter(function (g) { return tipo === 'defecto' ? g.tipo === 'defecto' : g.tipo !== 'defecto'; }).map(function (g) {
-      var etiqueta = g.tipo === 'defecto' ? 'Defecto' : (g.categoria === 'racial' ? 'Racial · ' + g.rareza : 'Mérito · ' + g.rareza);
-      var nota = g.tipo === 'defecto' ? 'Aporta ' + plural(g.puntos, 'punto', 'puntos') + ' al fondo'
-        : (g.descuento > 0 ? 'Costo base ' + g.costoBase + ', menos ' + g.descuento + ' por perfil racial' : (g.categoria === 'racial' ? 'Racial sin descuento (costo base ' + g.costoBase + ')' : 'Mérito común'));
-      return '<div class="item"><div class="t"><b>' + esc(g.nombre) + '</b><small>' + esc(nota) + '</small></div>' +
-        '<span class="chip ' + (g.tipo === 'defecto' ? '' : 'acc') + '">' + esc(etiqueta) + '</span>' +
-        '<span class="v">' + (g.tipo === 'defecto' ? '+' : '−') + g.puntos + '</span></div>';
-    }).join('');
+  function filaMerito(g) {
+    var defecto = g.tipo === 'defecto';
+    var etiqueta = defecto ? 'Defecto' : (g.categoria === 'racial' ? 'Racial · ' + g.rareza : 'Mérito · ' + g.rareza);
+    var nota = defecto ? 'Aporta ' + plural(g.puntos, 'punto', 'puntos') + ' al fondo'
+      : (g.descuento > 0 ? 'Costo base ' + g.costoBase + ', menos ' + g.descuento + ' por perfil racial' : (g.categoria === 'racial' ? 'Racial sin descuento (costo base ' + g.costoBase + ')' : 'Mérito común'));
+    return fila({ nombre: g.nombre, tip: nota, medio: chip(etiqueta, defecto ? '' : 'acc'),
+      der: '<span class="pts num ' + (defecto ? 'mas' : 'menos') + '" aria-label="' + (defecto ? 'aporta ' : 'cuesta ') + g.puntos + ' puntos">' + (defecto ? '+' : '−') + g.puntos + '</span>' });
   }
 
-  function listaTraits(calc) {
-    return calc.traits.length
-      ? '<div style="display:flex;flex-direction:column;gap:10px"><h3 style="font-size:20px">Traits</h3>' + calc.traits.map(function (t) {
-        return '<div class="item"><div class="t"><b>' + esc(t.nombre) + '</b><ul class="componentes">' + t.incluye.map(function (c) {
-          return '<li>' + esc(c.nombre) + ' <span class="mute">(' + (c.tipo === 'feat' ? 'feat' : 'ventaja') + ')</span></li>';
-        }).join('') + '</ul></div><span class="chip gold">Trait</span></div>';
-      }).join('') + '</div>'
-      : '';
+  function filaTrait(t) {
+    var inc = t.incluye.map(function (c) { return '· ' + c.nombre + ' (' + (c.tipo === 'feat' ? 'feat' : 'ventaja') + ')'; }).join('\n');
+    return fila({ nombre: t.nombre, tip: 'Incluye:\n' + inc, medio: chip('Trait', 'gold') });
   }
 
+  /** Méritos y luego defectos en una misma lista; los traits van debajo con el mismo formato. */
+  function filasMeritos(calc) {
+    var m = calc.meritos;
+    var orden = m.lista.filter(function (g) { return g.tipo !== 'defecto'; }).concat(m.lista.filter(function (g) { return g.tipo === 'defecto'; }));
+    var html = orden.length ? '<ul class="ren-lista">' + orden.map(filaMerito).join('') + '</ul>' : '<p class="mute">Sin méritos ni defectos registrados.</p>';
+    if (calc.traits.length) {
+      html += '<div class="bloque-feats"><span class="eyebrow">Traits</span><ul class="ren-lista">' + calc.traits.map(filaTrait).join('') + '</ul></div>';
+    }
+    return html;
+  }
+
+  function textoSaldo(m) {
+    return 'Iniciales ' + m.iniciales + ' + defectos ' + m.defectos + ' − méritos ' + m.meritos + ' = ' + m.total;
+  }
+
+  function contarMeritos(m) {
+    var d = m.lista.filter(function (g) { return g.tipo === 'defecto'; }).length;
+    return { meritos: m.lista.length - d, defectos: d };
+  }
+
+  /** Vista Jugar: una tarjeta con la lista; el saldo es un chip con el desglose en el tooltip. */
+  function seccionMeritosJuego(calc) {
+    var m = calc.meritos;
+    var n = contarMeritos(m);
+    return '<section class="card bloque-juego"><div class="row-between" style="align-items:center"><h2>Méritos y defectos</h2><span class="chips">' +
+      chipTip('Saldo ' + m.total, m.total < 0 ? 'warn' : 'acc', textoSaldo(m)) + chip(plural(n.meritos, 'mérito', 'méritos'), 'soft') + chip(plural(n.defectos, 'defecto', 'defectos'), 'soft') +
+      '</span></div>' + filasMeritos(calc) + '</section>';
+  }
+
+  /** Vista Construir: un solo desplegable con las cajas de puntos y la misma lista. */
   function seccionMeritos(calc, pj, con) {
     var m = calc.meritos;
+    var n = contarMeritos(m);
     var caja = function (rotuloTxt, valor, cls) { return '<div class="caja ' + (cls || '') + '"><small>' + rotuloTxt + '</small><b>' + valor + '</b></div>'; };
-    var lista = listaMeritos(m, 'merito');
-    var cuerpo = (con ? '<p class="sub">Los méritos solo se pagan con defectos. Puntos iniciales: floor(' + calc.nivel.nivel + ' / 2) + 1 = ' + m.iniciales + '. Un mérito heroico cuesta 10 puntos.</p>' : '') +
+    var cuerpo = (con ? '<p class="sub">Los méritos solo se pagan con defectos: cada defecto aporta puntos al fondo. Puntos iniciales: floor(' + calc.nivel.nivel + ' / 2) + 1 = ' + m.iniciales + '. Un mérito heroico cuesta 10 puntos.</p>' : '') +
       '<div class="cajas">' + caja('Iniciales', m.iniciales) + caja('Defectos', '+' + m.defectos) + caja('Méritos', '−' + m.meritos) + caja('Saldo', m.total, m.total < 0 ? 'neg' : 'saldo') + '</div>' +
-      '<div class="lista">' + (lista || '<p class="mute">Sin méritos registrados.</p>') + '</div>' + listaTraits(calc) +
+      filasMeritos(calc) +
       (con && pj.datosDeEjemplo ? '<p class="mute" style="font-size:13px">Los costos, el valor de los defectos y el descuento por perfil racial son valores de ejemplo: están pendientes del diseñador.</p>' : '');
-    var cantidad = m.lista.filter(function (g) { return g.tipo !== 'defecto'; }).length;
-    return desplegable('meritos', 'Méritos', chip('Saldo ' + m.total, m.total < 0 ? 'warn' : 'acc') + chip(plural(cantidad, 'mérito', 'méritos'), 'soft'), cuerpo);
-  }
-
-  function seccionDefectos(calc, con) {
-    var m = calc.meritos;
-    var lista = listaMeritos(m, 'defecto');
-    var cantidad = m.lista.filter(function (g) { return g.tipo === 'defecto'; }).length;
-    var cuerpo = (con ? '<p class="sub">Cada defecto aporta puntos al fondo con el que se pagan los méritos.</p>' : '') +
-      '<div class="lista">' + (lista || '<p class="mute">Sin defectos registrados.</p>') + '</div>';
-    return desplegable('defectos', 'Defectos', chip('+' + m.defectos + ' puntos', 'acc') + chip(plural(cantidad, 'defecto', 'defectos'), 'soft'), cuerpo);
+    return desplegable('meritos', 'Méritos y defectos', chip('Saldo ' + m.total, m.total < 0 ? 'warn' : 'acc') + chip(plural(n.meritos, 'mérito', 'méritos'), 'soft') + chip(plural(n.defectos, 'defecto', 'defectos'), 'soft'), cuerpo);
   }
 
 
@@ -475,8 +562,7 @@
     ft.lista.forEach(function (x, i) { (x.tipo === 'habilidad-tipo-conjuro' ? activos : pasivos).push({ x: x, borrador: i >= confirmados }); });
     var filas = pasivos.map(function (o) {
       var cat = estado.indiceFeats[o.x.id];
-      return '<li class="pasivo"><span class="nm">' + esc(o.x.nombre) + '</span>' + (o.borrador ? chip('Borrador', 'gold') : '') +
-        (cat && cat.resumen ? '<span class="mute res">' + esc(cat.resumen) + '</span>' : '') + enlaceFeat(cat) + '</li>';
+      return fila({ nombre: o.x.nombre, tip: cat && cat.resumen ? cat.resumen : '', medio: o.borrador ? chip('Borrador', 'gold') : '', der: enlaceFeat(cat) });
     }).join('');
     var tarjetas = activos.map(function (o) {
       var cat = estado.indiceFeats[o.x.convertidoDe];
@@ -484,10 +570,10 @@
         (cat && cat.resumen ? '<small class="mute">' + esc(cat.resumen) + '</small>' : '') +
         '<div class="acc-fila">' + chip('Costo en mana: pendiente', 'soft') + enlaceFeat(cat) + '</div></div>';
     }).join('');
-    return '<section class="card feats-juego"><div class="row-between" style="align-items:center"><h2>Feats</h2>' +
+    return '<section class="card bloque-juego"><div class="row-between" style="align-items:center"><h2>Feats</h2>' +
       '<span class="chips">' + chip(ft.slotsUsados + ' de ' + ft.slotsTotales + ' slots', ft.slotsLibres ? 'acc' : 'soft') + (ft.slotsLibres ? chip(plural(ft.slotsLibres, 'libre', 'libres'), 'gold') : '') + '</span></div>' +
       '<div class="bloque-feats"><span class="eyebrow">Pasivos</span>' +
-      (filas ? '<ul class="pasivos">' + filas + '</ul>' : '<p class="mute">Sin feats pasivos.</p>') + '</div>' +
+      (filas ? '<ul class="ren-lista">' + filas + '</ul>' : '<p class="mute">Sin feats pasivos.</p>') + '</div>' +
       (tarjetas ? '<div class="bloque-feats"><span class="eyebrow">Activos</span><div class="grid g300">' + tarjetas + '</div></div>' : '') + '</section>';
   }
 
@@ -658,6 +744,31 @@
 
   // ---- equipo
 
+  /** Vista Jugar: la armadura y cada extremidad en una línea; las cargas y el detalle van en el tooltip. */
+  function seccionEquipoJuego(calc) {
+    var e = calc.equipo;
+    var tipoTxt = { arma: 'Arma', objeto: 'Objeto' };
+    var idxObjeto = {};
+    e.objetos.forEach(function (o, i) { idxObjeto[o.id] = i + 1; });
+    var filaItem = function (etiqueta, it, vacio, extremidad) {
+      if (!it) return fila({ clase: 'libre', etiqueta: etiqueta, nombre: vacio });
+      var ayuda = it.tipo === 'armadura' ? 'Armadura: no ocupa extremidad ni cuenta entre los ' + e.limites.objetos + ' objetos mágicos.'
+        : it.tipo === 'arma' ? 'Arma en ' + extremidad.toLowerCase() + ': no cuenta entre los ' + e.limites.objetos + ' objetos mágicos.'
+        : 'Objeto mágico ' + idxObjeto[it.id] + ' de ' + e.limites.objetos + ', en ' + extremidad.toLowerCase() + '.';
+      var carga = '';
+      if (it.cargas) {
+        ayuda += '\n' + it.cargas.actuales + ' de ' + it.cargas.max + ' cargas' + (it.cargas.recarga === 'diaria' ? ', recarga diaria' : ', sin recarga');
+        carga = '<span class="chip soft num" aria-label="' + it.cargas.actuales + ' de ' + it.cargas.max + ' cargas">' + it.cargas.actuales + '/' + it.cargas.max + '</span>';
+      }
+      return fila({ etiqueta: etiqueta, nombre: it.nombre, tip: ayuda, medio: tipoTxt[it.tipo] ? chip(tipoTxt[it.tipo]) : '', der: carga });
+    };
+    var filas = filaItem('Armadura', e.armadura, 'Sin armadura', '');
+    e.porExtremidad.forEach(function (x) { filas += filaItem(x.etiqueta, x.item, 'Libre', x.etiqueta); });
+    return '<section class="card bloque-juego"><div class="row-between" style="align-items:center"><h2>Equipo</h2><span class="chips">' +
+      chip('Armadura ' + e.conteo.armadura + '/' + e.limites.armadura, 'soft') + chip('Arma ' + e.conteo.arma + '/' + e.limites.arma, 'soft') +
+      chip('Objetos mágicos ' + e.conteo.objetos + '/' + e.limites.objetos, 'soft') + '</span></div><ul class="ren-lista">' + filas + '</ul></section>';
+  }
+
   function seccionEquipo(calc, con) {
     var e = calc.equipo;
     var cargas = function (c) {
@@ -762,17 +873,18 @@
       ? '<div class="avisos borrador-aviso"><b>Hay ' + plural(borr.length, 'entrada', 'entradas') + ' en el borrador sin guardar en el personaje. Cámbiate a «Construir» para verlas o copiarlas.</b></div>'
       : '';
     // Todo lo que no es la base, los atributos o el registro de sesiones va plegado.
+    // En Jugar, feats, equipo y méritos/defectos son listas a la vista; en Construir se editan dentro de plegables.
     var plegables = '<section class="desp-grupo">' +
       (con ? seccionBorrador(calcB, pj, borr) + seccionFeats(calc, calcB, pj, con) : '') +
-      seccionLogros(calc, calcB, con) + seccionEquipo(calc, con) +
-      seccionMeritos(calc, pj, con) + seccionDefectos(calc, con) + seccionTiradas(calcB, con) +
+      seccionLogros(calc, calcB, con) +
+      (con ? seccionEquipo(calc, con) + seccionMeritos(calc, pj, con) + seccionTiradas(calcB, con) : '') +
       seccionZeo(calcB) + seccionMana(calcB) + seccionMagia(calcB) + '</section>';
     return '<div class="page">' +
       '<header class="topbar"><div class="brand"><b>EverwhiteEmperor</b><span class="eyebrow">Visor de personajes</span></div>' +
       '<div class="tools">' + selectorModo() + (pj.datosDeEjemplo ? chip('Datos de ejemplo · personaje inventado', 'gold') : '') + sel +
       '<label class="btn file">Abrir otro personaje (.json)<input type="file" id="archivo" accept="application/json,.json"></label>' +
       '<button class="btn" id="tema" type="button" aria-pressed="' + tema + '">' + (tema ? 'Tema noche' : 'Tema hielo') + '</button></div></header>' +
-      '<div id="msg" role="status"></div>' + seccionAvisos(calcB) + seccionFicha(calc, calcB, pj, con) + avisoBorrador + (con ? '' : seccionFeatsJuego(calc, calcB)) + plegables + seccionSesiones(calc) +
+      '<div id="msg" role="status"></div>' + seccionAvisos(calcB) + seccionFicha(calc, calcB, pj, con) + avisoBorrador + (con ? '' : seccionFeatsJuego(calc, calcB) + '<div class="bloques-juego">' + seccionEquipoJuego(calc) + seccionMeritosJuego(calc) + '</div>') + plegables + seccionSesiones(calc) +
       '<footer><p class="pie">' + (pj.datosDeEjemplo ? 'Los nombres de raza, méritos, objetos y logros son inventados. ' : '') +
       'Las reglas de Pathfinder 1e se usan bajo la OGL 1.0a; el proyecto es gratuito y no tiene afiliación con Paizo. Los feats se importaron sin su texto: se leen en Archives of Nethys.</p></footer></div>';
   }
@@ -798,6 +910,7 @@
       return;
     }
     estado.vista = v;
+    ocultarTip();
     app.innerHTML = paginaCompleta(v);
     document.title = pj.nombre + ' · EverwhiteEmperor';
     conectar();
@@ -854,13 +967,15 @@
     if (v && cont) cont.innerHTML = listaLogros(v.calcB);
   }
 
-  function refrescarVitales(rec, delta) {
+  /** Redibuja solo HP y MP; `foco` es el selector del botón que debe conservar el foco. */
+  function refrescarVitales(foco) {
     var v = estado.vista;
     var cont = document.getElementById('vitales');
     if (!v || !cont) return;
-    cont.innerHTML = htmlVitales(v.calcB, v.pj);
-    var otra = cont.querySelector('[data-accion="rec"][data-recurso="' + rec + '"][data-delta="' + delta + '"]');
-    if (otra) otra.focus();
+    ocultarTip();
+    cont.innerHTML = htmlVitales(v.calcB, v.pj, estado.modo === 'jugar');
+    var otra = foco ? cont.querySelector(foco) : null;
+    if (otra && !otra.disabled) otra.focus();
   }
 
   function copiar(texto, area) {
@@ -974,8 +1089,18 @@
       var delta = boton.getAttribute('data-delta');
       var max = estado.vista.calcB.recursos[rec].maximo;
       var actual = valorActual(pj, rec, max);
-      fijarActual(pj, rec, delta === 'max' ? max : Math.max(0, Math.min(max, actual + Number(delta))), max);
-      refrescarVitales(rec, delta);
+      fijarActual(pj, rec, delta === 'max' ? max : Math.max(minimoVital(rec, max), Math.min(max, actual + Number(delta))), max);
+      refrescarVitales('[data-accion="rec"][data-recurso="' + rec + '"][data-delta="' + delta + '"]');
+    } else if (a === 'descanso') {
+      var vc = estado.vista.calcB;
+      var cfg = estado.ctx.vitalidad;
+      var cur = Core.curacionDescanso(cfg, boton.getAttribute('data-id'), vc.nivel.nivel, valorAtributo(vc, cfg.descanso.bonoCuerpo.atributo));
+      var tope = vc.recursos.hp.maximo;
+      var antes = valorActual(pj, 'hp', tope);
+      var despues = Math.min(tope, antes + cur.hp);
+      fijarActual(pj, 'hp', despues, tope);
+      refrescarVitales('[data-accion="descanso"][data-id="' + cur.tipo + '"]');
+      toast(cur.nombre + ' (' + cur.horas + ' h): +' + (despues - antes) + ' HP, de ' + conSigno(antes) + ' a ' + conSigno(despues) + '.');
     } else if (a === 'quitar') {
       var borr = borradorDe(pj).slice();
       borr.splice(Number(boton.getAttribute('data-indice')), 1);
@@ -1046,6 +1171,62 @@
     });
   }
 
+  // ---- tooltips: un solo cuadro flotante para todos los [data-tip]; sale con el cursor, el teclado y el toque
+
+  var tipOrigen = null;
+  function cuadroTip() {
+    var t = document.getElementById('tooltip');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'tooltip';
+      t.setAttribute('role', 'tooltip');
+      t.hidden = true;
+      app.parentNode.appendChild(t);
+    }
+    return t;
+  }
+  function ocultarTip() {
+    var t = document.getElementById('tooltip');
+    if (t) t.hidden = true;
+    if (tipOrigen && tipOrigen.removeAttribute) tipOrigen.removeAttribute('aria-describedby');
+    tipOrigen = null;
+  }
+  function mostrarTip(el) {
+    var texto = el.getAttribute('data-tip');
+    if (!texto) return;
+    if (tipOrigen && tipOrigen !== el && tipOrigen.removeAttribute) tipOrigen.removeAttribute('aria-describedby');
+    var t = cuadroTip();
+    t.textContent = texto;
+    t.hidden = false;
+    var r = el.getBoundingClientRect();
+    var ancho = t.offsetWidth, alto = t.offsetHeight;
+    var x = Math.max(8, Math.min(r.left, window.innerWidth - ancho - 8));
+    var y = r.bottom + 6;
+    if (y + alto > window.innerHeight - 8) y = Math.max(8, r.top - alto - 6);
+    t.style.left = x + 'px';
+    t.style.top = y + 'px';
+    el.setAttribute('aria-describedby', 'tooltip');
+    tipOrigen = el;
+  }
+  function conTip(ev) { return ev.target && ev.target.closest ? ev.target.closest('[data-tip]') : null; }
+  app.addEventListener('mouseover', function (ev) { var el = conTip(ev); if (el) mostrarTip(el); });
+  app.addEventListener('mouseout', function (ev) {
+    var el = conTip(ev);
+    if (el && !(ev.relatedTarget && el.contains(ev.relatedTarget))) ocultarTip();
+  });
+  app.addEventListener('focusin', function (ev) { var el = conTip(ev); if (el) mostrarTip(el); });
+  app.addEventListener('focusout', function (ev) { if (conTip(ev)) ocultarTip(); });
+  document.addEventListener('click', function (ev) {
+    var el = conTip(ev);
+    if (el && app.contains(el)) mostrarTip(el); else ocultarTip();
+  });
+  // Al desplazar la página el tooltip sigue a su elemento; si este sale de la pantalla, se cierra.
+  window.addEventListener('scroll', function () {
+    if (!tipOrigen) return;
+    var r = tipOrigen.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > window.innerHeight) ocultarTip(); else mostrarTip(tipOrigen);
+  }, { passive: true });
+
   // Los clics y los filtros se atienden una sola vez, en #app, porque la página se redibuja entera.
   app.addEventListener('click', function (ev) {
     var b = ev.target.closest ? ev.target.closest('[data-accion]') : null;
@@ -1075,6 +1256,7 @@
     refrescarPicker();
   });
   app.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape') ocultarTip();
     var m = /^tr-(hp|mp)-res$/.exec(ev.target.id || '');
     if (m && ev.key === 'Enter') { ev.preventDefault(); tirar(m[1], 'manual'); }
   });

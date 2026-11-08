@@ -755,6 +755,56 @@
     };
   }
 
+  // ---- HP actual: fatiga, estados y descansos (el valor actual no se guarda en el registro)
+
+  /** HP enteros que cumplen "hp ≤ max × pct / 100": el tope es el entero hacia abajo, también bajo cero. */
+  function hpDeUmbral(max, pct) { return Math.floor(max * pct / 100); }
+
+  /** Umbrales de un máximo de HP dado, ya convertidos a HP, para dibujarlos y explicarlos. */
+  function umbralesVitales(max, cfg) {
+    let acumulado = 0;
+    const fatiga = cfg.fatiga.umbrales.map(function (u) {
+      acumulado += u.penalizador;
+      return { pct: u.pct, hp: hpDeUmbral(max, u.pct), penalizador: u.penalizador, acumulado: acumulado };
+    });
+    const estados = cfg.estados.map(function (e) {
+      return { id: e.id, nombre: e.nombre, pct: e.pct, hp: hpDeUmbral(max, e.pct), detalle: e.detalle || '' };
+    });
+    return { fatiga: fatiga, estados: estados };
+  }
+
+  /**
+   * Fatiga y estado de un HP actual. La fatiga es el penalizador acumulado de los umbrales alcanzados
+   * y el estado es el más grave alcanzado; sin máximo de HP (aún sin tiradas) no hay ninguno de los dos.
+   */
+  function estadoVital(hp, max, cfg) {
+    if (!(max > 0)) return { hp: hp, max: max, fatiga: 0, estado: null, nivelFatiga: 0 };
+    const u = umbralesVitales(max, cfg);
+    let fatiga = 0, nivelFatiga = 0;
+    u.fatiga.forEach(function (t, i) { if (hp <= t.hp) { fatiga = t.acumulado; nivelFatiga = i + 1; } });
+    let estado = null;
+    u.estados.forEach(function (e) { if (hp <= e.hp) estado = { id: e.id, nombre: e.nombre, detalle: e.detalle }; });
+    return { hp: hp, max: max, fatiga: fatiga, estado: estado, nivelFatiga: nivelFatiga };
+  }
+
+  /**
+   * HP que cura un descanso: nivel × curación por nivel, más el bono de cuerpo (el modificador del
+   * atributo, nunca negativo, por nivel si la regla lo dice), proporcional a las horas del descanso
+   * respecto del largo y con un mínimo de 1.
+   */
+  function curacionDescanso(cfg, tipoId, nivel, valorAtributo) {
+    const d = cfg.descanso;
+    const tipo = d.tipos.find(function (t) { return t.id === tipoId; });
+    if (!tipo) throw new Error('descanso desconocido: ' + tipoId);
+    const mod = Math.max(0, modAtributo(valorAtributo));
+    const base = nivel * d.curacionPorNivel;
+    const bono = d.bonoCuerpo.porNivel ? mod * nivel : mod;
+    const largo = base + bono;
+    const hp = Math.max(1, Math.floor(largo * tipo.horas / d.horasLargo));
+    return { tipo: tipo.id, nombre: tipo.nombre, horas: tipo.horas, nivel: nivel, base: base, bono: bono, mod: mod,
+      atributo: d.bonoCuerpo.atributo, porNivel: !!d.bonoCuerpo.porNivel, largo: largo, hp: hp };
+  }
+
   /** Archivos de data/ que lee el motor, por clave de contexto. */
   const ARCHIVOS = {
     config: 'xp-config.json',
@@ -767,6 +817,7 @@
     achievements: 'achievements.json',
     traits: 'traits.json',
     classes: 'classes.json',
+    vitalidad: 'vitalidad.json',
   };
 
   /** Convierte los JSON de data/ (ya parseados, por clave de ARCHIVOS) en el contexto del motor. */
@@ -783,6 +834,7 @@
       achievements: raw.achievements.achievements,
       traits: raw.traits.traits,
       classes: raw.classes.clases,
+      vitalidad: raw.vitalidad,
     };
   }
 
@@ -802,6 +854,9 @@
     derivarAtributos: derivarAtributos,
     atributosCompletos: atributosCompletos,
     validarAtributos: validarAtributos,
+    umbralesVitales: umbralesVitales,
+    estadoVital: estadoVital,
+    curacionDescanso: curacionDescanso,
     babDeClase: babDeClase,
     evaluarRequisitos: evaluarRequisitos,
     contextoJugador: contextoJugador,

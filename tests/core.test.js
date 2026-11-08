@@ -577,6 +577,69 @@ test('el retrato se pasa tal cual y es opcional', () => {
   assert.equal(Core.calcularPersonaje(ctx, pj([[xp(0)]], { imagen: 42 })).personaje.imagen, null);
 });
 
+// ------------------------------------------------------ HP actual: fatiga, estados y descansos
+
+test('umbrales de vitalidad: porcentajes del diseñador convertidos a HP enteros', () => {
+  const u = Core.umbralesVitales(56, contexto().vitalidad);
+  assert.deepEqual(u.fatiga.map((t) => [t.pct, t.hp, t.penalizador, t.acumulado]), [[50, 28, -2, -2], [25, 14, -4, -6], [10, 5, -4, -10]]);
+  assert.deepEqual(u.estados.map((e) => [e.id, e.hp]), [['down', 0], ['ko', -14], ['deadly', -28]]);
+  // Con un máximo de 10, −25 % son −2,5: el primer entero que cumple es −3.
+  assert.deepEqual(Core.umbralesVitales(10, contexto().vitalidad).estados.map((e) => e.hp), [0, -3, -5]);
+});
+
+test('fatiga: −2 con HP ≤ 50 %, −6 con ≤ 25 % y −10 con ≤ 10 %', () => {
+  const cfg = contexto().vitalidad;
+  const fatiga = (hp) => Core.estadoVital(hp, 56, cfg).fatiga;
+  assert.deepEqual([56, 29, 28, 15, 14, 6, 5, 1].map(fatiga), [0, 0, -2, -2, -6, -6, -10, -10]);
+  assert.equal(Core.estadoVital(28, 56, cfg).nivelFatiga, 1);
+  assert.equal(Core.estadoVital(5, 56, cfg).nivelFatiga, 3);
+  assert.equal(Core.estadoVital(56, 56, cfg).nivelFatiga, 0);
+});
+
+test('estados: DOWN en 0, K.O. en −25 % y Deadly en −50 %; con HP positivo no hay estado', () => {
+  const cfg = contexto().vitalidad;
+  const estado = (hp) => { const e = Core.estadoVital(hp, 56, cfg).estado; return e && e.nombre; };
+  assert.deepEqual([1, 0, -13, -14, -27, -28, -56].map(estado), [null, 'DOWN', 'DOWN', 'K.O.', 'K.O.', 'Deadly', 'Deadly']);
+  // En DOWN la fatiga sigue siendo la del último tramo.
+  assert.equal(Core.estadoVital(0, 56, cfg).fatiga, -10);
+});
+
+test('sin máximo de HP no hay fatiga ni estado', () => {
+  const e = Core.estadoVital(0, 0, contexto().vitalidad);
+  assert.deepEqual([e.fatiga, e.estado], [0, null]);
+});
+
+test('descansos: largo = nivel × (1 + mod. de CON), corto = 2/8 del largo, con mínimo de 1', () => {
+  const cfg = contexto().vitalidad;
+  // Nivel 7, CON 13 (+1): 7 de base y 7 de bono por cuerpo.
+  const largo = Core.curacionDescanso(cfg, 'largo', 7, 13);
+  assert.deepEqual([largo.base, largo.bono, largo.largo, largo.hp, largo.horas], [7, 7, 14, 14, 8]);
+  assert.equal(Core.curacionDescanso(cfg, 'corto', 7, 13).hp, 3); // floor(14 × 2 / 8)
+  // Un modificador negativo no resta: el bono mínimo es 0.
+  const flojo = Core.curacionDescanso(cfg, 'largo', 7, 6);
+  assert.deepEqual([flojo.mod, flojo.bono, flojo.hp], [0, 0, 7]);
+  // Nivel 1 sin bono: el corto curaría 0 y se sube al mínimo de 1.
+  assert.equal(Core.curacionDescanso(cfg, 'corto', 1, 10).hp, 1);
+  assert.throws(() => Core.curacionDescanso(cfg, 'siesta', 7, 13), /desconocido/);
+});
+
+test('el bono de cuerpo puede ser fijo en vez de por nivel', () => {
+  const cfg = JSON.parse(JSON.stringify(contexto().vitalidad));
+  cfg.descanso.bonoCuerpo.porNivel = false;
+  assert.equal(Core.curacionDescanso(cfg, 'largo', 7, 13).hp, 8);
+});
+
+test('data/vitalidad.json: umbrales ordenados de mayor a menor y descansos con horas válidas', () => {
+  const cfg = contexto().vitalidad;
+  const pcts = cfg.fatiga.umbrales.map((u) => u.pct);
+  assert.deepEqual(pcts.slice().sort((a, b) => b - a), pcts);
+  assert.ok(cfg.fatiga.umbrales.every((u) => u.penalizador < 0));
+  const est = cfg.estados.map((e) => e.pct);
+  assert.deepEqual(est.slice().sort((a, b) => b - a), est);
+  assert.ok(cfg.descanso.tipos.every((t) => t.horas > 0 && t.horas <= cfg.descanso.horasLargo));
+  assert.ok(cfg.descanso.tipos.some((t) => t.id === 'largo' && t.horas === cfg.descanso.horasLargo));
+});
+
 // ------------------------------------------------------ personaje de ejemplo
 
 test('personaje de ejemplo: todo lo derivado coincide y no hay avisos', () => {

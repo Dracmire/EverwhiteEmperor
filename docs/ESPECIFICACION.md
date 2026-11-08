@@ -1,6 +1,6 @@
-# EverwhiteEmperor — Especificación del tracker de personajes (v0.8.1)
+# EverwhiteEmperor — Especificación del tracker de personajes (v0.8.2)
 
-Estado: borrador del 2026-11-08. La v0.8.1 ajusta la vista Jugar (feats como lista, derivados en mini tarjetas) y documenta el diseño nuevo de Mana por Gates, Magia con conjuros y habilidades de clase por nivel, que todavía **no está implementado**. La v0.8 cambió los atributos (STR, DEX, PER, INT, WIS y CHA; CON, SPR y MND se derivan), añade HP y MP con tiradas de dados, y rehace la ficha del visor: retrato, base y atributos arriba, todo lo demás plegado y el registro de sesiones abajo, con achievements asignables desde una lista con scroll (ver "Cambios respecto a versiones anteriores" al final).
+Estado: borrador del 2026-11-08. La v0.8.2 añade la fatiga, los estados DOWN, K.O. y Deadly y los descansos a la vista Jugar (1.2), convierte Equipo y Méritos y defectos en listas de una línea con tooltip, deja las tiradas de HP y MP solo en Construir, y fija que los Gates conectan por defecto salvo incompatibilidad (4.1.2). La v0.8.1 ajusta la vista Jugar (feats como lista, derivados en mini tarjetas) y documenta el diseño nuevo de Mana por Gates, Magia con conjuros y habilidades de clase por nivel, que todavía **no está implementado**. La v0.8 cambió los atributos (STR, DEX, PER, INT, WIS y CHA; CON, SPR y MND se derivan), añade HP y MP con tiradas de dados, y rehace la ficha del visor: retrato, base y atributos arriba, todo lo demás plegado y el registro de sesiones abajo, con achievements asignables desde una lista con scroll (ver "Cambios respecto a versiones anteriores" al final).
 
 Convención del documento:
 - **[PENDIENTE]**: falta un dato o una decisión del diseñador.
@@ -54,9 +54,36 @@ Restricciones:
 - **[SUPUESTO]** La tirada se asigna al primer nivel sin tirada que ya se alcanzó, o al `nivel` indicado en la entrada. No se puede tirar para un nivel que el personaje no alcanzó ni repetir un nivel.
 - **[SUPUESTO]** El nivel 1 también se tira (no hay valor fijo) y el modificador se aplica a todos los niveles con el valor actual del atributo (si el atributo cambia, el máximo se recalcula).
 - Los niveles sin tirada no son un error: el motor avisa («faltan tiradas de HP en los niveles…») y el máximo solo suma las tiradas hechas.
-- **[SUPUESTO]** El HP y el MP *actuales* (el daño recibido o el mana gastado) no son parte del registro por sesión. El visor los lleva con botones −5, −1, +1, +5 y «Máx», guardados solo en el navegador de quien mira, por personaje.
+- **[SUPUESTO]** El HP y el MP *actuales* (el daño recibido o el mana gastado) no son parte del registro por sesión. El visor los lleva con botones −5, −1, +1, +5 y «Máx», guardados solo en el navegador de quien mira, por personaje. El HP actual puede bajar de 0 hasta −máximo (1.2); el MP se detiene en 0.
 - **[PENDIENTE]** Qué dado usa cada clase para HP y para MP (el visor ofrece d4 a d20; el ejemplo usa d10 para HP y d6 para MP), y si MND tiene algún efecto.
 - **[PENDIENTE]** Si el MP máximo es lo mismo que el «mana ganado» del subsistema de mana (4.1) o son cosas separadas. Hoy el motor las trata por separado: `recursos.mp` (tiradas) y `mana.total` (XP de mana).
+
+### 1.2 HP actual: fatiga, estados y recuperación (v0.8.2) [DECIDIDO salvo lo marcado]
+
+Todo esto vive en la vista **Jugar**. El HP actual sigue siendo un valor del navegador (1.1), no del registro; las cifras salen de `data/vitalidad.json` y las calculan `Core.umbralesVitales`, `Core.estadoVital` y `Core.curacionDescanso`, así que se cambian sin tocar el código.
+
+**Fatiga [DECIDIDO].** Es un **penalizador acumulativo** que depende del HP actual como porcentaje del máximo:
+
+| HP actual | Penalizador de ese tramo | Total |
+|---|---|---|
+| ≤ 50 % | −2 | −2 |
+| ≤ 25 % | −4 más | −6 |
+| ≤ 10 % | −4 más | −10 |
+
+**Estados [DECIDIDO].** Con HP ≤ 0 el personaje está **DOWN**; con HP ≤ −25 % del máximo está **K.O.**; con HP ≤ −50 % está **Deadly**. Por eso el HP actual puede bajar hasta −máximo.
+
+- **[SUPUESTO]** Los umbrales son inclusivos (≤). Cada porcentaje se convierte a HP con `floor(máximo × porcentaje / 100)`, también bajo cero: con un máximo de 56 la fatiga empieza en 28, 14 y 5 HP, y DOWN, K.O. y Deadly empiezan en 0, −14 y −28; con un máximo de 10, −25 % son −2,5 y K.O. empieza en −3.
+- **[SUPUESTO]** En DOWN, K.O. y Deadly la fatiga sigue contando (−10).
+- **[PENDIENTE]** A qué se aplica el penalizador de fatiga (¿todas las tiradas, solo ataque y habilidades?). El visor solo lo muestra, en un chip junto al estado; el tooltip del chip lista los umbrales convertidos a HP, y la barra marca el 50 %, el 25 % y el 10 %.
+- **[PENDIENTE]** Qué significa cada estado en la mesa (si DOWN impide actuar, si K.O. y Deadly piden tiradas de estabilización o muerte). Hoy solo se marcan.
+
+**Recuperación [DECIDIDO que hay un descanso corto de 2 h y uno largo de 8 h, con el valor de Pathfinder y un bono por cuerpo].**
+
+- Pathfinder 1e cura **1 HP por nivel de personaje tras 8 h de descanso** (el doble con un día completo de reposo absoluto) y **no tiene un descanso corto ni usa CON**. Se verificó en Archives of Nethys («Natural Healing»).
+- **[SUPUESTO]** Descanso **largo** (8 h) = `nivel × (1 + bono de cuerpo)`. El **bono de cuerpo** es el modificador de **CON** (el atributo «cuerpo», derivado de STR y DEX) con mínimo 0, y se suma **por nivel**, igual que CON se suma a cada tirada de HP. Con nivel 7 y CON 13 (+1): `7 × (1 + 1) = 14` HP. Si el bono debiera ser fijo, basta con `bonoCuerpo.porNivel: false` (8 HP en el mismo caso).
+- **[SUPUESTO]** Descanso **corto** (2 h) = `floor(largo × 2 / 8)`, con mínimo 1: el valor de Pathfinder repartido por horas. Con el mismo personaje: `floor(14 × 2 / 8) = 3` HP.
+- **[SUPUESTO]** Cada botón suma al HP actual (también desde valores negativos) sin pasar del máximo, y el visor avisa cuánto subió de verdad. Los botones se desactivan con el HP al máximo.
+- **[PENDIENTE]** Si el descanso recupera MP (hoy **no**: el MP se relaciona con el mana de 4.1.2, que sigue abierto), si hay un tope de descansos cortos por día y si el largo recarga también las cargas diarias del equipo (7). Hoy esas cargas se derivan del registro, no del navegador.
 
 ---
 
@@ -323,6 +350,8 @@ Mana es **una serie de poderes, como Zeo**, no un «mana ganado». Crece con SX 
 - Slots de nivel 1 = Gates. Slots de nivel 2 = **nodos**, es decir, pares de Gates que **conectan**. Slots de nivel 3 = **círculos**, es decir, tríos de Gates en que **conectan los tres pares**.
 - Con todos los pares conectados, *n* Gates dan `n + C(n,2) + C(n,3)` slots: 1 Gate = 1, 2 = 3, **3 = 3 + 3 + 1 = 7**, 4 = 14, 5 = 25.
 - **No todos los Gates conectan entre sí**, y eso **resta slots**. Un círculo solo existe si los tres pares del trío conectan. Con 3 Gates y un solo par sin conexión: 3 Gates + 2 nodos + 0 círculos = **5** slots.
+- **Los Gates conectan por defecto [DECIDIDO el 2026-11-08].** Dos Gates **siempre conectan**, salvo que haya un **problema de compatibilidad** entre sus tags. La excepción la define una **tabla de compatibilidad**: son unos **200 tags**, así que la tabla es grande, pero **el jugador maneja solo un puñado** (los tags de sus propios Gates). La tabla lista los pares **incompatibles**; todo par que no figura conecta.
+  - **[SUPUESTO]** Formato: `data/mana-tags.json` con los tags y, por tag, sus tags incompatibles. La relación es simétrica y el validador comprueba que lo sea. El motor solo consulta los tags que el personaje tiene en sus Gates, y el visor muestra únicamente esos.
 - Cada Gate tiene un **tag** y una **función** (capacidad, intensidad, potencia o sentidos). La función es **solo del Gate**. Los **tags se heredan**: el tag es el concepto del Gate y pasa a los nodos y círculos que lo incluyen. Un Gate de fuego y uno de oscuridad pueden no conectar.
 
 Propuesta de entradas del registro (**[SUPUESTO]**, no implementadas). Los nodos y los círculos **no** son entradas: el motor los **deriva** del grafo de Gates y de la compatibilidad entre sus tags.
@@ -336,7 +365,7 @@ Propuesta de entradas del registro (**[SUPUESTO]**, no implementadas). Los nodos
 ]
 ```
 
-- **[PENDIENTE]** **Qué decide si dos Gates conectan** (una tabla de compatibilidad entre tags, una lista de opuestos por tag, o lo decide el GM y queda en el registro), y qué tag lleva un nodo o un círculo (la unión de los tags de sus Gates).
+- **[PENDIENTE]** El **contenido de la tabla de compatibilidad** (los ~200 tags y sus pares incompatibles), si el GM puede forzar o romper una conexión concreta y dejarlo en el registro, y qué tag lleva un nodo o un círculo (la unión de los tags de sus Gates).
 - **[PENDIENTE]** Cuánto SX cuesta cada Gate y si el SX se **gasta** o es solo un umbral; cuánto da cada fuente de MF; qué hace cada función (capacidad, intensidad, potencia, sentidos).
 - **[PENDIENTE]** Cómo se nombra y se inscribe un slot de nodo o de círculo (su identificador, p. ej. `g1-g2`), y si lo que se inscribe debe coincidir con el tag del slot.
 - **[PENDIENTE]** Si hay niveles de mana con tabla de SX como en Zeo, y la relación con el MP que se tira (1.1: ¿el MP es el combustible de las habilidades inscritas, o lo reemplazan los slots?).
@@ -615,6 +644,8 @@ data/
   items.json
   achievements.json
   zeo.json                  # tabla de sx, ramas, pisos y desbloqueos (ya creado)
+  vitalidad.json            # fatiga, estados DOWN/K.O./Deadly y descansos (v0.8.2, ya creado)
+  mana-tags.json            # a futuro: ~200 tags de Gates y sus pares incompatibles (4.1.2)
   subsystems.json           # mana (tabla de XP propia, pendiente)
 characters/
   <id>.json
@@ -695,14 +726,16 @@ El visor de solo lectura ya existe en `viewer/` y se construye dentro del repo (
 2. **Los atributos**: los seis base en una fila (tres por fila en pantallas angostas) y, debajo, los tres derivados como **mini tarjetas en una sola línea** (valor, modificador y «→ HP» o «→ MP»; la fórmula, en el tooltip). HP y MP citan su atributo: «dado + CON 13 (+1)».
 3. **El registro de sesiones** (los «logs»), al final.
 
-Entre la ficha y el registro hay una lista de secciones plegables, todas cerradas la primera vez (el estado se recuerda en el navegador): Borrador (solo en Construir), **Feats**, **Achievements y fate**, **Equipo**, **Méritos**, **Defectos**, **Tiradas de HP y MP**, **Zeo**, **Mana** y **Magia**. Cada cabecera muestra la cifra que importa (slots, fate, saldo de puntos, HP y MP máximos, nivel zeo, mana…).
+Entre la ficha y el registro hay secciones plegables, todas cerradas la primera vez (el estado se recuerda en el navegador). **En Construir**: Borrador, **Feats**, **Achievements y fate**, **Equipo**, **Méritos y defectos** (un solo desplegable desde la v0.8.2), **Tiradas de HP y MP**, **Zeo**, **Mana** y **Magia**. **En Jugar**: Feats, Equipo y Méritos y defectos son tarjetas siempre visibles (abajo), y quedan plegadas solo **Achievements y fate**, **Zeo**, **Mana** y **Magia**. Cada cabecera muestra la cifra que importa (slots, fate, saldo de puntos, HP y MP máximos, nivel zeo, mana…).
+
+**Listas de una línea con tooltip (v0.8.2) [DECIDIDO].** Los feats pasivos, el equipo y los méritos y defectos comparten el mismo formato en Jugar: una fila de aproximadamente una línea por elemento, con el nombre subrayado con puntos y **el detalle en un tooltip**. El tooltip sale con el cursor, con el foco del teclado (Tab) y con un toque, se cierra con Esc o al tocar fuera, y se recoloca para no salirse de la pantalla. Equipo muestra la armadura y cada extremidad con el tipo de objeto y las cargas (`9/10`); Méritos y defectos muestra primero los méritos y después los defectos en una misma lista, con su valor a la derecha (`−3` un mérito que cuesta, `+2` un defecto que aporta), y debajo los traits. El saldo (`Iniciales 4 + defectos 3 − méritos 5 = 2`) es un chip con el desglose en el tooltip. Las dos tarjetas van una junto a la otra en pantalla ancha.
 
 **Retrato.** Si el personaje trae `imagen` se muestra en el marco 4:5; si no, aparece un marco con las iniciales. En Construir, «Cambiar retrato» elige una imagen local (solo en ese navegador) y «Quitar» la descarta.
 
 **Vistas.** Un botón en la cabecera (la última elegida se recuerda):
 
-- **Jugar**: la versión reducida para la mesa. Misma ficha. **Feats no es un desplegable**: es una tarjeta siempre visible con los feats **pasivos como una lista corta** (nombre y enlace) y **una tarjeta solo para cada habilidad activa** (los feats activos reclasificados, 6.2). El resto va en secciones plegables, sin selectores, sin borrador y sin el formulario de tiradas.
-- **Construir**: agrega los selectores, el borrador, las explicaciones de las reglas y el formulario de tiradas.
+- **Jugar**: la versión reducida para la mesa. Misma ficha, y HP suma **fatiga, estados y marcas de umbral**, y la ficha suma **Recuperación** con los botones de descanso corto y largo (1.2). **Feats no es un desplegable**: es una tarjeta siempre visible con los feats **pasivos como una lista de una línea con tooltip** (nombre y enlace) y **una tarjeta solo para cada habilidad activa** (los feats activos reclasificados, 6.2); debajo van Equipo y Méritos y defectos con el mismo formato. Sin selectores, sin borrador y **sin las tiradas de HP y MP**.
+- **Construir**: agrega los selectores, el borrador, las explicaciones de las reglas y la construcción de HP y MP (**Tiradas de HP y MP**, que ya no aparece en Jugar). No muestra fatiga ni recuperación: son de la mesa.
 
 **Selector de feats** (dentro de Feats, vista Construir):
 
@@ -711,7 +744,7 @@ Entre la ficha y el registro hay una lista de secciones plegables, todas cerrada
 
 **Achievements** (dentro de Achievements y fate, vista Construir): el catálogo completo con buscador y recuadro con scroll; cada fila muestra su fate y un botón «Asignar», que se deshabilita si el nivel ya tiene achievement (con un aviso que explica por qué) o si ya está ganado.
 
-**Tiradas de HP y MP** (vista Construir): lista las tiradas por nivel (dado, resultado, modificador y total) y, si faltan niveles, ofrece elegir el dado y **Tirar** (el visor tira por ti) o escribir el resultado de tus dados y **Registrar**.
+**Tiradas de HP y MP** (solo vista Construir): lista las tiradas por nivel (dado, resultado, modificador y total) y, si faltan niveles, ofrece elegir el dado y **Tirar** (el visor tira por ti) o escribir el resultado de tus dados y **Registrar**.
 
 **Borrador.** Todo lo que se elige, asigna o tira va a un borrador: una sesión provisional que el motor calcula como si ya estuviera en el personaje (slots, requisitos, máximo por nivel, fate). Cada acción muestra un aviso flotante con un acceso directo a «Ver borrador». Se puede quitar cualquier entrada; si una entrada deja de ser válida se marca con su error. El borrador se copia como JSON y se pega en la lista `entradas` de una sesión de `characters/<id>.json`. **El visor no escribe en los personajes**: el borrador solo vive en el navegador (`localStorage`), por personaje.
 
@@ -753,7 +786,7 @@ Entre la ficha y el registro hay una lista de secciones plegables, todas cerrada
 
 ## 11. Hitos
 
-Estado en v0.8: el motor (M1) y el visor (M2) están implementados y probados localmente (41 pruebas); M3 está avanzado (catálogo de 665 feats con requisitos estructurados, achievement feats y conversión de activos; faltan revisar los candidatos a activo y los efectos). Falta activar GitHub Pages. M0 (importar pixelkeep) sigue pendiente.
+Estado en v0.8.2: el motor (M1) y el visor (M2) están implementados y probados localmente (48 pruebas); M3 está avanzado (catálogo de 665 feats con requisitos estructurados, achievement feats y conversión de activos; faltan revisar los candidatos a activo y los efectos). Falta activar GitHub Pages. M0 (importar pixelkeep) sigue pendiente.
 
 | Hito | Contenido | Criterio de aceptación |
 |---|---|---|
@@ -823,7 +856,19 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 - Una tirada de 9 con d8, un dado `8`, un dado `d1`, un nivel aún no alcanzado o un nivel repetido: rechazada.
 - Niveles sin tirada: aviso, no error.
 
+### HP actual: fatiga, estados y descansos (v0.8.2)
+
+- Máximo 56: HP 29 → sin fatiga; 28 → −2; 15 → −2; 14 → −6; 6 → −6; 5 → −10.
+- Máximo 56: HP 1 → sin estado; 0 y −13 → DOWN; −14 y −27 → K.O.; −28 y −56 → Deadly. En DOWN la fatiga sigue en −10.
+- Máximo 10: K.O. empieza en −3 (−25 % son −2,5) y Deadly en −5.
+- Sin máximo de HP (aún sin tiradas): ni fatiga ni estado.
+- Nivel 7 y CON 13 (+1): descanso largo = 14 HP, corto = 3 HP. Con CON 6 (modificador −3, el bono no baja de 0): largo = 7 HP. Nivel 1 con CON 10: el corto sale 0 y se sube al mínimo de 1.
+- Con `bonoCuerpo.porNivel: false`: nivel 7 y CON 13 dan 8 HP en el largo.
+- Un descanso que no existe en `data/vitalidad.json`: error.
+
 ### Mana: Gates y slots (casos esperados, sin implementar)
+
+- Dos Gates cuyos tags no figuran como incompatibles en la tabla conectan siempre (3 Gates sin incompatibilidades: 7 slots).
 
 | Gates | Pares sin conexión | Nodos | Círculos | Slots |
 |---|---|---|---|---|
@@ -886,13 +931,22 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 20. Clases: el catálogo trae las 37 clases de Pathfinder 1e con su progresión de ataque base; decidir cuáles se permiten en el sistema y si hay clases propias.
 21. HP y MP: dado de cada clase para HP y para MP, relación del MP con el mana ganado, si MND tiene efecto y si el HP y el MP actuales deben entrar al registro (1.1).
 22. Achievements: sustituir las 12 entradas de ejemplo por la lista real, con su fate y sus condiciones.
-23. Mana por Gates: qué decide si dos Gates conectan, SX por Gate, fuentes de MF y su valor, y qué hace cada función (4.1.2). Ya está decidido que nodos y círculos son aditivos.
+23. Mana por Gates: contenido de la tabla de compatibilidad (~200 tags y sus pares incompatibles), SX por Gate, fuentes de MF y su valor, y qué hace cada función (4.1.2). Ya está decidido que nodos y círculos son aditivos y que los Gates conectan por defecto salvo incompatibilidad.
 24. Magia: sistema y edición del catálogo de conjuros, origen de los datos y escuelas por clase (4.2).
 25. Habilidades de clase: origen del dato y del texto de cada habilidad de las 37 clases; qué clases se permiten (6.5).
+26. Fatiga y recuperación (1.2): a qué se aplica el penalizador de fatiga, qué significan DOWN, K.O. y Deadly en la mesa, el valor del descanso corto (Pathfinder 1e no lo tiene) y del bono de cuerpo (hoy: modificador de CON por nivel), si el descanso recupera MP, y si hay un tope de descansos cortos.
 
 ---
 
 ## Cambios respecto a versiones anteriores
+
+### v0.8.2
+
+- **Fatiga y estados [DECIDIDO]:** penalizador acumulativo según el HP actual (≤ 50 %: −2; ≤ 25 %: −6 en total; ≤ 10 %: −10 en total) y estados DOWN (HP ≤ 0), K.O. (≤ −25 % del máximo) y Deadly (≤ −50 %). El HP actual puede bajar hasta −máximo. Nueva sección 1.2.
+- **Recuperación [DECIDIDO que existe; las cifras son SUPUESTO]:** descanso corto (2 h) y largo (8 h) con el valor de Pathfinder 1e (1 HP por nivel en 8 h) más un bono de cuerpo. Pathfinder 1e no tiene descanso corto ni usa CON, así que el corto es proporcional (2/8) y el bono es el modificador de CON por nivel. No recupera MP. Todo está en `data/vitalidad.json`, y el motor expone `umbralesVitales`, `estadoVital` y `curacionDescanso`.
+- **Gates [DECIDIDO]:** dos Gates **siempre conectan** salvo incompatibilidad; la tabla de compatibilidad entre tags (~200 tags) lista solo los pares incompatibles, y el jugador maneja un puñado. Archivo propuesto `data/mana-tags.json`. Sin implementar.
+- **Visor, vista Jugar:** Equipo y **Méritos y defectos** pasan a tarjetas con listas de una línea y tooltip, igual que los feats pasivos; Méritos y Defectos son un solo bloque (también un solo desplegable en Construir); **las tiradas de HP y MP quedan solo en Construir**; HP muestra fatiga, estado y marcas de umbral, y la ficha suma Recuperación. Nuevo componente de tooltip con cursor, teclado y toque.
+- 48 pruebas del motor (antes 41): umbrales, fatiga, estados, descansos y consistencia de `data/vitalidad.json`.
 
 ### v0.8.1
 
