@@ -318,22 +318,28 @@ Mana es **una serie de poderes, como Zeo**, no un «mana ganado». Crece con SX 
 - **2 Gates crean una línea llamada nodo**, equivalente a un conjuro de nivel 2.
 - **3 Gates crean un circuito cerrado llamado círculo**, equivalente a un conjuro de nivel 3.
 
-Propuesta de entradas del registro (**[SUPUESTO]**, no implementadas; el formato se cierra al confirmar lo pendiente):
+**Modelo de grafo [DECIDIDO el 2026-11-08].** El sistema de mana tiene una visión circular: los Gates son **nodos de un grafo, equidistantes** (dispuestos en un círculo). Los nodos y los círculos son **aditivos**: no consumen los Gates, se suman a ellos.
+
+- Slots de nivel 1 = Gates. Slots de nivel 2 = **nodos**, es decir, pares de Gates que **conectan**. Slots de nivel 3 = **círculos**, es decir, tríos de Gates en que **conectan los tres pares**.
+- Con todos los pares conectados, *n* Gates dan `n + C(n,2) + C(n,3)` slots: 1 Gate = 1, 2 = 3, **3 = 3 + 3 + 1 = 7**, 4 = 14, 5 = 25.
+- **No todos los Gates conectan entre sí**, y eso **resta slots**. Un círculo solo existe si los tres pares del trío conectan. Con 3 Gates y un solo par sin conexión: 3 Gates + 2 nodos + 0 círculos = **5** slots.
+- Cada Gate tiene un **tag** y una **función** (capacidad, intensidad, potencia o sentidos). La función es **solo del Gate**. Los **tags se heredan**: el tag es el concepto del Gate y pasa a los nodos y círculos que lo incluyen. Un Gate de fuego y uno de oscuridad pueden no conectar.
+
+Propuesta de entradas del registro (**[SUPUESTO]**, no implementadas). Los nodos y los círculos **no** son entradas: el motor los **deriva** del grafo de Gates y de la compatibilidad entre sus tags.
 
 ```json
 [
   { "tipo": "mana-fuerza", "cantidad": 1, "fuente": "criatura-contratada", "nota": "Contrato con el lobo blanco" },
   { "tipo": "gate", "id": "g1", "funcion": "capacidad", "tag": "hielo", "oportunidad": "El altar del glaciar", "sx": 10 },
-  { "tipo": "nodo", "id": "n1", "gates": ["g1", "g2"] },
-  { "tipo": "circulo", "id": "c1", "gates": ["g1", "g2", "g3"] },
+  { "tipo": "gate", "id": "g2", "funcion": "potencia", "tag": "oscuridad", "oportunidad": "La grieta bajo la torre", "sx": 10 },
   { "tipo": "inscribir", "slot": "g1", "habilidad": "power-attack" }
 ]
 ```
 
+- **[PENDIENTE]** **Qué decide si dos Gates conectan** (una tabla de compatibilidad entre tags, una lista de opuestos por tag, o lo decide el GM y queda en el registro), y qué tag lleva un nodo o un círculo (la unión de los tags de sus Gates).
 - **[PENDIENTE]** Cuánto SX cuesta cada Gate y si el SX se **gasta** o es solo un umbral; cuánto da cada fuente de MF; qué hace cada función (capacidad, intensidad, potencia, sentidos).
-- **[PENDIENTE]** Si un nodo o un círculo **consume** los Gates que lo forman (2 Gates → 1 slot de nivel 2) o se construye **sobre** ellos y suma slots (los Gates conservan su slot de nivel 1); cuántos nodos y círculos se pueden armar con un conjunto de Gates; si construirlos también pide una oportunidad.
-- **[PENDIENTE]** Si lo que se inscribe debe coincidir con el tag del Gate, y si hay niveles de mana con tabla de SX como en Zeo.
-- **[PENDIENTE]** Relación con el MP que se tira (1.1): ¿el MP es el combustible de las habilidades inscritas, o lo reemplazan los slots?
+- **[PENDIENTE]** Cómo se nombra y se inscribe un slot de nodo o de círculo (su identificador, p. ej. `g1-g2`), y si lo que se inscribe debe coincidir con el tag del slot.
+- **[PENDIENTE]** Si hay niveles de mana con tabla de SX como en Zeo, y la relación con el MP que se tira (1.1: ¿el MP es el combustible de las habilidades inscritas, o lo reemplazan los slots?).
 
 ### 4.2 Magia (conjuros) (v0.8.1) [DECIDIDO la dirección; sin implementar]
 
@@ -817,6 +823,19 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 - Una tirada de 9 con d8, un dado `8`, un dado `d1`, un nivel aún no alcanzado o un nivel repetido: rechazada.
 - Niveles sin tirada: aviso, no error.
 
+### Mana: Gates y slots (casos esperados, sin implementar)
+
+| Gates | Pares sin conexión | Nodos | Círculos | Slots |
+|---|---|---|---|---|
+| 1 | — | 0 | 0 | 1 |
+| 2 | 0 | 1 | 0 | 3 |
+| 2 | 1 | 0 | 0 | 2 |
+| 3 | 0 | 3 | 1 | 7 |
+| 3 | 1 | 2 | 0 | 5 |
+| 4 | 0 | 6 | 4 | 14 |
+| Mana force | 1 | 2 | 4 | 8 |
+| Gates que permite (**[SUPUESTO]**) | 1 | 2 | 3 | 4 |
+
 ### Puntos de méritos y slots de feats
 
 | Nivel | Puntos iniciales `floor(n/2)+1` | Slots de feats (1 en el nivel 1, +1 cada 2 niveles) |
@@ -867,7 +886,7 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 20. Clases: el catálogo trae las 37 clases de Pathfinder 1e con su progresión de ataque base; decidir cuáles se permiten en el sistema y si hay clases propias.
 21. HP y MP: dado de cada clase para HP y para MP, relación del MP con el mana ganado, si MND tiene efecto y si el HP y el MP actuales deben entrar al registro (1.1).
 22. Achievements: sustituir las 12 entradas de ejemplo por la lista real, con su fate y sus condiciones.
-23. Mana por Gates: SX por Gate, fuentes de MF y su valor, qué hace cada función, y si nodos y círculos consumen Gates (4.1.2).
+23. Mana por Gates: qué decide si dos Gates conectan, SX por Gate, fuentes de MF y su valor, y qué hace cada función (4.1.2). Ya está decidido que nodos y círculos son aditivos.
 24. Magia: sistema y edición del catálogo de conjuros, origen de los datos y escuelas por clase (4.2).
 25. Habilidades de clase: origen del dato y del texto de cada habilidad de las 37 clases; qué clases se permiten (6.5).
 
@@ -876,6 +895,8 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 ## Cambios respecto a versiones anteriores
 
 ### v0.8.1
+
+- **Mana por Gates, modelo de grafo [DECIDIDO]:** los Gates son nodos equidistantes de un grafo; los nodos (pares que conectan) y los círculos (tríos con sus tres pares conectados) **suman** slots y no consumen Gates; 3 Gates conectados dan 7 slots; los pares que no conectan restan slots; la función es solo del Gate y los tags se heredan. Nodos y círculos se derivan, no son entradas del registro.
 
 - **Vista Jugar:** Feats deja de ser un desplegable: lista corta de pasivos y una tarjeta solo por cada habilidad activa. Los atributos derivados pasan a una línea de mini tarjetas con su referencia a HP y MP, y HP y MP citan su atributo con el valor (`recursos.*.valor`).
 - **Diseño nuevo, sin implementar:** Mana como serie de poderes por Gates con Mana force (4.1.2, reemplaza el «mana ganado» y el supuesto del atributo que se gasta), Magia con catálogo de conjuros y escuelas por clase (4.2), habilidades de clase por nivel con tooltip y carga de una sola clase (6.5), y la respuesta sobre añadir y quitar en Construir (10.5).
