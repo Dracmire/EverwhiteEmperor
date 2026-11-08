@@ -239,9 +239,76 @@
     return Math.floor((nivel + 1) / 2);
   }
 
-  function proximoSlot(nivel, nivelMax) {
+  /** Slots de feats en un nivel: los de siempre más los feats extra del arquetipo (`extras` = niveles en que los da). */
+  function slotsTotalesEn(nivel, extras) {
+    return slotsDeFeats(nivel) + (extras || []).filter(function (n) { return n <= nivel; }).length;
+  }
+
+  /** Nivel del próximo slot de feat (el normal o un extra del arquetipo), o null si no llega otro. */
+  function proximoSlot(nivel, nivelMax, extras) {
     const sig = nivel % 2 === 1 ? nivel + 2 : nivel + 1;
-    return sig <= nivelMax - 1 ? sig : null;
+    const candidatos = [];
+    if (sig <= nivelMax - 1) candidatos.push(sig);
+    (extras || []).forEach(function (n) { if (n > nivel && n <= nivelMax) candidatos.push(n); });
+    return candidatos.length ? Math.min.apply(null, candidatos) : null;
+  }
+
+  // ------------------------------------------------ habilidades de clase (6.5)
+
+  /**
+   * Habilidades de una clase a un nivel. `detalle` es el archivo data/clases/<id>.json; `arquetipoId` es opcional.
+   * El arquetipo quita las habilidades de `reemplaza` y suma las suyas. Devuelve null si no hay detalle de la clase.
+   * Cada habilidad lleva `mejoras` con `alcanzada` (nivel <= el del personaje) y `proximaMejora`.
+   */
+  function habilidadesDeClase(detalle, arquetipoId, nivel) {
+    if (!detalle) return null;
+    const arquetipos = detalle.arquetipos || [];
+    const arq = arquetipoId ? arquetipos.find(function (a) { return a.id === arquetipoId; }) || null : null;
+    const porId = indexar(detalle.habilidades || []);
+    const quitadas = arq ? (arq.reemplaza || []) : [];
+    const preparar = function (h, origen) {
+      const mejoras = (h.mejoras || []).map(function (m) { return { nivel: m.nivel, detalle: m.detalle, alcanzada: m.nivel <= nivel }; });
+      const sig = mejoras.find(function (m) { return !m.alcanzada; });
+      return {
+        id: h.id, nombre: h.nombre, nivel: h.nivel, ejecucion: h.ejecucion || 'pasivo', detalle: h.detalle || '', origen: origen,
+        sustituye: h.sustituye && porId[h.sustituye] ? { id: h.sustituye, nombre: porId[h.sustituye].nombre } : null,
+        mejoras: mejoras, proximaMejora: sig ? sig.nivel : null,
+      };
+    };
+    const todas = (detalle.habilidades || []).filter(function (h) { return quitadas.indexOf(h.id) < 0; }).map(function (h) { return preparar(h, 'clase'); })
+      .concat(arq ? (arq.habilidades || []).map(function (h) { return preparar(h, 'arquetipo'); }) : [])
+      .sort(function (a, b) { return a.nivel - b.nivel; });
+    return {
+      id: detalle.id, nombre: detalle.nombre, dadoDeGolpe: detalle.dadoDeGolpe || null,
+      arquetipo: arq ? {
+        id: arq.id, nombre: arq.nombre, resumen: arq.resumen || '', fuente: arq.fuente || null,
+        reemplaza: quitadas.map(function (id) { return { id: id, nombre: porId[id] ? porId[id].nombre : id }; }),
+        featsExtra: (arq.featsExtra || []).slice().sort(function (a, b) { return a - b; }),
+      } : null,
+      habilidades: todas.filter(function (h) { return h.nivel <= nivel; }),
+      proximas: todas.filter(function (h) { return h.nivel > nivel; }),
+    };
+  }
+
+  /** Ruta, dentro de data/, del archivo de habilidades de una clase. */
+  function rutaClase(id) {
+    return 'clases/' + id + '.json';
+  }
+
+  // ------------------------------------------------------------ alineamiento
+
+  const ALINEAMIENTO_LEY = { L: 'Legal', N: 'Neutral', C: 'Caótico' };
+  const ALINEAMIENTO_MORAL = { B: 'bueno', N: 'neutral', M: 'malo' };
+
+  /**
+   * Alineamiento del personaje, escrito «ley.moral»: L, N o C y B (bueno), N o M (malo), por ejemplo «L.N» o «N.B».
+   * Devuelve { codigo, texto } o null si no es válido.
+   */
+  function etiquetaAlineamiento(codigo) {
+    const m = /^([LNC])\.([BNM])$/.exec(String(codigo || '').trim().toUpperCase());
+    if (!m) return null;
+    const texto = m[1] === 'N' && m[2] === 'N' ? 'Neutral puro' : ALINEAMIENTO_LEY[m[1]] + ' ' + ALINEAMIENTO_MORAL[m[2]];
+    return { codigo: m[1] + '.' + m[2], texto: texto };
   }
 
   /** Ataque base de una clase a un nivel (completa = nivel, media = 3/4, baja = 1/2; redondeo hacia abajo). null si no se sabe. */
@@ -361,6 +428,19 @@
     validarAtributos(pj.atributos).forEach(function (m) {
       avisos.push({ nivel: 'error', sesion: null, indice: null, mensaje: m });
     });
+    const alineamiento = pj.alineamiento === undefined ? null : etiquetaAlineamiento(pj.alineamiento);
+    if (pj.alineamiento !== undefined && !alineamiento) {
+      avisos.push({ nivel: 'error', sesion: null, indice: null, mensaje: 'el alineamiento "' + pj.alineamiento + '" no es válido: se escribe ley.moral con L, N o C y B, N o M (por ejemplo L.N o N.B)' });
+    }
+    const detalleClase = (ctx.clasesDetalle || {})[pj.clase] || null;
+    const arquetipoElegido = pj.arquetipo === undefined ? null : pj.arquetipo;
+    const arquetipoDef = detalleClase && arquetipoElegido ? (detalleClase.arquetipos || []).find(function (a) { return a.id === arquetipoElegido; }) || null : null;
+    if (arquetipoElegido && !arquetipoDef) {
+      avisos.push({ nivel: 'error', sesion: null, indice: null, mensaje: detalleClase
+        ? 'el arquetipo "' + arquetipoElegido + '" no existe para la clase ' + detalleClase.nombre + ' (hay: ' + (detalleClase.arquetipos || []).map(function (a) { return a.id; }).join(', ') + ')'
+        : 'el arquetipo "' + arquetipoElegido + '" no se puede comprobar: falta data/clases/' + pj.clase + '.json' });
+    }
+    const featsExtra = arquetipoDef && Array.isArray(arquetipoDef.featsExtra) ? arquetipoDef.featsExtra.slice().sort(function (a, b) { return a - b; }) : [];
     const estado = {
       xp: 0,
       sx: {},
@@ -511,8 +591,8 @@
               throw new Error('el feat "' + f.nombre + '" ya está ganado con la elección "' + eleccion + '"');
             }
             const nivel = nivelActual();
-            if (estado.feats.length + 1 > slotsDeFeats(nivel)) {
-              throw new Error('no hay slot de feat libre en el nivel ' + nivel + ' (' + slotsDeFeats(nivel) + ' slots)');
+            if (estado.feats.length + 1 > slotsTotalesEn(nivel, featsExtra)) {
+              throw new Error('no hay slot de feat libre en el nivel ' + nivel + ' (' + slotsTotalesEn(nivel, featsExtra) + ' slots)');
             }
             const evaluacion = evaluarRequisitos(f, {
               atributos: todos, nivel: nivel, claseId: pj.clase, clase: clases[pj.clase] || null,
@@ -833,7 +913,7 @@
       return { id: x, etiqueta: rotulo(x), item: vistas.find(function (v) { return v.extremidad === x; }) || null };
     });
 
-    const sl = slotsDeFeats(nivelInfo.nivel);
+    const sl = slotsTotalesEn(nivelInfo.nivel, featsExtra);
 
     /** Puntos de un recurso: cada nivel suma max(1, tirada + modificador del atributo). */
     function recurso(rec, atributo) {
@@ -862,7 +942,9 @@
         atributos: atributos, derivados: derivados, extremidades: extremidades,
         imagen: typeof pj.imagen === 'string' ? pj.imagen : null,
         preferidos: raza ? raza.atributosPreferidos || [] : [], perfilRacial: perfil,
+        alineamiento: alineamiento, arquetipo: arquetipoDef ? { id: arquetipoDef.id, nombre: arquetipoDef.nombre } : null,
       },
+      clase: habilidadesDeClase(detalleClase, arquetipoDef ? arquetipoDef.id : null, nivelInfo.nivel),
       xp: estado.xp,
       nivel: nivelInfo,
       sesiones: sesionesOut,
@@ -876,8 +958,12 @@
         slotsTotales: sl,
         slotsUsados: estado.feats.length,
         slotsLibres: Math.max(0, sl - estado.feats.length),
-        niveles: Array.from({ length: Math.ceil(cfg.nivelMax / 2) }, function (_, i) { return i * 2 + 1; }).filter(function (n) { return n <= Math.max(nivelInfo.nivel + 2, 9); }),
-        proximoSlot: proximoSlot(nivelInfo.nivel, cfg.nivelMax),
+        // Nivel de cada slot, en orden; los feats extra del arquetipo van mezclados y se listan aparte en `nivelesExtra`.
+        niveles: Array.from({ length: Math.ceil(cfg.nivelMax / 2) }, function (_, i) { return i * 2 + 1; })
+          .concat(featsExtra).filter(function (n) { return n <= Math.max(nivelInfo.nivel + 2, 9); })
+          .sort(function (a, b) { return a - b; }),
+        nivelesExtra: featsExtra.filter(function (n) { return n <= Math.max(nivelInfo.nivel + 2, 9); }),
+        proximoSlot: proximoSlot(nivelInfo.nivel, cfg.nivelMax, featsExtra),
       },
       logros: estado.logros,
       meritos: saldoMeritos(),
@@ -1060,6 +1146,8 @@
       vitalidad: raw.vitalidad,
       mana: raw.mana,
       manaTags: raw.manaTags.tags,
+      // Habilidades por clase (data/clases/<id>.json), solo de las clases que se cargaron: { id: archivo }.
+      clasesDetalle: raw.clasesDetalle || {},
     };
   }
 
@@ -1073,6 +1161,11 @@
     umbralesZeo: umbralesZeo,
     detalleLinea: detalleLinea,
     slotsDeFeats: slotsDeFeats,
+    slotsTotalesEn: slotsTotalesEn,
+    proximoSlot: proximoSlot,
+    habilidadesDeClase: habilidadesDeClase,
+    rutaClase: rutaClase,
+    etiquetaAlineamiento: etiquetaAlineamiento,
     ATRIBUTOS_BASE: ATRIBUTOS_BASE,
     DERIVADOS: DERIVADOS,
     modAtributo: modAtributo,

@@ -13,6 +13,12 @@ function leer(rel) {
 function contexto() {
   const raw = {};
   Object.keys(Core.ARCHIVOS).forEach((k) => { raw[k] = leer('data/' + Core.ARCHIVOS[k]); });
+  // Habilidades por clase (data/clases/<id>.json): se cargan todas las que existan.
+  raw.clasesDetalle = {};
+  fs.readdirSync(path.join(RAIZ, 'data', 'clases')).filter((n) => n.endsWith('.json')).forEach((n) => {
+    const c = leer('data/clases/' + n);
+    raw.clasesDetalle[c.id] = c;
+  });
   return Core.armarContexto(raw);
 }
 const ejemplo = () => leer('characters/ejemplo.json');
@@ -937,4 +943,181 @@ test('personaje de ejemplo: todo lo derivado coincide y no hay avisos', () => {
   assert.deepEqual([r.recursos.hp.valor, r.recursos.mp.valor], [13, 8]);
   assert.equal(r.recursos.mp.maximo, 20);
   assert.deepEqual(r.personaje.derivados, { CON: 13, SPR: 8, MND: 10 });
+});
+
+// ------------------------------------- habilidades de clase, arquetipos y alineamiento (v0.9)
+
+const detalleClase = (id) => leer('data/clases/' + id + '.json');
+const nombresDe = (lista) => lista.map((h) => h.nombre);
+
+test('habilidades de clase: las del nivel, sus mejoras y la próxima mejora', () => {
+  const m1 = Core.habilidadesDeClase(detalleClase('monk'), null, 1);
+  assert.deepEqual(nombresDe(m1.habilidades), ['Bonus Feat', 'Improved Unarmed Strike', 'Flurry of Blows', 'Stunning Fist', 'AC Bonus']);
+  assert.equal(m1.arquetipo, null);
+  assert.equal(m1.proximas[0].nombre, 'Evasion');
+  const m7 = Core.habilidadesDeClase(detalleClase('monk'), null, 7);
+  assert.ok(nombresDe(m7.habilidades).includes('Wholeness of Body'));
+  assert.ok(!nombresDe(m7.habilidades).includes('Improved Evasion'));
+  const fast = m7.habilidades.find((h) => h.id === 'fast-movement');
+  assert.deepEqual(fast.mejoras.map((m) => [m.nivel, m.alcanzada]), [[6, true], [9, false], [12, false], [15, false], [18, false]]);
+  assert.equal(fast.proximaMejora, 9);
+  const evasion = m7.habilidades.find((h) => h.id === 'evasion');
+  assert.equal(evasion.proximaMejora, null);
+  assert.equal(Core.habilidadesDeClase(null, null, 7), null);
+});
+
+test('arquetipo Sombra asesina: sustituye cinco habilidades y no usa engaño', () => {
+  const base = Core.habilidadesDeClase(detalleClase('monk'), null, 20);
+  const arq = Core.habilidadesDeClase(detalleClase('monk'), 'sombra-asesina', 20);
+  const ids = (r) => r.habilidades.map((h) => h.id);
+  ['stunning-fist', 'maneuver-training', 'purity-of-body', 'wholeness-of-body', 'quivering-palm'].forEach((id) => {
+    assert.ok(ids(base).includes(id), id + ' está en la clase base');
+    assert.ok(!ids(arq).includes(id), id + ' lo sustituye el arquetipo');
+  });
+  ['sneak-attack', 'silent-step', 'poison-mastery', 'vanish', 'death-attack'].forEach((id) => assert.ok(ids(arq).includes(id), id));
+  assert.equal(ids(arq).length, ids(base).length, 'sustituye una por una');
+  assert.deepEqual(arq.arquetipo.reemplaza.map((r) => r.nombre), ['Stunning Fist', 'Maneuver Training', 'Purity of Body', 'Wholeness of Body', 'Quivering Palm']);
+  const sneak = arq.habilidades.find((h) => h.id === 'sneak-attack');
+  assert.equal(sneak.origen, 'arquetipo');
+  assert.equal(sneak.sustituye.nombre, 'Stunning Fist');
+  // En el nivel 7 todavía no tiene Death Attack, que llega al 15.
+  const n7 = Core.habilidadesDeClase(detalleClase('monk'), 'sombra-asesina', 7);
+  assert.ok(!n7.habilidades.some((h) => h.id === 'death-attack'));
+  assert.ok(n7.proximas.some((h) => h.id === 'death-attack' && h.nivel === 15));
+  // Sin engaño: ninguna habilidad del arquetipo es de Bluff, Disguise ni de fintar.
+  detalleClase('monk').arquetipos[0].habilidades.forEach((h) => {
+    assert.ok(!/bluff|disguise|deception|feint|engañ|disfraz|fint/i.test(h.id + ' ' + h.nombre), h.id);
+  });
+  assert.match(detalleClase('monk').arquetipos[0].resumen, /No usa engaño ni disfraz/);
+});
+
+test('arquetipo Polímata sin escuela: quita Arcane School y da feats extra que suman slots', () => {
+  const c = contexto();
+  const mago = (arquetipo, entradas) => ({
+    personaje: 'm', nombre: 'M', raza: 'humano', clase: 'wizard', arquetipo: arquetipo,
+    atributos: { STR: 10, DEX: 14, PER: 13, INT: 18, WIS: 13, CHA: 12 },
+    extremidades: [], sesiones: [{ id: 's0', fecha: '2026-01-01', titulo: 'S0', entradas: entradas }],
+  });
+  const base = [xp(6000)];
+  const r0 = Core.calcularPersonaje(c, mago('sin-escuela', base));
+  assert.deepEqual(errores(r0), []);
+  assert.equal(r0.nivel.nivel, 7);
+  assert.equal(r0.feats.slotsTotales, 6, '4 normales + extras en los niveles 1 y 4');
+  assert.deepEqual(r0.feats.nivelesExtra, [1, 4, 8]);
+  assert.equal(r0.feats.proximoSlot, 8, 'el próximo slot es el extra del nivel 8, antes que el normal del 9');
+  assert.ok(!r0.clase.habilidades.some((h) => h.id === 'arcane-school'));
+  assert.ok(r0.clase.habilidades.some((h) => h.id === 'polymath-training'));
+  // Sin arquetipo conserva la escuela y tiene 4 slots.
+  const r1 = Core.calcularPersonaje(c, mago(undefined, base));
+  assert.equal(r1.feats.slotsTotales, 4);
+  assert.ok(r1.clase.habilidades.some((h) => h.id === 'arcane-school'));
+  assert.equal(r1.personaje.arquetipo, null);
+  // Seis feats caben y el séptimo no.
+  const seis = ['combat-casting', 'spell-penetration', 'empower-spell', 'toughness', 'improved-initiative', 'extend-spell'].map((id) => ({ tipo: 'feat', id }));
+  assert.deepEqual(errores(Core.calcularPersonaje(c, mago('sin-escuela', base.concat(seis)))), []);
+  const siete = Core.calcularPersonaje(c, mago('sin-escuela', base.concat(seis, [{ tipo: 'feat', id: 'silent-spell' }])));
+  assert.match(errores(siete).join(' '), /no hay slot de feat libre en el nivel 7 \(6 slots\)/);
+  // Los slots por nivel: 1 → 2, 3 → 3, 4 → 4, 20 → 10 + 6.
+  assert.deepEqual([1, 3, 4, 8, 20].map((n) => Core.slotsTotalesEn(n, [1, 4, 8, 12, 16, 20])), [2, 3, 4, 7, 16]);
+  assert.equal(Core.proximoSlot(20, 20, [1, 4, 8, 12, 16, 20]), null);
+  assert.equal(Core.proximoSlot(7, 20, []), 9);
+});
+
+test('arquetipo desconocido o sin archivo de la clase es un error; sin archivo no hay detalle', () => {
+  const c = contexto();
+  const base = (extra) => Object.assign({
+    personaje: 'x', nombre: 'X', raza: 'humano', clase: 'monk', atributos: { STR: 14, DEX: 18, PER: 14, INT: 10, WIS: 14, CHA: 10 },
+    extremidades: [], sesiones: [{ id: 's0', fecha: '2026-01-01', titulo: 'S0', entradas: [xp(6000)] }],
+  }, extra);
+  assert.match(errores(Core.calcularPersonaje(c, base({ arquetipo: 'nada' }))).join(' '), /el arquetipo "nada" no existe para la clase Monk \(hay: sombra-asesina\)/);
+  assert.match(errores(Core.calcularPersonaje(c, base({ clase: 'rogue', arquetipo: 'nada' }))).join(' '), /falta data\/clases\/rogue\.json/);
+  const sinDetalle = Core.calcularPersonaje(c, base({ clase: 'rogue' }));
+  assert.equal(sinDetalle.clase, null);
+  assert.deepEqual(errores(sinDetalle), []);
+});
+
+test('alineamiento ley.moral: se lee, se rotula y se valida', () => {
+  assert.deepEqual(Core.etiquetaAlineamiento('L.N'), { codigo: 'L.N', texto: 'Legal neutral' });
+  assert.deepEqual(Core.etiquetaAlineamiento('n.b'), { codigo: 'N.B', texto: 'Neutral bueno' });
+  assert.deepEqual(Core.etiquetaAlineamiento('N.N'), { codigo: 'N.N', texto: 'Neutral puro' });
+  assert.deepEqual(Core.etiquetaAlineamiento('C.M'), { codigo: 'C.M', texto: 'Caótico malo' });
+  ['', 'LN', 'L.G', 'X.N', 'L.N.B', null, undefined].forEach((v) => assert.equal(Core.etiquetaAlineamiento(v), null, String(v)));
+  const c = contexto();
+  const r = Core.calcularPersonaje(c, pj([[xp(1000)]], { alineamiento: 'L.N' }));
+  assert.equal(r.personaje.alineamiento.texto, 'Legal neutral');
+  assert.equal(Core.calcularPersonaje(c, pj([[xp(1000)]])).personaje.alineamiento, null);
+  assert.match(errores(Core.calcularPersonaje(c, pj([[xp(1000)]], { alineamiento: 'Legal' }))).join(' '), /el alineamiento "Legal" no es válido/);
+});
+
+test('data/clases: formato, niveles y arquetipos coherentes', () => {
+  const archivos = fs.readdirSync(path.join(RAIZ, 'data', 'clases')).filter((n) => n.endsWith('.json'));
+  assert.deepEqual(archivos.sort(), ['monk.json', 'wizard.json']);
+  const clases = contexto().classes;
+  archivos.forEach((n) => {
+    const d = leer('data/clases/' + n);
+    assert.equal(n, d.id + '.json');
+    assert.ok(clases.some((x) => x.id === d.id), d.id + ' está en classes.json');
+    assert.equal(Core.rutaClase(d.id), 'clases/' + n);
+    const ids = d.habilidades.map((h) => h.id);
+    assert.equal(new Set(ids).size, ids.length, d.id + ': ids repetidos');
+    const comprobar = (h, donde) => {
+      assert.ok(Number.isInteger(h.nivel) && h.nivel >= 1 && h.nivel <= 20, donde + ' ' + h.id + ': nivel');
+      assert.ok(['pasivo', 'activo'].includes(h.ejecucion), donde + ' ' + h.id + ': ejecucion');
+      assert.ok(h.nombre && h.detalle, donde + ' ' + h.id + ': nombre y detalle');
+      let previo = h.nivel;
+      (h.mejoras || []).forEach((m) => {
+        assert.ok(m.nivel > previo && m.nivel <= 20, donde + ' ' + h.id + ': mejoras en orden y después del nivel');
+        assert.ok(m.detalle, donde + ' ' + h.id + ': detalle de mejora');
+        previo = m.nivel;
+      });
+    };
+    d.habilidades.forEach((h) => comprobar(h, d.id));
+    (d.arquetipos || []).forEach((a) => {
+      assert.ok(a.id && a.nombre && a.resumen && a.fuente, a.id + ': campos');
+      a.reemplaza.forEach((id) => assert.ok(ids.includes(id), a.id + ' reemplaza una habilidad que existe: ' + id));
+      const propios = a.habilidades.map((h) => h.id);
+      assert.equal(new Set(propios.concat(ids)).size, propios.length + ids.length, a.id + ': ids propios no chocan con la clase');
+      a.habilidades.forEach((h) => {
+        comprobar(h, a.id);
+        if (h.sustituye) assert.ok(a.reemplaza.includes(h.sustituye), a.id + ' ' + h.id + ': sustituye algo que reemplaza');
+      });
+      (a.featsExtra || []).forEach((n, i, l) => {
+        assert.ok(Number.isInteger(n) && n >= 1 && n <= 20, 'featsExtra en 1..20');
+        if (i) assert.ok(n > l[i - 1], 'featsExtra ordenados y sin repetir');
+      });
+    });
+  });
+  // El Monk de Pathfinder 1e: los niveles de sus habilidades clave.
+  const mk = Object.fromEntries(leer('data/clases/monk.json').habilidades.map((h) => [h.id, h.nivel]));
+  assert.deepEqual([mk['evasion'], mk['ki-pool'], mk['wholeness-of-body'], mk['abundant-step'], mk['quivering-palm'], mk['perfect-self']], [2, 4, 7, 12, 15, 20]);
+});
+
+test('personajes de muestra: Musashi Nanaya (monje) y Herb\'Azzio (mago)', () => {
+  const c = contexto();
+  const indice = leer('characters/index.json').personajes;
+  assert.deepEqual(indice, ['ejemplo', 'musashi-nanaya', 'herb-azzio']);
+  indice.forEach((id) => {
+    const r = Core.calcularPersonaje(c, leer('characters/' + id + '.json'));
+    assert.deepEqual(errores(r), [], id);
+    assert.equal(r.avisos.filter((a) => a.nivel === 'aviso').length, 0, id + ': sin avisos');
+  });
+  const mu = Core.calcularPersonaje(c, leer('characters/musashi-nanaya.json'));
+  assert.equal(mu.personaje.nombre, 'Musashi Nanaya');
+  assert.equal(mu.personaje.claseNombre, 'Monk');
+  assert.equal(mu.personaje.alineamiento.texto, 'Legal neutral');
+  assert.equal(mu.personaje.arquetipo.id, 'sombra-asesina');
+  assert.equal(mu.nivel.nivel, 7);
+  assert.deepEqual(mu.feats.lista.map((f) => f.id), ['dodge', 'stealthy', 'mobility', 'spring-attack']);
+  assert.equal(mu.feats.slotsTotales, 4);
+  assert.ok(mu.clase.habilidades.some((h) => h.id === 'vanish') && !mu.clase.habilidades.some((h) => h.id === 'stunning-fist'));
+  const he = Core.calcularPersonaje(c, leer('characters/herb-azzio.json'));
+  assert.equal(he.personaje.nombre, "Herb'Azzio");
+  assert.equal(he.personaje.claseNombre, 'Wizard');
+  assert.equal(he.personaje.alineamiento.texto, 'Neutral bueno');
+  assert.equal(he.personaje.arquetipo.id, 'sin-escuela');
+  assert.equal(he.feats.slotsTotales, 6);
+  assert.equal(he.feats.slotsUsados, 6);
+  assert.ok(!he.clase.habilidades.some((h) => h.id === 'arcane-school'));
+  // El ejemplo (Fighter) no tiene archivo de clase: sigue funcionando sin detalle.
+  assert.equal(Core.calcularPersonaje(c, ejemplo()).clase, null);
 });

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 400" role="img" aria-label="Retrato de Musashi Nanaya: monje encapuchado con el rostro cubierto, bajo la luna">
+  <defs>
+    <linearGradient id="noche" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b2a4a"/>
+      <stop offset="1" stop-color="#0b0b14"/>
+    </linearGradient>
+    <radialGradient id="luna" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#f4efe0" stop-opacity="0.9"/>
+      <stop offset="0.55" stop-color="#f4efe0" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#f4efe0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="320" height="400" fill="url(#noche)"/>
+  <circle cx="236" cy="92" r="92" fill="url(#luna)"/>
+  <circle cx="236" cy="92" r="30" fill="#f4efe0" opacity="0.92"/>
+  <g stroke="#3a4a52" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8">
+    <path d="M36 400V150M52 400V190M70 400V130"/>
+    <path d="M36 190c14-10 26-10 40-4M52 230c-12-8-24-8-34-2M70 168c12-8 24-8 34 0"/>
+  </g>
+  <path d="M0 400V336C48 300 112 280 160 280s112 20 160 56v64z" fill="#1c1a2e"/>
+  <path d="M160 70c-56 0-82 52-78 108 2 30 14 56 38 80h80c24-24 36-50 38-80 4-56-22-108-78-108z" fill="#0d0c18"/>
+  <path d="M104 168c12-24 100-24 112 0v30c-12 8-100 8-112 0z" fill="#e7d8c0"/>
+  <path d="M120 183h26M174 183h26" stroke="#0d0c18" stroke-width="5" stroke-linecap="round"/>
+  <path d="M110 200c16 40 84 40 100 0l4 46c-30 22-78 22-108 0z" fill="#16152a"/>
+  <path d="M112 262c26 18 70 18 96 0l14 22c-34 26-90 26-124 0z" fill="#9c2f3a"/>
+  <path d="M160 270v40M146 282l28 18M174 282l-28 18" stroke="#e7d8c0" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+</svg>

@@ -1,0 +1,283 @@
+{
+  "version": "0.9",
+  "id": "monk",
+  "nombre": "Monk",
+  "fuente": "pf1",
+  "libro": "CRB",
+  "dadoDeGolpe": "d8",
+  "nota": "Habilidades del Monk de Pathfinder 1e. Los nombres y los niveles son datos de reglas (SRD, OGL 1.0a); el texto de `detalle` son resúmenes propios, no el texto de Paizo. Un feat extra de la clase NO suma slots (6.1): los feats se eligen en los slots normales. Los arquetipos son homebrew.",
+  "habilidades": [
+    {
+      "id": "bonus-feat",
+      "nombre": "Bonus Feat",
+      "nivel": 1,
+      "ejecucion": "pasivo",
+      "detalle": "Un feat de una lista corta, sin pedir sus requisitos. Lista inicial: Catch Off-Guard, Combat Reflexes, Deflect Arrows, Dodge, Improved Grapple, Scorpion Style y Throw Anything. En este sistema se elige dentro de los slots normales.",
+      "mejoras": [
+        { "nivel": 2, "detalle": "Otro feat de la lista inicial." },
+        { "nivel": 6, "detalle": "Otro feat; la lista suma Gorgon's Fist, Improved Bull Rush, Improved Disarm, Improved Feint, Improved Trip y Mobility." },
+        { "nivel": 10, "detalle": "Otro feat; la lista suma Improved Critical, Medusa's Wrath, Snatch Arrows y Spring Attack." },
+        { "nivel": 14, "detalle": "Otro feat de la lista." },
+        { "nivel": 18, "detalle": "Otro feat de la lista." }
+      ]
+    },
+    {
+      "id": "improved-unarmed-strike",
+      "nombre": "Improved Unarmed Strike",
+      "nivel": 1,
+      "ejecucion": "pasivo",
+      "detalle": "Golpea sin armas sin provocar ataques de oportunidad, y sus puños, codos, rodillas y pies cuentan como armas naturales a todo efecto. Su daño sin armas es 1d6 (criatura mediana).",
+      "mejoras": [
+        { "nivel": 4, "detalle": "Daño sin armas 1d8." },
+        { "nivel": 8, "detalle": "Daño sin armas 1d10." },
+        { "nivel": 12, "detalle": "Daño sin armas 2d6." },
+        { "nivel": 16, "detalle": "Daño sin armas 2d8." },
+        { "nivel": 20, "detalle": "Daño sin armas 2d10." }
+      ]
+    },
+    {
+      "id": "flurry-of-blows",
+      "nombre": "Flurry of Blows",
+      "nivel": 1,
+      "ejecucion": "activo",
+      "detalle": "Con una acción de ataque completo, ataca sin armas (o con armas de monje) una vez más a cambio de −2 a todos esos ataques.",
+      "mejoras": [
+        { "nivel": 8, "detalle": "Dos ataques adicionales en vez de uno." },
+        { "nivel": 15, "detalle": "Tres ataques adicionales." }
+      ]
+    },
+    {
+      "id": "stunning-fist",
+      "nombre": "Stunning Fist",
+      "nivel": 1,
+      "ejecucion": "activo",
+      "detalle": "Recibe el feat Stunning Fist como habilidad de clase, sin pedir sus requisitos y sin ocupar un slot: un golpe sin armas que, si el objetivo falla su salvación de Fortaleza, lo deja aturdido.",
+      "mejoras": [
+        { "nivel": 4, "detalle": "Puede dejar al objetivo fatigado." },
+        { "nivel": 8, "detalle": "Puede dejarlo indispuesto durante 1 minuto." },
+        { "nivel": 12, "detalle": "Puede dejarlo tambaleante durante 1d6+1 asaltos." },
+        { "nivel": 16, "detalle": "Puede dejarlo ciego o sordo de forma permanente." },
+        { "nivel": 20, "detalle": "Puede dejarlo paralizado durante 1d6+1 asaltos." }
+      ]
+    },
+    {
+      "id": "ac-bonus",
+      "nombre": "AC Bonus",
+      "nivel": 1,
+      "ejecucion": "pasivo",
+      "detalle": "Sin armadura, sin escudo y con carga ligera, suma su bono de WIS a la CA y a la DMC.",
+      "mejoras": [
+        { "nivel": 4, "detalle": "+1 más a la CA y la DMC." },
+        { "nivel": 8, "detalle": "+1 más (+2 en total)." },
+        { "nivel": 12, "detalle": "+1 más (+3 en total)." },
+        { "nivel": 16, "detalle": "+1 más (+4 en total)." },
+        { "nivel": 20, "detalle": "+1 más (+5 en total, el máximo)." }
+      ]
+    },
+    {
+      "id": "evasion",
+      "nombre": "Evasion",
+      "nivel": 2,
+      "ejecucion": "pasivo",
+      "detalle": "Si supera una salvación de Reflejos que normalmente reduce el daño a la mitad, no recibe ningún daño."
+    },
+    {
+      "id": "fast-movement",
+      "nombre": "Fast Movement",
+      "nivel": 3,
+      "ejecucion": "pasivo",
+      "detalle": "Sin armadura ni carga media o pesada, gana +10 pies de velocidad.",
+      "mejoras": [
+        { "nivel": 6, "detalle": "+20 pies en total." },
+        { "nivel": 9, "detalle": "+30 pies en total." },
+        { "nivel": 12, "detalle": "+40 pies en total." },
+        { "nivel": 15, "detalle": "+50 pies en total." },
+        { "nivel": 18, "detalle": "+60 pies en total." }
+      ]
+    },
+    {
+      "id": "maneuver-training",
+      "nombre": "Maneuver Training",
+      "nivel": 3,
+      "ejecucion": "pasivo",
+      "detalle": "Para las maniobras de combate usa su nivel de monje como ataque base, no el ataque base real."
+    },
+    {
+      "id": "still-mind",
+      "nombre": "Still Mind",
+      "nivel": 3,
+      "ejecucion": "pasivo",
+      "detalle": "+2 a las salvaciones contra los efectos de encantamiento."
+    },
+    {
+      "id": "ki-pool",
+      "nombre": "Ki Pool",
+      "nivel": 4,
+      "ejecucion": "activo",
+      "detalle": "Reserva de puntos ki: la mitad de su nivel de monje más su bono de WIS. Gasta 1 punto para un ataque extra en Flurry, +20 pies de velocidad o +4 de CA por esquiva durante 1 asalto. Ki Strike: sus golpes sin armas cuentan como mágicos.",
+      "mejoras": [
+        { "nivel": 7, "detalle": "Sus golpes también vencen la reducción de daño de la plata fría y el hierro frío." },
+        { "nivel": 10, "detalle": "Sus golpes también cuentan como legales." },
+        { "nivel": 16, "detalle": "Sus golpes también cuentan como de adamantina (ignoran la dureza)." }
+      ]
+    },
+    {
+      "id": "slow-fall",
+      "nombre": "Slow Fall",
+      "nivel": 4,
+      "ejecucion": "pasivo",
+      "detalle": "Si está al alcance de una pared, reduce el daño por caída en 20 pies.",
+      "mejoras": [
+        { "nivel": 6, "detalle": "30 pies." },
+        { "nivel": 8, "detalle": "40 pies." },
+        { "nivel": 10, "detalle": "50 pies." },
+        { "nivel": 12, "detalle": "60 pies." },
+        { "nivel": 14, "detalle": "70 pies." },
+        { "nivel": 16, "detalle": "80 pies." },
+        { "nivel": 18, "detalle": "90 pies." },
+        { "nivel": 20, "detalle": "Cualquier distancia." }
+      ]
+    },
+    {
+      "id": "high-jump",
+      "nombre": "High Jump",
+      "nivel": 5,
+      "ejecucion": "activo",
+      "detalle": "Suma su nivel de monje a las pruebas de Acrobacias para saltar y siempre cuenta como si hubiera tomado carrerilla. Con una acción rápida y 1 punto de ki gana +20 a esas pruebas durante 1 asalto."
+    },
+    {
+      "id": "purity-of-body",
+      "nombre": "Purity of Body",
+      "nivel": 5,
+      "ejecucion": "pasivo",
+      "detalle": "Es inmune a todas las enfermedades, incluidas las sobrenaturales y mágicas."
+    },
+    {
+      "id": "wholeness-of-body",
+      "nombre": "Wholeness of Body",
+      "nivel": 7,
+      "ejecucion": "activo",
+      "detalle": "Como acción estándar, gasta 2 puntos de ki para curarse tantos puntos de golpe como su nivel de monje."
+    },
+    {
+      "id": "improved-evasion",
+      "nombre": "Improved Evasion",
+      "nivel": 9,
+      "ejecucion": "pasivo",
+      "detalle": "Como Evasion, pero si falla la salvación de Reflejos igualmente recibe solo la mitad del daño."
+    },
+    {
+      "id": "diamond-body",
+      "nombre": "Diamond Body",
+      "nivel": 11,
+      "ejecucion": "pasivo",
+      "detalle": "Es inmune a todos los venenos."
+    },
+    {
+      "id": "abundant-step",
+      "nombre": "Abundant Step",
+      "nivel": 12,
+      "ejecucion": "activo",
+      "detalle": "Gasta 2 puntos de ki para teletransportarse como con puerta dimensional, con nivel de lanzador igual a la mitad de su nivel de monje."
+    },
+    {
+      "id": "diamond-soul",
+      "nombre": "Diamond Soul",
+      "nivel": 13,
+      "ejecucion": "pasivo",
+      "detalle": "Obtiene resistencia a conjuros igual a 10 + su nivel de monje."
+    },
+    {
+      "id": "quivering-palm",
+      "nombre": "Quivering Palm",
+      "nivel": 15,
+      "ejecucion": "activo",
+      "detalle": "Un golpe sin armas que implanta vibraciones en el objetivo; más tarde puede activarlas y, si falla una salvación de Fortaleza, el objetivo muere."
+    },
+    {
+      "id": "timeless-body",
+      "nombre": "Timeless Body",
+      "nivel": 17,
+      "ejecucion": "pasivo",
+      "detalle": "Ya no sufre penalizadores por envejecer, aunque la edad sigue pasando."
+    },
+    {
+      "id": "tongue-of-the-sun-and-moon",
+      "nombre": "Tongue of the Sun and Moon",
+      "nivel": 17,
+      "ejecucion": "pasivo",
+      "detalle": "Puede hablar con cualquier criatura viva."
+    },
+    {
+      "id": "empty-body",
+      "nombre": "Empty Body",
+      "nivel": 19,
+      "ejecucion": "activo",
+      "detalle": "Gasta 3 puntos de ki para volverse etéreo durante 1 asalto por nivel de monje."
+    },
+    {
+      "id": "perfect-self",
+      "nombre": "Perfect Self",
+      "nivel": 20,
+      "ejecucion": "pasivo",
+      "detalle": "Se convierte en una criatura exterior nativa y obtiene reducción de daño 10/caótico."
+    }
+  ],
+  "arquetipos": [
+    {
+      "id": "sombra-asesina",
+      "nombre": "Sombra asesina",
+      "fuente": "homebrew",
+      "resumen": "Monje asesino al estilo ninja: sigilo, golpes de precisión y venenos. No usa engaño ni disfraz: toda su ventaja sale de moverse sin ser visto y de golpear donde el objetivo está expuesto. Su lista de feats extra no incluye Improved Feint, que se apoya en Engañar. Los números son supuestos de ejemplo hasta que el diseñador los ajuste.",
+      "reemplaza": ["stunning-fist", "maneuver-training", "purity-of-body", "wholeness-of-body", "quivering-palm"],
+      "habilidades": [
+        {
+          "id": "sneak-attack",
+          "nombre": "Sneak Attack",
+          "sustituye": "stunning-fist",
+          "nivel": 1,
+          "ejecucion": "pasivo",
+          "detalle": "+1d6 de daño de precisión cuando el objetivo no puede defenderse bien: desprevenido, flanqueado o sin su bono de Destreza a la CA. Funciona en cada golpe de una ráfaga.",
+          "mejoras": [
+            { "nivel": 5, "detalle": "+2d6 en total." },
+            { "nivel": 9, "detalle": "+3d6 en total." },
+            { "nivel": 13, "detalle": "+4d6 en total." },
+            { "nivel": 17, "detalle": "+5d6 en total." }
+          ]
+        },
+        {
+          "id": "silent-step",
+          "nombre": "Silent Step",
+          "sustituye": "maneuver-training",
+          "nivel": 3,
+          "ejecucion": "pasivo",
+          "detalle": "Avanza a su velocidad normal sin el penalizador a Sigilo por moverse, y no deja rastro audible sobre superficies duras. Sigue sin dar bono para fintar ni para disfrazarse."
+        },
+        {
+          "id": "poison-mastery",
+          "nombre": "Poison Mastery",
+          "sustituye": "purity-of-body",
+          "nivel": 5,
+          "ejecucion": "pasivo",
+          "detalle": "Aplica venenos a sus armas sin riesgo de envenenarse y gana +4 a las salvaciones contra veneno (a la inmunidad total llega con Diamond Body)."
+        },
+        {
+          "id": "vanish",
+          "nombre": "Vanish",
+          "sustituye": "wholeness-of-body",
+          "nivel": 7,
+          "ejecucion": "activo",
+          "detalle": "Gasta 2 puntos de ki para volverse invisible hasta el final de su siguiente turno; atacar no rompe el efecto en ese primer asalto. Cada punto de ki extra lo mantiene un asalto más."
+        },
+        {
+          "id": "death-attack",
+          "nombre": "Death Attack",
+          "sustituye": "quivering-palm",
+          "nivel": 15,
+          "ejecucion": "activo",
+          "detalle": "Tras estudiar a un objetivo durante 3 asaltos, su siguiente golpe de precisión lo obliga a una salvación de Fortaleza (CD 10 + la mitad de su nivel + bono de WIS): si falla, muere o queda paralizado 1d6 asaltos + su nivel, a elección del monje."
+        }
+      ]
+    }
+  ]
+}

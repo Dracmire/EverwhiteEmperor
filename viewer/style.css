@@ -260,6 +260,7 @@ button[data-tip] { cursor: pointer; }
 .slot.usado { background: var(--acc); color: var(--onAcc); }
 .slot.libre { background: var(--accSoft); color: var(--acc); }
 .slot.futuro { border: 1px dashed var(--mute); color: var(--mute); }
+.slot.extra { box-shadow: inset 0 0 0 2px var(--gold); }
 .componentes { margin: 0; padding-left: 18px; font-size: 13px; color: var(--mute); }
 
 /* equipo */

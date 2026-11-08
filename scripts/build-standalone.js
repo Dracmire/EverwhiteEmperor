@@ -15,6 +15,14 @@ const indice = JSON.parse(leer('characters/index.json'));
 const personajes = {};
 indice.personajes.forEach((id) => { personajes[id] = JSON.parse(leer('characters/' + id + '.json')); });
 
+// Habilidades por clase (6.5): el archivo único trae solo las de las clases de los personajes que empaqueta.
+data.clasesDetalle = {};
+Object.keys(personajes).forEach((id) => {
+  const clase = personajes[id].clase;
+  const ruta = path.join(raiz, 'data', Core.rutaClase(clase));
+  if (clase && !data.clasesDetalle[clase] && fs.existsSync(ruta)) data.clasesDetalle[clase] = JSON.parse(fs.readFileSync(ruta, 'utf8'));
+});
+
 // El retrato (campo "imagen") puede ser una ruta relativa a characters/. En el archivo único no hay carpeta:
 // se convierte en un data: URI. Una URL o un data: ya escrito se deja tal cual.
 const MIME = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml' };

@@ -1,0 +1,164 @@
+{
+  "personaje": "herb-azzio",
+  "nombre": "Herb'Azzio",
+  "imagen": "retratos/herb-azzio.svg",
+  "raza": "humano",
+  "clase": "wizard",
+  "arquetipo": "sin-escuela",
+  "alineamiento": "N.B",
+  "atributos": {
+    "STR": 10,
+    "DEX": 14,
+    "PER": 13,
+    "INT": 18,
+    "WIS": 13,
+    "CHA": 12
+  },
+  "extremidades": [
+    "mano-derecha",
+    "mano-izquierda",
+    "pie-derecho",
+    "pie-izquierdo"
+  ],
+  "sesiones": [
+    {
+      "id": "2026-11-08-00",
+      "fecha": "2026-11-08",
+      "titulo": "Creación del personaje (nivel 7)",
+      "notas": "Inicio de campaña en nivel 7. Mago sin escuela arcana: cambia los poderes de escuela por dos feats extra. Atributos, tiradas, feats y equipo son un borrador a revisar.",
+      "entradas": [
+        {
+          "tipo": "ajuste",
+          "campo": "xp",
+          "cantidad": 6000,
+          "motivo": "Inicio de campaña en nivel 7"
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d6",
+          "resultado": 6
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d6",
+          "resultado": 3
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d6",
+          "resultado": 5
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d6",
+          "resultado": 2
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d6",
+          "resultado": 4
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d6",
+          "resultado": 3
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d6",
+          "resultado": 5
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d8",
+          "resultado": 6
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d8",
+          "resultado": 5
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d8",
+          "resultado": 7
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d8",
+          "resultado": 4
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d8",
+          "resultado": 8
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d8",
+          "resultado": 3
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d8",
+          "resultado": 6
+        },
+        {
+          "tipo": "feat",
+          "id": "combat-casting"
+        },
+        {
+          "tipo": "feat",
+          "id": "spell-penetration"
+        },
+        {
+          "tipo": "feat",
+          "id": "empower-spell"
+        },
+        {
+          "tipo": "feat",
+          "id": "craft-wand"
+        },
+        {
+          "tipo": "feat",
+          "id": "toughness"
+        },
+        {
+          "tipo": "feat",
+          "id": "improved-initiative"
+        },
+        {
+          "tipo": "objeto",
+          "id": "tunica-del-erudito-1",
+          "accion": "equipar"
+        },
+        {
+          "tipo": "objeto",
+          "id": "baston-del-vinculo",
+          "accion": "equipar",
+          "extremidad": "mano-derecha"
+        },
+        {
+          "tipo": "objeto",
+          "id": "varita-proyectil-magico",
+          "accion": "equipar",
+          "extremidad": "mano-izquierda"
+        }
+      ]
+    }
+  ]
+}

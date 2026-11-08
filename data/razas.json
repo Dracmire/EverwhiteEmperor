@@ -1,6 +1,6 @@
 {
   "version": "0.6",
-  "nota": "Raza inventada para el personaje de ejemplo. El descuento de rareza 'raro' = 1 es un valor de ejemplo; los reales los define el diseñador.",
+  "nota": "Razas inventadas para los personajes de ejemplo y de muestra. El descuento de rareza 'raro' = 1 de la raza de ejemplo es un valor de ejemplo; los reales los define el diseñador. «Humano» es un marcador sin racials ni atributos preferidos.",
   "razas": [
     {
       "id": "raza-ejemplo",
@@ -16,6 +16,21 @@
       "descuentoPorRareza": {
         "normal": 0,
         "raro": 1,
+        "extraordinario": 0,
+        "epico": 0,
+        "heroico": 0,
+        "legendario": 0
+      }
+    },
+    {
+      "id": "humano",
+      "nombre": "Humano",
+      "fuente": "ejemplo",
+      "atributosPreferidos": [],
+      "racials": [],
+      "descuentoPorRareza": {
+        "normal": 0,
+        "raro": 0,
         "extraordinario": 0,
         "epico": 0,
         "heroico": 0,

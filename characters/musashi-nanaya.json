@@ -1,0 +1,156 @@
+{
+  "personaje": "musashi-nanaya",
+  "nombre": "Musashi Nanaya",
+  "imagen": "retratos/musashi-nanaya.svg",
+  "raza": "humano",
+  "clase": "monk",
+  "arquetipo": "sombra-asesina",
+  "alineamiento": "L.N",
+  "atributos": {
+    "STR": 14,
+    "DEX": 18,
+    "PER": 14,
+    "INT": 10,
+    "WIS": 14,
+    "CHA": 10
+  },
+  "extremidades": [
+    "mano-derecha",
+    "mano-izquierda",
+    "pie-derecho",
+    "pie-izquierdo"
+  ],
+  "sesiones": [
+    {
+      "id": "2026-11-08-00",
+      "fecha": "2026-11-08",
+      "titulo": "Creación del personaje (nivel 7)",
+      "notas": "Inicio de campaña en nivel 7. Monje asesino ninja (Sombra asesina), sin Engañar ni Disfraz. Atributos, tiradas, feats y equipo son un borrador a revisar.",
+      "entradas": [
+        {
+          "tipo": "ajuste",
+          "campo": "xp",
+          "cantidad": 6000,
+          "motivo": "Inicio de campaña en nivel 7"
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d8",
+          "resultado": 8
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d8",
+          "resultado": 5
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d8",
+          "resultado": 6
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d8",
+          "resultado": 7
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d8",
+          "resultado": 4
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d8",
+          "resultado": 6
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d8",
+          "resultado": 3
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 4
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 3
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 5
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 2
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 6
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 3
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 4
+        },
+        {
+          "tipo": "feat",
+          "id": "dodge"
+        },
+        {
+          "tipo": "feat",
+          "id": "stealthy"
+        },
+        {
+          "tipo": "feat",
+          "id": "mobility"
+        },
+        {
+          "tipo": "feat",
+          "id": "spring-attack"
+        },
+        {
+          "tipo": "objeto",
+          "id": "bracales-de-armadura-1",
+          "accion": "equipar"
+        },
+        {
+          "tipo": "objeto",
+          "id": "vendas-del-puno-1",
+          "accion": "equipar",
+          "extremidad": "mano-derecha"
+        },
+        {
+          "tipo": "objeto",
+          "id": "botas-paso-silencioso",
+          "accion": "equipar",
+          "extremidad": "pie-derecho"
+        }
+      ]
+    }
+  ]
+}

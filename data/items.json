@@ -1,6 +1,6 @@
 {
   "version": "0.6",
-  "nota": "Objetos inventados para el ejemplo. Las cargas máximas son de ejemplo; las cargas actuales se derivan del registro.",
+  "nota": "Objetos inventados para los personajes de ejemplo y de muestra. Las cargas máximas son de ejemplo; las cargas actuales se derivan del registro.",
   "items": [
     {
       "id": "cota-de-mallas-1",
@@ -38,6 +38,40 @@
       "cargas": {
         "max": 3,
         "recarga": "diaria"
+      }
+    },
+    {
+      "id": "bracales-de-armadura-1",
+      "nombre": "Bracales de armadura +1",
+      "fuente": "ejemplo",
+      "tipo": "armadura"
+    },
+    {
+      "id": "vendas-del-puno-1",
+      "nombre": "Vendas del puño +1",
+      "fuente": "ejemplo",
+      "tipo": "arma"
+    },
+    {
+      "id": "tunica-del-erudito-1",
+      "nombre": "Túnica del erudito +1",
+      "fuente": "ejemplo",
+      "tipo": "armadura"
+    },
+    {
+      "id": "baston-del-vinculo",
+      "nombre": "Bastón del vínculo",
+      "fuente": "ejemplo",
+      "tipo": "arma"
+    },
+    {
+      "id": "varita-proyectil-magico",
+      "nombre": "Varita de proyectil mágico",
+      "fuente": "ejemplo",
+      "tipo": "objeto",
+      "cargas": {
+        "max": 50,
+        "recarga": "ninguna"
       }
     }
   ]

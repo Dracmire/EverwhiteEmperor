@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 400" role="img" aria-label="Retrato de Herb'Azzio: mago con sombrero puntiagudo y barba, rodeado de glifos">
+  <defs>
+    <linearGradient id="estudio" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1f4a4a"/>
+      <stop offset="1" stop-color="#0c1c24"/>
+    </linearGradient>
+    <radialGradient id="aura" cx="50%" cy="42%" r="50%">
+      <stop offset="0" stop-color="#9ff0d4" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#9ff0d4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="320" height="400" fill="url(#estudio)"/>
+  <rect width="320" height="400" fill="url(#aura)"/>
+  <g fill="none" stroke="#9ff0d4" stroke-width="2" opacity="0.5">
+    <circle cx="160" cy="190" r="130"/>
+    <circle cx="160" cy="190" r="108" stroke-dasharray="4 10"/>
+  </g>
+  <g fill="#bff7e3" opacity="0.8">
+    <path d="M44 120l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/>
+    <path d="M272 96l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
+    <path d="M262 260l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
+    <path d="M52 300l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
+  </g>
+  <path d="M0 400V334C46 296 110 278 160 278s114 18 160 56v66z" fill="#25506a"/>
+  <path d="M160 18l62 120H98z" fill="#2a3f78"/>
+  <path d="M70 142c24-14 156-14 180 0l-6 14c-26-10-142-10-168 0z" fill="#22336a"/>
+  <path d="M160 70l5 12 12 2-9 9 2 12-10-6-10 6 2-12-9-9 12-2z" fill="#f3d27a"/>
+  <ellipse cx="160" cy="194" rx="46" ry="52" fill="#e8cdb0"/>
+  <path d="M128 176h16M176 176h16" stroke="#26303a" stroke-width="4" stroke-linecap="round"/>
+  <path d="M112 196c-6 56 18 86 48 96 30-10 54-40 48-96-12 30-26 42-48 42s-36-12-48-42z" fill="#d9dfe6"/>
+  <path d="M148 214c8 5 16 5 24 0" stroke="#8a6f5a" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M96 292c30 22 98 22 128 0l10 40c-40 28-108 28-148 0z" fill="#2a3f78"/>
+</svg>

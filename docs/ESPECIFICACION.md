@@ -1,6 +1,6 @@
-# EverwhiteEmperor — Especificación del tracker de personajes (v0.8.6)
+# EverwhiteEmperor — Especificación del tracker de personajes (v0.9.0)
 
-Estado: borrador del 2026-11-08. La v0.8.6 **desplaza C en 2** (C = bono + 2) para bajar el punto de recuperación cero, **define la recuperación de MP** con la misma fórmula (bono de SPR, ×10) y deja solo **dos descansos**: corto de 2 h y largo de 8 h con **+50 %** (1.2). La v0.8.5 reemplaza la recuperación de 5e por **la fórmula del diseñador en HP por hora** (1.2): C es el bono de CON, el descanso cura R × horas y desaparecen los Dados de Golpe. La v0.8.4 hace que **el SX sea una reserva común de Zeo y Mana** (4.1.3), agrega al visor los **formularios para Gates y Mana force**, y registra como propuesta la **fórmula de recuperación por hora** del diseñador (1.2, pendiente de aclarar qué es C). La v0.8.3 cambia la recuperación a la regla de D&D 5e (la más generosa: descanso largo con todo el HP y Dados de Golpe en el corto, 1.2), difiere la recuperación de MP, e **implementa Mana por Gates** (4.1.2): Mana force, Gates con tag y función, grafo de slots (Gates, nodos y círculos), tabla de compatibilidad entre tags e inscripción de habilidades; todas las cifras de Mana son **[SUPUESTO]** de ejemplo. La v0.8.2 añade la fatiga, los estados DOWN, K.O. y Deadly y los descansos a la vista Jugar (1.2), convierte Equipo y Méritos y defectos en listas de una línea con tooltip, deja las tiradas de HP y MP solo en Construir, y fija que los Gates conectan por defecto salvo incompatibilidad (4.1.2). La v0.8.1 ajusta la vista Jugar (feats como lista, derivados en mini tarjetas) y documenta el diseño nuevo de Mana por Gates, Magia con conjuros y habilidades de clase por nivel, que todavía **no está implementado**. La v0.8 cambió los atributos (STR, DEX, PER, INT, WIS y CHA; CON, SPR y MND se derivan), añade HP y MP con tiradas de dados, y rehace la ficha del visor: retrato, base y atributos arriba, todo lo demás plegado y el registro de sesiones abajo, con achievements asignables desde una lista con scroll (ver "Cambios respecto a versiones anteriores" al final).
+Estado: borrador del 2026-11-08. La v0.9.0 implementa las **habilidades de clase por nivel y los arquetipos** (6.5) solo para **Monk y Wizard**, añade el **alineamiento** (1.3) y dos personajes de muestra: **Musashi Nanaya** (monje asesino ninja, L.N) y **Herb'Azzio** (mago sin escuela, N.B), con feats extra a cambio de la escuela (6.1). La v0.8.6 **desplaza C en 2** (C = bono + 2) para bajar el punto de recuperación cero, **define la recuperación de MP** con la misma fórmula (bono de SPR, ×10) y deja solo **dos descansos**: corto de 2 h y largo de 8 h con **+50 %** (1.2). La v0.8.5 reemplaza la recuperación de 5e por **la fórmula del diseñador en HP por hora** (1.2): C es el bono de CON, el descanso cura R × horas y desaparecen los Dados de Golpe. La v0.8.4 hace que **el SX sea una reserva común de Zeo y Mana** (4.1.3), agrega al visor los **formularios para Gates y Mana force**, y registra como propuesta la **fórmula de recuperación por hora** del diseñador (1.2, pendiente de aclarar qué es C). La v0.8.3 cambia la recuperación a la regla de D&D 5e (la más generosa: descanso largo con todo el HP y Dados de Golpe en el corto, 1.2), difiere la recuperación de MP, e **implementa Mana por Gates** (4.1.2): Mana force, Gates con tag y función, grafo de slots (Gates, nodos y círculos), tabla de compatibilidad entre tags e inscripción de habilidades; todas las cifras de Mana son **[SUPUESTO]** de ejemplo. La v0.8.2 añade la fatiga, los estados DOWN, K.O. y Deadly y los descansos a la vista Jugar (1.2), convierte Equipo y Méritos y defectos en listas de una línea con tooltip, deja las tiradas de HP y MP solo en Construir, y fija que los Gates conectan por defecto salvo incompatibilidad (4.1.2). La v0.8.1 ajusta la vista Jugar (feats como lista, derivados en mini tarjetas) y documenta el diseño nuevo de Mana por Gates, Magia con conjuros y habilidades de clase por nivel, que todavía **no está implementado**. La v0.8 cambió los atributos (STR, DEX, PER, INT, WIS y CHA; CON, SPR y MND se derivan), añade HP y MP con tiradas de dados, y rehace la ficha del visor: retrato, base y atributos arriba, todo lo demás plegado y el registro de sesiones abajo, con achievements asignables desde una lista con scroll (ver "Cambios respecto a versiones anteriores" al final).
 
 Convención del documento:
 - **[PENDIENTE]**: falta un dato o una decisión del diseñador.
@@ -99,6 +99,17 @@ V no tiene nombre: es la incógnita que se **despeja** de la primera ecuación, 
 **Visor.** En Jugar, **Recuperación** muestra **dos chips** con la tasa (**HP por hora** y **MP por hora**, con la fórmula resuelta en el tooltip, incluido el recorte del bono negativo) y los botones **Descanso corto · 2 h** y **Descanso largo · 8 h · +50 %**, cada uno con lo que recuperaría («+6 HP · +20 MP»). Los botones se desactivan con HP y MP al máximo, sin tiradas de HP o si ambas tasas son 0.
 
 Las cifras viven en `data/vitalidad.json` (`descanso.formula`: `atributo`, `minimoBono`, `sumaFija`, `constante`, `porBono`, `divisorV`, `minimoPorHora`; `descanso.corto` y `descanso.largo` con sus horas), así que se cambian sin tocar el código.
+
+### 1.3 Alineamiento y arquetipo del personaje (v0.9) [DECIDIDO la notación; el resto es SUPUESTO]
+
+El JSON del personaje trae dos campos nuevos, ambos opcionales y fijos (no cambian con las sesiones):
+
+- **`alineamiento`**: se escribe `ley.moral`, con **L, N o C** (legal, neutral, caótico) y **B, N o M** (bueno, neutral, malo): `L.N` es *Legal neutral* y `N.B` *Neutral bueno*; `N.N` se rotula *Neutral puro*. Un valor que no cumple el formato es un error del personaje.
+- **`arquetipo`**: el `id` de un arquetipo de su clase (6.5), por ejemplo `sombra-asesina`. Un arquetipo que no existe en la clase, o cuya clase no tiene archivo en `data/clases/`, es un error.
+
+El visor los muestra bajo el nombre: `Monk (Sombra asesina) · Humano · Legal neutral (L.N)`.
+
+- **[SUPUESTO]** Es solo una etiqueta: no cambia reglas ni cifras. El proyecto tiene un sistema de alineamiento propio (Alignment Spiral: Score y Rank continuos por eje, personas); cómo se registra eso en el ledger queda **[PENDIENTE]** y, cuando exista, esta etiqueta sería su lectura.
 
 ---
 
@@ -540,7 +551,7 @@ La raza se conserva como un **perfil racial**, no como los rasgos de raza de Pat
 
 Campos de `requisitos` (todos opcionales): `atributos`, `bab` (ataque base), `babAlt` (`{clase, nivel}`: "ataque base +6 **o** monje nivel 5"), `nivelPj` (nivel de personaje), `nivelClase` (`{clase, nivel}`), `feats` (ids de feats previos) y `otros` (lista de textos que el motor no evalúa: rangos de habilidad, nivel de lanzador, rasgos de clase…).
 
-- **[DECIDIDO]** Slots de feats: **uno en el nivel 1 y uno más cada 2 niveles** (nivel 1 → 1, nivel 3 → 2, nivel 7 → 4, nivel 19 → 10). Un personaje de nivel 7 tiene 4. **No hay feats extra por clase.** El motor usa `floor((nivel + 1) / 2)`.
+- **[DECIDIDO]** Slots de feats: **uno en el nivel 1 y uno más cada 2 niveles** (nivel 1 → 1, nivel 3 → 2, nivel 7 → 4, nivel 19 → 10). Un personaje de nivel 7 tiene 4. **No hay feats extra por clase.** El motor usa `floor((nivel + 1) / 2)`. **Excepción (v0.9) [SUPUESTO]:** un **arquetipo** puede dar slots de feat extra a cambio de las habilidades que sustituye (`featsExtra`, la lista de niveles en que llega cada uno; ejemplo: el mago «Polímata sin escuela», 6.5). Los feats que da la clase base (Bonus Feat) siguen sin sumar slots.
 - El motor comprueba, al ganar un feat: que exista, que no esté repetido, que haya un slot libre y los requisitos estructurados. El ataque base sale de la progresión de la clase (`data/classes.json`: `completa` = nivel, `media` = 3/4, `baja` = 1/2, redondeo hacia abajo). Los requisitos de `otros` no bloquean: el feat ganado los lleva en `sinVerificar` y el visor los muestra con «?» para que el diseñador los revise a mano.
 - **Feats repetibles:** un feat con `multiple: true` se puede ganar varias veces; la entrada del registro lleva `eleccion` (arma, escuela, etc.): `{ "tipo": "feat", "id": "weapon-focus", "eleccion": "espada larga" }`. No se puede repetir la misma elección. Un feat sin `multiple` no se repite. **[SUPUESTO]** Un requisito de feat previo se cumple con cualquier elección de ese feat; "con el arma elegida" queda en `otros`.
 - Los feats con efecto numérico (ataque, daño, salvaciones, CA, iniciativa) aportarían a las estadísticas derivadas, y el tracker calcularía los efectos acumulados. **[DIFERIDO]** Hoy el catálogo no lleva efectos ni texto de beneficios (ver 9 y `docs/FUENTES.md`); el visor enlaza al texto en Archives of Nethys, o muestra el `resumen` propio que el diseñador escriba en `data/feats.conversiones.json`.
@@ -589,15 +600,19 @@ La mayoría de los feats de Pathfinder que representan una **ejecución activa**
 - Desde la v0.8 el visor lista el catálogo en un recuadro con scroll y buscador, y «Asignar» suma el achievement al borrador (10.5). Se deshabilita si el nivel ya tiene su achievement o si ya se ganó.
 - **[PENDIENTE]** Lista de achievement feats, condiciones de cada uno y sus efectos. El catálogo trae 12 entradas de ejemplo (`fuente: "ejemplo"`) para probar la lista.
 
-### 6.5 Habilidades de clase por nivel (v0.8.1) [DECIDIDO la dirección; sin implementar]
+### 6.5 Habilidades de clase y arquetipos (diseño v0.8.1, implementado en v0.9.0 para Monk y Wizard) [DECIDIDO]
 
-Como el sistema es Pathfinder, cada clase da **habilidades por nivel**. El visor las muestra con un **tooltip** que trae el detalle de cada una.
+Como el sistema es Pathfinder, cada clase da **habilidades por nivel**. El visor las muestra con un **tooltip** que trae el detalle de cada una. **[DECIDIDO]** No hacen falta las 37 clases: **solo Monk y Wizard** tienen archivo; las demás (el Fighter del ejemplo, por ejemplo) funcionan igual, sin sección de habilidades.
 
-- **Se carga solo la clase en uso.** Cada clase vive en su propio archivo, `data/clases/<id>.json`; el visor pide solo el de la clase del personaje (y el archivo único incluye solo las clases de los personajes que empaqueta). `data/classes.json` sigue siendo el índice de las 37 clases con su ataque base.
-- Una habilidad tiene `nivel`, `nombre`, `ejecucion` (`pasivo` o `activo`) y `detalle` (el texto del tooltip). La lista del personaje es la de los niveles que ya alcanzó, y se ve igual que los feats: los pasivos en una lista corta y los activos en tarjetas.
-- La clase también anota, si lanza conjuros, su lista y sus escuelas permitidas y prohibidas (4.2).
-- **[SUPUESTO]** Las habilidades de clase de Pathfinder que dan feats extra (Bonus Feat del luchador) **no suman slots**: los slots de feats están decididos sin extras por clase (6.1).
-- **[PENDIENTE]** De dónde salen las habilidades de las 37 clases y su texto. El nombre y el nivel son datos de reglas; el texto del detalle es contenido de Paizo y sigue la regla de 15 (OGL y avisos pendientes). Alternativa: resúmenes propios, o solo enlace a Archives of Nethys, y escribir con texto completo únicamente las clases que se usen.
+- **Un archivo por clase, cargado solo si se usa.** Cada clase vive en `data/clases/<id>.json`. El visor pide únicamente el de las clases de los personajes cargados (y el de un personaje abierto desde un archivo); el archivo único incluye solo las de los personajes que empaqueta. `data/classes.json` sigue siendo el índice de las 37 clases con su ataque base. El motor recibe los archivos en `ctx.clasesDetalle` (`{ id: archivo }`).
+- **Formato.** `{ id, nombre, fuente, libro, dadoDeGolpe, nota, habilidades: [...], arquetipos: [...] }`. Una habilidad: `id`, `nombre`, `nivel`, `ejecucion` (`pasivo` o `activo`), `detalle` (el texto del tooltip) y `mejoras` opcional (`[{ nivel, detalle }]`: lo que cambia en niveles posteriores; Flurry of Blows, Fast Movement, etc.). El motor devuelve en `resultado.clase` las habilidades alcanzadas, las próximas y, de cada una, qué mejoras ya llegaron y cuál es la siguiente.
+- **Arquetipos.** `{ id, nombre, fuente, resumen, reemplaza: [ids de la clase], habilidades: [...], featsExtra: [niveles] }`. El arquetipo **quita** las habilidades de `reemplaza` y **suma** las suyas; cada habilidad propia puede decir a cuál `sustituye`. Se elige en el personaje (`arquetipo`, 1.3). Los de Monk y Wizard son **homebrew**: Pathfinder 1e no trae un arquetipo de monje asesino ni un mago que cambie su escuela por feats, así que se armaron con las piezas de la clase.
+- **Lista y tooltip.** Se ve igual que los feats: las habilidades **pasivas** en una lista corta (nombre, nivel, marca «Arquetipo», próxima mejora) y las **activas** en tarjetas. El tooltip suma lo que sustituye, las mejoras logradas y la próxima. En Jugar es una tarjeta; en Construir, un plegable con el resumen del arquetipo. Los slots de feat extra del arquetipo se marcan con ★ en Construir.
+- **[DECIDIDO] Texto propio.** El nombre y el nivel de cada habilidad son datos de reglas (SRD, OGL 1.0a, verificados en Archives of Nethys); el `detalle` son **resúmenes propios en español**, no el texto de Paizo. Quien quiera el texto completo lo lee en Archives of Nethys.
+- **[SUPUESTO]** Las habilidades de clase que dan feats (Bonus Feat del monje y del mago) **no suman slots**: se eligen en los slots normales. Las que son un feat concreto (Stunning Fist, Scribe Scroll) son **habilidades de clase y no ocupan slot**. En este sistema el casteo del Wizard (Spells, Spellbook, Cantrips) se documenta pero la magia pasa por Gates y Mana (4.2).
+- **Sombra asesina (Monk) [homebrew, cifras SUPUESTO].** Monje asesino al estilo ninja, **sin engaño ni disfraz**: toda su ventaja sale del sigilo, el flanqueo y los venenos. Sustituye cinco habilidades: Stunning Fist → **Sneak Attack** (+1d6 de precisión, +1d6 más en los niveles 5, 9, 13 y 17), Maneuver Training → **Silent Step** (3), Purity of Body → **Poison Mastery** (5), Wholeness of Body → **Vanish** (7, 2 ki: invisibilidad corta) y Quivering Palm → **Death Attack** (15). Su lista de bonus feats no incluye Improved Feint (usa Engañar).
+- **Polímata sin escuela (Wizard) [homebrew, cifras SUPUESTO].** Sustituye **Arcane School** (poderes de escuela, espacio extra por nivel de conjuro y escuelas de oposición) por **Polymath Training**: sin restricciones de escuela y **un slot de feat extra en los niveles 1, 4, 8, 12, 16 y 20** (6.1). Un mago de nivel 7 tiene 6 slots en vez de 4.
+- **[PENDIENTE]** Ajustar las cifras de los dos arquetipos (cuántos feats vale una escuela, el daño de Sneak Attack, el costo de Vanish) y si un arquetipo puede sustituirse al subir de nivel o es fijo.
 
 ---
 
@@ -634,6 +649,9 @@ Es el núcleo del tracker. Es la **fuente de verdad**: el estado del personaje (
 {
   "personaje": "slug",
   "raza": "slug-de-raza",
+  "clase": "monk",
+  "arquetipo": "sombra-asesina",
+  "alineamiento": "L.N",
   "imagen": "retratos/slug.png",
   "atributos": { "STR": 17, "DEX": 13, "PER": 12, "INT": 10, "WIS": 12, "CHA": 8 },
   "sesiones": [
@@ -797,7 +815,7 @@ Entre la ficha y el registro hay secciones plegables, todas cerradas la primera 
 
 **Vistas.** Un botón en la cabecera (la última elegida se recuerda):
 
-- **Jugar**: la versión reducida para la mesa. Misma ficha, y HP suma **fatiga, estados y marcas de umbral**, y la ficha suma **Recuperación** (v0.8.6): las tasas de HP y de MP por hora y los descansos corto (2 h) y largo (8 h, +50 %), que recuperan HP y MP a la vez (1.2). **Feats no es un desplegable**: es una tarjeta siempre visible con los feats **pasivos como una lista de una línea con tooltip** (nombre y enlace) y **una tarjeta solo para cada habilidad activa** (los feats activos reclasificados, 6.2); debajo van Equipo y Méritos y defectos con el mismo formato. Sin selectores, sin borrador y **sin las tiradas de HP y MP**.
+- **Jugar**: la versión reducida para la mesa. Misma ficha, y HP suma **fatiga, estados y marcas de umbral**, y la ficha suma **Recuperación** (v0.8.6): las tasas de HP y de MP por hora y los descansos corto (2 h) y largo (8 h, +50 %), que recuperan HP y MP a la vez (1.2). **Habilidades de clase (v0.9)** es otra tarjeta siempre visible, con las pasivas en lista y las activas en tarjetas (6.5). **Feats no es un desplegable**: es una tarjeta siempre visible con los feats **pasivos como una lista de una línea con tooltip** (nombre y enlace) y **una tarjeta solo para cada habilidad activa** (los feats activos reclasificados, 6.2); debajo van Equipo y Méritos y defectos con el mismo formato. Sin selectores, sin borrador y **sin las tiradas de HP y MP**.
 - **Construir**: agrega los selectores, el borrador, las explicaciones de las reglas y la construcción de HP y MP (**Tiradas de HP y MP**, que ya no aparece en Jugar). No muestra fatiga ni recuperación: son de la mesa.
 
 **Selector de feats** (dentro de Feats, vista Construir):
@@ -849,7 +867,7 @@ Entre la ficha y el registro hay secciones plegables, todas cerradas la primera 
 
 ## 11. Hitos
 
-Estado en v0.8.6: el motor (M1) y el visor (M2) están implementados y probados localmente (69 pruebas), incluido el mana por Gates; M3 está avanzado (catálogo de 665 feats con requisitos estructurados, achievement feats y conversión de activos; faltan revisar los candidatos a activo y los efectos). Falta activar GitHub Pages. M0 (importar pixelkeep) sigue pendiente.
+Estado en v0.9.0: el motor (M1) y el visor (M2) están implementados y probados localmente (76 pruebas), incluido el mana por Gates; M3 está avanzado (catálogo de 665 feats con requisitos estructurados, achievement feats y conversión de activos; faltan revisar los candidatos a activo y los efectos). Falta activar GitHub Pages. M0 (importar pixelkeep) sigue pendiente.
 
 | Hito | Contenido | Criterio de aceptación |
 |---|---|---|
@@ -926,6 +944,16 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 - Máximo 10: K.O. empieza en −3 (−25 % son −2,5) y Deadly en −5.
 - Sin máximo de HP (aún sin tiradas): ni fatiga ni estado.
 - Un descanso que no existe en `data/vitalidad.json`: error.
+
+### Habilidades de clase, arquetipos y alineamiento (v0.9)
+
+- Monk nivel 1: Bonus Feat, Improved Unarmed Strike, Flurry of Blows, Stunning Fist y AC Bonus; la siguiente es Evasion (2). Nivel 7: suma Wholeness of Body y no tiene Improved Evasion (9). Fast Movement en el nivel 7 ya tiene la mejora del 6 y la próxima es la del 9.
+- Sombra asesina en el nivel 20: no tiene Stunning Fist, Maneuver Training, Purity of Body, Wholeness of Body ni Quivering Palm, y sí sus cinco sustitutas; el número de habilidades no cambia. En el nivel 7 todavía no tiene Death Attack (llega al 15).
+- Polímata sin escuela, nivel 7: 6 slots de feat (4 + extras de los niveles 1 y 4), próximo slot en el nivel 8, sin Arcane School y con Polymath Training. Sin arquetipo: 4 slots y con Arcane School. Seis feats caben; el séptimo da «no hay slot de feat libre en el nivel 7 (6 slots)». Slots totales: nivel 1 → 2, 3 → 3, 4 → 4, 8 → 7, 20 → 16.
+- Arquetipo que no existe: error con los que hay (`sombra-asesina`). Arquetipo de una clase sin archivo: error. Clase sin archivo (Fighter): sin `clase` y sin errores.
+- Alineamiento `L.N` → Legal neutral, `n.b` → Neutral bueno, `N.N` → Neutral puro, `C.M` → Caótico malo; `LN`, `L.G`, `X.N`, vacío y `null` no valen. Un valor mal escrito en el personaje es un error.
+- `data/clases/*.json`: ids únicos, niveles de 1 a 20, ejecución `pasivo` o `activo`, mejoras ordenadas y posteriores a la habilidad, `reemplaza` y `sustituye` apuntan a habilidades que existen, `featsExtra` ordenados. Niveles del Monk: Evasion 2, Ki Pool 4, Wholeness of Body 7, Abundant Step 12, Quivering Palm 15, Perfect Self 20.
+- Personajes de muestra: Musashi Nanaya (nivel 7, HP 53, MP 27, 4 de 4 slots, Dodge, Stealthy, Mobility y Spring Attack) y Herb'Azzio (nivel 7, HP 28, MP 46, 6 de 6 slots); ninguno tiene errores ni avisos.
 
 ### Recuperación por hora (v0.8.6)
 
@@ -1022,15 +1050,25 @@ Otros casos de Mana (con los datos de ejemplo):
 22. Achievements: sustituir las 12 entradas de ejemplo por la lista real, con su fate y sus condiciones.
 23. Mana por Gates (4.1.2): sustituir los 13 tags de ejemplo por la tabla real (~200 tags y sus pares incompatibles), fijar el SX por Gate y si se gasta, el valor de cada fuente de MF, qué hace cada función, si el GM puede forzar o romper una conexión, si lo inscrito debe coincidir con el tag del slot, y qué hace falta para borrar o corregir un Gate ya construido. Ya está decidido que nodos y círculos son aditivos y que los Gates conectan por defecto salvo incompatibilidad.
 24. Magia: sistema y edición del catálogo de conjuros, origen de los datos y escuelas por clase (4.2).
-25. Habilidades de clase: origen del dato y del texto de cada habilidad de las 37 clases; qué clases se permiten (6.5).
+25. Habilidades de clase (6.5): **ya están Monk y Wizard**; faltan las demás clases si se llegan a usar, y ajustar las cifras de los dos arquetipos homebrew. El detalle son resúmenes propios (el texto completo de Paizo sigue pendiente de la regla de la sección 15 de la OGL).
 26. Fatiga y recuperación (1.2): a qué se aplica el penalizador de fatiga, qué significan DOWN, K.O. y Deadly en la mesa, y si el largo recarga las cargas del equipo.
 27. Recuperación de MP (1.2): confirmar que «×10» se aplica a la tasa final y no a otro término (con MP 20 un descanso corto de 2 h ya lo llena), y la relación del MP con el mana de 4.1.2.
 28. Recuperación por hora (1.2): confirmar el desplazamiento en las dos ecuaciones, el redondeo hacia abajo, el recorte del bono y de R a 0, que el +50 % del largo aplique también al MP, y qué hacer con la rareza de que desde H ≈ 540 subir el bono enlentece la recuperación.
 29. SX compartido (4.1.3): si el SX se gasta de verdad al construir Gates o subir ramas, si se puede reasignar, y si la reserva tiene tope.
+30. Alineamiento (1.3): hoy es solo una etiqueta; falta decidir cómo entra el Alignment Spiral (Score, Rank, personas) al ledger.
+31. Personajes de muestra (Musashi Nanaya y Herb'Azzio): los atributos, tiradas de HP y MP, feats y equipo son un **borrador** a revisar; la raza «Humano» y los objetos nuevos son marcadores de ejemplo.
 
 ---
 
 ## Cambios respecto a versiones anteriores
+
+### v0.9.0
+
+- **Habilidades de clase por nivel [DECIDIDO; implementado para Monk y Wizard]:** un archivo por clase en `data/clases/` (`monk.json`, `wizard.json`) con las habilidades, sus mejoras por nivel y los arquetipos; el motor las resuelve (`habilidadesDeClase`, `resultado.clase`) y el visor las muestra como lista de pasivas y tarjetas de activas, con tooltip. Solo se cargan las clases en uso; las demás clases siguen sin detalle. Textos propios en español, niveles verificados en la SRD.
+- **Arquetipos [homebrew]:** **Sombra asesina** (Monk: asesino ninja, sin engaño) y **Polímata sin escuela** (Wizard: cambia Arcane School por feats extra en los niveles 1, 4, 8, 12, 16 y 20). Un arquetipo sustituye habilidades y puede dar `featsExtra`, que **suman slots de feat** (6.1): `slotsTotalesEn` y `proximoSlot` lo tienen en cuenta.
+- **Alineamiento (1.3):** campo `alineamiento` con la notación `ley.moral` (`L.N`, `N.B`) y campo `arquetipo` en el personaje, validados y mostrados bajo el nombre.
+- **Personajes de muestra:** Musashi Nanaya (Monk, Sombra asesina, L.N) y Herb'Azzio (Wizard, Polímata sin escuela, N.B), nivel 7, con retrato propio. Atributos, tiradas, feats y equipo son un borrador. Nuevos datos de ejemplo: raza «Humano» y cinco objetos.
+- 76 pruebas del motor (antes 69).
 
 ### v0.8.6
 

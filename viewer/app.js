@@ -69,9 +69,23 @@
       })).then(function (pares) {
         var personajes = {};
         pares.forEach(function (p) { personajes[p[0]] = p[1]; });
-        return { ctx: Core.armarContexto(raw), personajes: personajes };
+        // Habilidades de clase (6.5): solo se piden los archivos de las clases que usan los personajes.
+        raw.clasesDetalle = {};
+        var clases = [];
+        Object.keys(personajes).forEach(function (id) { var c = personajes[id].clase; if (c && clases.indexOf(c) < 0) clases.push(c); });
+        return Promise.all(clases.map(function (c) { return pedirClase(c, raw.clasesDetalle); })).then(function () {
+          return { ctx: Core.armarContexto(raw), personajes: personajes };
+        });
       });
     });
+  }
+
+  /** Pide data/clases/<id>.json y lo deja en `destino`. Sin archivo (404) no es un error: la clase queda sin detalle. */
+  function pedirClase(id, destino) {
+    if (!id || destino[id] || window.EWE_DATA) return Promise.resolve();
+    return fetch('../data/' + Core.rutaClase(id)).then(function (r) {
+      return r.ok ? r.json() : null;
+    }).then(function (j) { if (j && j.id === id) destino[id] = j; }).catch(function () { /* sin detalle de la clase */ });
   }
 
   // ----------------------------------------------------------------------- estado
@@ -374,7 +388,9 @@
         (calc.personaje.perfilRacial ? 'se cumple, hay descuento en los racials.' : 'no se cumple, sin descuento.') + ' CON, SPR y MND se derivan de los atributos base.</p>'
       : '';
     return '<section class="card ficha"><div class="ficha-top">' + htmlRetrato(calc, pj, con) +
-      '<div class="ficha-nombre"><h1>' + esc(pj.nombre) + '</h1><p class="mute">' + esc(calc.personaje.claseNombre) + ' · ' + esc(calc.personaje.razaNombre) + ' · ' +
+      '<div class="ficha-nombre"><h1>' + esc(pj.nombre) + '</h1><p class="mute">' + esc(calc.personaje.claseNombre) +
+      (calc.personaje.arquetipo ? ' (' + esc(calc.personaje.arquetipo.nombre) + ')' : '') + ' · ' + esc(calc.personaje.razaNombre) +
+      (calc.personaje.alineamiento ? ' · ' + esc(calc.personaje.alineamiento.texto) + ' (' + esc(calc.personaje.alineamiento.codigo) + ')' : '') + ' · ' +
       plural(Math.max(0, calc.sesiones.length - 1), 'sesión registrada', 'sesiones registradas') + '</p></div>' +
       '<div class="ficha-nivel"><div class="nivel-num chico"><span class="eyebrow">Nivel</span><b>' + n.nivel + '</b></div>' +
       '<div class="xp-block"><div class="row-between"><span class="xp-big num">' + f(calc.xp) + ' <small>XP</small></span>' +
@@ -782,13 +798,19 @@
   function seccionFeats(calc, calcB, pj, con) {
     var ft = calcB.feats;
     var confirmados = calc.feats.lista.length;
+    var vistos = {};
     var slots = ft.niveles.map(function (nv, i) {
       var cls = i < ft.slotsUsados ? 'usado' : i < ft.slotsTotales ? 'libre' : 'futuro';
-      return '<span class="slot ' + cls + '">Nv. ' + nv + '</span>';
+      // Los slots normales llegan en niveles impares: un nivel par, o el segundo slot de un nivel, es un feat extra del arquetipo.
+      var extra = ft.nivelesExtra.indexOf(nv) >= 0 && (nv % 2 === 0 || vistos[nv]);
+      vistos[nv] = true;
+      return '<span class="slot ' + cls + (extra ? ' extra' : '') + '"' + (extra ? tip('Feat extra del arquetipo') : '') + '>Nv. ' + nv + (extra ? ' ★' : '') + '</span>';
     }).join('');
     var lista = ft.lista.map(function (x, i) { return itemFeat(x, i >= confirmados, con); }).join('');
     var activos = ft.lista.filter(function (x) { return x.tipo === 'habilidad-tipo-conjuro'; });
-    var cuerpo = (con ? '<p class="sub">' + ft.slotsUsados + ' de ' + ft.slotsTotales + ' slots usados. Un slot en el nivel 1 y uno más cada dos niveles' + (ft.proximoSlot ? '; el próximo llega al nivel ' + ft.proximoSlot : '') + '.</p>' : '') +
+    var cuerpo = (con ? '<p class="sub">' + ft.slotsUsados + ' de ' + ft.slotsTotales + ' slots usados. Un slot en el nivel 1 y uno más cada dos niveles' +
+      (ft.nivelesExtra.length && calcB.personaje.arquetipo ? ', más los feats extra del arquetipo ' + esc(calcB.personaje.arquetipo.nombre) + ' (★, nivel ' + ft.nivelesExtra.join(', ') + ')' : '') +
+      (ft.proximoSlot ? '; el próximo llega al nivel ' + ft.proximoSlot : '') + '.</p>' : '') +
       '<div class="slots">' + slots + '</div><div class="lista">' + (lista || '<p class="mute">Sin feats.</p>') + '</div>' +
       (activos.length ? '<p class="mute" style="font-size:13px">' + esc(activos.map(function (a) { return a.nombre; }).join(', ')) + (activos.length === 1 ? ' es un feat de ejecución activa: se reclasifica' : ' son feats de ejecución activa: se reclasifican') + ' como habilidad tipo conjuro.</p>' : '') +
       (con ? bloquePicker(calcB, pj) : '');
@@ -796,6 +818,66 @@
     var resumen = chip(ft.slotsUsados + ' de ' + ft.slotsTotales + ' slots', ft.slotsLibres ? 'acc' : 'soft') + (ft.slotsLibres ? chip(plural(ft.slotsLibres, 'libre', 'libres'), 'gold') : '') +
       (hayBorr ? chip('Con borrador', 'gold') : '');
     return desplegable('feats', 'Feats', resumen, cuerpo);
+  }
+
+  // ---- habilidades de clase y arquetipo (6.5)
+
+  /** Texto del tooltip de una habilidad de clase: el detalle, lo que sustituye y las mejoras ya logradas. */
+  function tipHabilidad(h) {
+    var l = [h.detalle];
+    if (h.sustituye) l.push('Sustituye a ' + h.sustituye.nombre + '.');
+    h.mejoras.forEach(function (m) { if (m.alcanzada) l.push('Nivel ' + m.nivel + ': ' + m.detalle); });
+    if (h.proximaMejora) l.push('Próxima mejora: nivel ' + h.proximaMejora + '.');
+    return l.join('\n');
+  }
+
+  function tipArquetipo(a) {
+    return a.resumen + (a.reemplaza.length ? '\nSustituye: ' + a.reemplaza.map(function (r) { return r.nombre; }).join(', ') + '.' : '');
+  }
+
+  /** Cuerpo de las habilidades de clase: pasivas en una lista corta, activas en tarjetas y las que vienen después. */
+  function cuerpoClase(cl, con) {
+    var pasivas = cl.habilidades.filter(function (h) { return h.ejecucion !== 'activo'; });
+    var activas = cl.habilidades.filter(function (h) { return h.ejecucion === 'activo'; });
+    var marca = function (h) { return chip('Nv. ' + h.nivel, 'soft') + (h.origen === 'arquetipo' ? chip('Arquetipo', 'gold') : ''); };
+    var filas = pasivas.map(function (h) {
+      return fila({ nombre: h.nombre, tip: tipHabilidad(h), tipEnNombre: true, medio: marca(h), der: h.proximaMejora ? '<span class="mute">mejora en el nivel ' + h.proximaMejora + '</span>' : '' });
+    }).join('');
+    var tarjetas = activas.map(function (h) {
+      var logradas = h.mejoras.filter(function (m) { return m.alcanzada; }).map(function (m) { return '<small class="mute">Nivel ' + m.nivel + ': ' + esc(m.detalle) + '</small>'; }).join('');
+      return '<div class="tarjeta-activa"><div class="row-between" style="align-items:center"><b>' + esc(h.nombre) + '</b>' + chip('Activa', 'acc') + '</div>' +
+        '<small class="mute">' + esc(h.detalle) + '</small>' + logradas +
+        '<div class="acc-fila">' + chip('Nv. ' + h.nivel, '') + (h.origen === 'arquetipo' ? chip('Arquetipo', 'gold') : '') + (h.sustituye ? chip('Sustituye a ' + h.sustituye.nombre, '') : '') + (h.proximaMejora ? chip('Mejora en el nivel ' + h.proximaMejora, '') : '') + '</div></div>';
+    }).join('');
+    var arq = cl.arquetipo && con
+      ? '<p class="sub"><b>Arquetipo: ' + esc(cl.arquetipo.nombre) + '</b> (' + esc(cl.arquetipo.fuente || 'homebrew') + '). ' + esc(cl.arquetipo.resumen) +
+        (cl.arquetipo.reemplaza.length ? ' Sustituye: ' + esc(cl.arquetipo.reemplaza.map(function (r) { return r.nombre; }).join(', ')) + '.' : '') + '</p>'
+      : '';
+    var proximas = cl.proximas.length
+      ? '<p class="mute" style="font-size:13px">Próximas: ' + esc(cl.proximas.slice(0, 4).map(function (h) { return h.nombre + ' (nivel ' + h.nivel + ')'; }).join(', ')) + (cl.proximas.length > 4 ? ' y ' + (cl.proximas.length - 4) + ' más' : '') + '.</p>'
+      : '';
+    return arq +
+      '<div class="bloque-feats"><span class="eyebrow">Pasivas</span>' + (filas ? '<ul class="ren-lista">' + filas + '</ul>' : '<p class="mute">Sin habilidades pasivas.</p>') + '</div>' +
+      (tarjetas ? '<div class="bloque-feats"><span class="eyebrow">Activas</span><div class="grid g300">' + tarjetas + '</div></div>' : '') + proximas;
+  }
+
+  function chipsClase(cl) {
+    return chip(plural(cl.habilidades.length, 'habilidad', 'habilidades'), 'acc') +
+      (cl.arquetipo ? chipTip(cl.arquetipo.nombre, 'gold', tipArquetipo(cl.arquetipo)) : '');
+  }
+
+  /** Vista Jugar: tarjeta siempre visible. Sin archivo de la clase no se dibuja nada. */
+  function seccionClaseJuego(calcB) {
+    var cl = calcB.clase;
+    if (!cl) return '';
+    return '<section class="card bloque-juego"><div class="row-between" style="align-items:center"><h2>Habilidades de ' + esc(cl.nombre) + '</h2><span class="chips">' + chipsClase(cl) + '</span></div>' + cuerpoClase(cl, false) + '</section>';
+  }
+
+  /** Vista Construir: plegable, con el resumen del arquetipo. */
+  function seccionClase(calcB) {
+    var cl = calcB.clase;
+    if (!cl) return '';
+    return desplegable('clase', 'Habilidades de ' + cl.nombre, chipsClase(cl), cuerpoClase(cl, true));
   }
 
   // ---- selector de feats
@@ -1109,7 +1191,7 @@
     // Todo lo que no es la base, los atributos o el registro de sesiones va plegado.
     // En Jugar, feats, equipo y méritos/defectos son listas a la vista; en Construir se editan dentro de plegables.
     var plegables = '<section class="desp-grupo">' +
-      (con ? seccionBorrador(calcB, pj, borr) + seccionFeats(calc, calcB, pj, con) : '') +
+      (con ? seccionBorrador(calcB, pj, borr) + seccionFeats(calc, calcB, pj, con) + seccionClase(calcB) : '') +
       seccionLogros(calc, calcB, con) +
       (con ? seccionEquipo(calc, con) + seccionMeritos(calc, pj, con) + seccionTiradas(calcB, con) : '') +
       seccionSx(calcB, con) + seccionZeo(calcB) + seccionMana(calc, calcB, pj, con) + seccionMagia(calcB) + '</section>';
@@ -1118,7 +1200,7 @@
       '<div class="tools">' + selectorModo() + (pj.datosDeEjemplo ? chip('Datos de ejemplo · personaje inventado', 'gold') : '') + sel +
       '<label class="btn file">Abrir otro personaje (.json)<input type="file" id="archivo" accept="application/json,.json"></label>' +
       '<button class="btn" id="tema" type="button" aria-pressed="' + tema + '">' + (tema ? 'Tema noche' : 'Tema hielo') + '</button></div></header>' +
-      '<div id="msg" role="status"></div>' + seccionAvisos(calcB) + seccionFicha(calc, calcB, pj, con) + avisoBorrador + (con ? '' : seccionFeatsJuego(calc, calcB) + '<div class="bloques-juego">' + seccionEquipoJuego(calc) + seccionMeritosJuego(calc) + '</div>') + plegables + seccionSesiones(calc) +
+      '<div id="msg" role="status"></div>' + seccionAvisos(calcB) + seccionFicha(calc, calcB, pj, con) + avisoBorrador + (con ? '' : seccionFeatsJuego(calc, calcB) + seccionClaseJuego(calcB) + '<div class="bloques-juego">' + seccionEquipoJuego(calc) + seccionMeritosJuego(calc) + '</div>') + plegables + seccionSesiones(calc) +
       '<footer><p class="pie">' + (pj.datosDeEjemplo ? 'Los nombres de raza, méritos, objetos y logros son inventados. ' : '') +
       'Las reglas de Pathfinder 1e se usan bajo la OGL 1.0a; el proyecto es gratuito y no tiene afiliación con Paizo. Los feats se importaron sin su texto: se leen en Archives of Nethys.</p></footer></div>';
   }
@@ -1455,7 +1537,7 @@
           estado.personajes['(archivo)'] = pj;
           if (estado.ids.indexOf('(archivo)') < 0) estado.ids.push('(archivo)');
           estado.actual = '(archivo)';
-          mostrar(pj);
+          pedirClase(pj.clase, estado.ctx.clasesDetalle).then(function () { mostrar(pj); });
         } catch (err) {
           avisoMsg('No se pudo abrir ' + file.name + ': ' + err.message);
         }

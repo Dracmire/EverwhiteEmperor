@@ -1,0 +1,102 @@
+{
+  "version": "0.9",
+  "id": "wizard",
+  "nombre": "Wizard",
+  "fuente": "pf1",
+  "libro": "CRB",
+  "dadoDeGolpe": "d6",
+  "nota": "Habilidades del Wizard de Pathfinder 1e. Los nombres y los niveles son datos de reglas (SRD, OGL 1.0a); el texto de `detalle` son resúmenes propios, no el texto de Paizo. Aquí se documenta el casteo de la clase, pero en este sistema la magia pasa por Gates y Mana (4.2). Un feat extra de la clase NO suma slots (6.1); los del arquetipo sí (6.1). El arquetipo es homebrew.",
+  "habilidades": [
+    {
+      "id": "weapon-and-armor-proficiency",
+      "nombre": "Weapon and Armor Proficiency",
+      "nivel": 1,
+      "ejecucion": "pasivo",
+      "detalle": "Maneja garrote, daga, bastón y ballestas ligera y pesada; no lleva armadura ni escudo. La armadura le estorba al lanzar conjuros."
+    },
+    {
+      "id": "spells",
+      "nombre": "Spells",
+      "nivel": 1,
+      "ejecucion": "pasivo",
+      "detalle": "Lanza conjuros arcanos de la lista de hechicero y mago, prepara cada día los que va a usar y su atributo de lanzamiento es INT. Aquí solo se documenta la clase: en este sistema la magia pasa por Mana (4.2)."
+    },
+    {
+      "id": "spellbook",
+      "nombre": "Spellbook",
+      "nivel": 1,
+      "ejecucion": "pasivo",
+      "detalle": "Guarda sus conjuros en un libro: empieza con todos los trucos y tres conjuros de nivel 1 más uno por punto de su bono de INT, y añade dos conjuros nuevos en cada nivel."
+    },
+    {
+      "id": "cantrips",
+      "nombre": "Cantrips",
+      "nivel": 1,
+      "ejecucion": "activo",
+      "detalle": "Prepara trucos (conjuros de nivel 0) y los lanza cuantas veces quiera: no se gastan al usarlos."
+    },
+    {
+      "id": "arcane-bond",
+      "nombre": "Arcane Bond",
+      "nivel": 1,
+      "ejecucion": "activo",
+      "detalle": "Se vincula a un familiar o a un objeto (amuleto, anillo, bastón, varita o arma). El objeto es obra maestra y gratis, y una vez al día permite lanzar un conjuro de su libro sin prepararlo."
+    },
+    {
+      "id": "arcane-school",
+      "nombre": "Arcane School",
+      "nivel": 1,
+      "ejecucion": "pasivo",
+      "detalle": "Elige una escuela de especialista o universalista, y la elección es permanente. El especialista tiene dos escuelas de oposición (preparar sus conjuros cuesta dos espacios), un espacio extra por nivel de conjuro y un poder de escuela desde el nivel 1. El universalista no tiene restricciones y recibe Hand of the Apprentice.",
+      "mejoras": [
+        { "nivel": 8, "detalle": "Segundo poder de escuela; el universalista recibe Metamagic Mastery. (Según la escuela, otros poderes llegan en los niveles 6, 11, 12 o 20.)" }
+      ]
+    },
+    {
+      "id": "scribe-scroll",
+      "nombre": "Scribe Scroll",
+      "nivel": 1,
+      "ejecucion": "pasivo",
+      "detalle": "Puede escribir pergaminos con los conjuros que conoce. Es una habilidad de clase (el feat Scribe Scroll): no ocupa un slot de feat."
+    },
+    {
+      "id": "bonus-feat",
+      "nombre": "Bonus Feat",
+      "nivel": 5,
+      "ejecucion": "pasivo",
+      "detalle": "Un feat de metamagia, de creación de objetos o Spell Mastery, cumpliendo sus requisitos. En este sistema se elige dentro de los slots normales.",
+      "mejoras": [
+        { "nivel": 10, "detalle": "Otro feat de metamagia, de creación de objetos o Spell Mastery." },
+        { "nivel": 15, "detalle": "Otro feat de la misma lista." },
+        { "nivel": 20, "detalle": "Otro feat de la misma lista." }
+      ]
+    }
+  ],
+  "arquetipos": [
+    {
+      "id": "sin-escuela",
+      "nombre": "Polímata sin escuela",
+      "fuente": "homebrew",
+      "resumen": "El mago renuncia a Arcane School: sin poderes de escuela, sin espacio extra por nivel de conjuro y sin escuelas de oposición ni prohibidas. A cambio gana feats extra: uno en los niveles 1, 4, 8, 12, 16 y 20, que sí suman slots de feat. Los niveles son un supuesto de ejemplo hasta que el diseñador los ajuste.",
+      "reemplaza": ["arcane-school"],
+      "featsExtra": [1, 4, 8, 12, 16, 20],
+      "habilidades": [
+        {
+          "id": "polymath-training",
+          "nombre": "Polymath Training",
+          "sustituye": "arcane-school",
+          "nivel": 1,
+          "ejecucion": "pasivo",
+          "detalle": "Sin escuela: puede preparar conjuros de cualquier escuela sin restricciones. Ganas un slot de feat extra en este nivel y en los niveles 4, 8, 12, 16 y 20.",
+          "mejoras": [
+            { "nivel": 4, "detalle": "Segundo slot de feat extra." },
+            { "nivel": 8, "detalle": "Tercer slot de feat extra." },
+            { "nivel": 12, "detalle": "Cuarto slot de feat extra." },
+            { "nivel": 16, "detalle": "Quinto slot de feat extra." },
+            { "nivel": 20, "detalle": "Sexto slot de feat extra." }
+          ]
+        }
+      ]
+    }
+  ]
+}
