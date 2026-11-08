@@ -1,0 +1,110 @@
+{
+  "version": "0.8.3",
+  "nota": "Tabla de compatibilidad entre tags de Gates (4.1.2). Los Gates conectan por defecto; solo los pares listados aquí NO conectan. Estos 13 tags y sus pares son de EJEMPLO: la tabla real tiene unos 200 tags y la define el diseñador. La relación es simétrica: cada par se escribe en los dos tags.",
+  "tags": [
+    {
+      "id": "fuego",
+      "nombre": "Fuego",
+      "incompatibles": [
+        "agua",
+        "hielo"
+      ],
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "agua",
+      "nombre": "Agua",
+      "incompatibles": [
+        "fuego"
+      ],
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "hielo",
+      "nombre": "Hielo",
+      "incompatibles": [
+        "fuego"
+      ],
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "viento",
+      "nombre": "Viento",
+      "incompatibles": [
+        "tierra"
+      ],
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "tierra",
+      "nombre": "Tierra",
+      "incompatibles": [
+        "viento"
+      ],
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "rayo",
+      "nombre": "Rayo",
+      "incompatibles": [],
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "luz",
+      "nombre": "Luz",
+      "incompatibles": [
+        "oscuridad",
+        "sombra"
+      ],
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "oscuridad",
+      "nombre": "Oscuridad",
+      "incompatibles": [
+        "luz"
+      ],
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "sombra",
+      "nombre": "Sombra",
+      "incompatibles": [
+        "luz"
+      ],
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "vida",
+      "nombre": "Vida",
+      "incompatibles": [
+        "muerte"
+      ],
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "muerte",
+      "nombre": "Muerte",
+      "incompatibles": [
+        "vida"
+      ],
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "sonido",
+      "nombre": "Sonido",
+      "incompatibles": [
+        "silencio"
+      ],
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "silencio",
+      "nombre": "Silencio",
+      "incompatibles": [
+        "sonido"
+      ],
+      "fuente": "ejemplo"
+    }
+  ]
+}

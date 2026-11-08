@@ -609,24 +609,33 @@ test('sin máximo de HP no hay fatiga ni estado', () => {
   assert.deepEqual([e.fatiga, e.estado], [0, null]);
 });
 
-test('descansos: largo = nivel × (1 + mod. de CON), corto = 2/8 del largo, con mínimo de 1', () => {
+test('Dados de Golpe: tantos como niveles; lo gastado se acota entre 0 y el total', () => {
   const cfg = contexto().vitalidad;
-  // Nivel 7, CON 13 (+1): 7 de base y 7 de bono por cuerpo.
-  const largo = Core.curacionDescanso(cfg, 'largo', 7, 13);
-  assert.deepEqual([largo.base, largo.bono, largo.largo, largo.hp, largo.horas], [7, 7, 14, 14, 8]);
-  assert.equal(Core.curacionDescanso(cfg, 'corto', 7, 13).hp, 3); // floor(14 × 2 / 8)
-  // Un modificador negativo no resta: el bono mínimo es 0.
-  const flojo = Core.curacionDescanso(cfg, 'largo', 7, 6);
-  assert.deepEqual([flojo.mod, flojo.bono, flojo.hp], [0, 0, 7]);
-  // Nivel 1 sin bono: el corto curaría 0 y se sube al mínimo de 1.
-  assert.equal(Core.curacionDescanso(cfg, 'corto', 1, 10).hp, 1);
-  assert.throws(() => Core.curacionDescanso(cfg, 'siesta', 7, 13), /desconocido/);
+  assert.deepEqual(Core.dadosDeGolpe(7, 0, cfg), { total: 7, gastados: 0, disponibles: 7 });
+  assert.deepEqual(Core.dadosDeGolpe(7, 3, cfg), { total: 7, gastados: 3, disponibles: 4 });
+  assert.deepEqual(Core.dadosDeGolpe(7, 99, cfg), { total: 7, gastados: 7, disponibles: 0 });
+  assert.equal(Core.dadosDeGolpe(7, -2, cfg).gastados, 0);
 });
 
-test('el bono de cuerpo puede ser fijo en vez de por nivel', () => {
-  const cfg = JSON.parse(JSON.stringify(contexto().vitalidad));
-  cfg.descanso.bonoCuerpo.porNivel = false;
-  assert.equal(Core.curacionDescanso(cfg, 'largo', 7, 13).hp, 8);
+test('descanso corto: un Dado de Golpe cura el dado más el modificador de CON, con mínimo 1', () => {
+  const cfg = contexto().vitalidad;
+  const c = Core.curaDadoDeGolpe(6, 13, cfg); // CON 13 → +1
+  assert.deepEqual([c.resultado, c.mod, c.atributo, c.cura], [6, 1, 'CON', 7]);
+  assert.equal(Core.curaDadoDeGolpe(1, 6, cfg).cura, 1); // 1 − 2 = −1 → mínimo 1
+  assert.equal(Core.curaDadoDeGolpe(10, 6, cfg).cura, 8);
+});
+
+test('descanso largo: HP al máximo y recupera la mitad de los dados gastados (mínimo uno)', () => {
+  const cfg = contexto().vitalidad;
+  const r = Core.descansoLargo(20, 56, 7, 6, cfg);
+  assert.deepEqual([r.hp, r.curado, r.dadosRecuperados, r.gastados], [56, 36, 3, 3]); // mitad de 7 = 3
+  // Desde HP negativo también sube al máximo.
+  assert.deepEqual([Core.descansoLargo(-30, 56, 7, 0, cfg).hp, Core.descansoLargo(-30, 56, 7, 0, cfg).curado], [56, 86]);
+  // Con un solo dado gastado se recupera ese dado; con ninguno, ninguno.
+  assert.equal(Core.descansoLargo(50, 56, 7, 1, cfg).dadosRecuperados, 1);
+  assert.equal(Core.descansoLargo(50, 56, 7, 0, cfg).dadosRecuperados, 0);
+  // Nivel 1: la mitad de 1 es 0 y se sube al mínimo de 1.
+  assert.equal(Core.descansoLargo(3, 10, 1, 1, cfg).dadosRecuperados, 1);
 });
 
 test('data/vitalidad.json: umbrales ordenados de mayor a menor y descansos con horas válidas', () => {
@@ -636,8 +645,137 @@ test('data/vitalidad.json: umbrales ordenados de mayor a menor y descansos con h
   assert.ok(cfg.fatiga.umbrales.every((u) => u.penalizador < 0));
   const est = cfg.estados.map((e) => e.pct);
   assert.deepEqual(est.slice().sort((a, b) => b - a), est);
-  assert.ok(cfg.descanso.tipos.every((t) => t.horas > 0 && t.horas <= cfg.descanso.horasLargo));
-  assert.ok(cfg.descanso.tipos.some((t) => t.id === 'largo' && t.horas === cfg.descanso.horasLargo));
+  assert.ok(cfg.descanso.corto.horas > 0 && cfg.descanso.corto.horas < cfg.descanso.largo.horas);
+  const dg = cfg.descanso.dadosDeGolpe;
+  assert.ok(dg.porNivel > 0 && dg.recuperaLargo > 0 && dg.recuperaLargo <= 1 && dg.minimoPorDado >= 0);
+});
+
+// ------------------------------------------------------ Mana por Gates
+
+const SX = (n) => ({ tipo: 'xp-subsistema', subsistema: 'mana', cantidad: n });
+const MF = (n, fuente, nota) => ({ tipo: 'mana-fuerza', cantidad: n, fuente: fuente || 'otra', nota: nota || '' });
+const gate = (id, tag, funcion, op) => ({ tipo: 'gate', id: id, funcion: funcion || 'capacidad', tag: tag, oportunidad: op || 'una oportunidad' });
+// Un personaje con SX y Mana force de sobra para los casos.
+const base = (entradas) => pj([[xp(3000), SX(700), MF(15, 'criatura-contratada', 'prueba')].concat(entradas)]);
+const tagsDe = () => Object.fromEntries(contexto().manaTags.map((t) => [t.id, t]));
+
+test('grafo de Gates: n Gates conectados dan n + C(n,2) + C(n,3) slots', () => {
+  const tags = tagsDe();
+  const slots = (...ts) => Core.grafoMana(ts.map((t, i) => ({ id: 'g' + (i + 1), tag: t })), tags).slots.length;
+  // Hielo, oscuridad, viento, rayo y vida no chocan entre sí.
+  assert.deepEqual([1, 2, 3, 4, 5].map((n) => slots.apply(null, ['hielo', 'oscuridad', 'viento', 'rayo', 'vida'].slice(0, n))), [1, 3, 7, 14, 25]);
+});
+
+test('los pares incompatibles restan slots y un círculo exige los tres pares', () => {
+  const tags = tagsDe();
+  const g = (...ts) => Core.grafoMana(ts.map((t, i) => ({ id: 'g' + (i + 1), tag: t })), tags);
+  const dos = g('fuego', 'hielo'); // incompatibles
+  assert.deepEqual([dos.nodos.length, dos.slots.length], [0, 2]);
+  const tres = g('hielo', 'oscuridad', 'fuego'); // hielo–fuego no conectan
+  assert.deepEqual([tres.nodos.map((n) => n.id), tres.circulos.length, tres.slots.length], [['g1-g2', 'g2-g3'], 0, 5]);
+  assert.deepEqual(tres.conexiones.filter((c) => !c.conecta).map((c) => c.a + c.b), ['g1g3']);
+  assert.equal(g('fuego', 'fuego', 'fuego').slots.length, 7); // un tag no choca consigo mismo
+});
+
+test('los tags se heredan: un nodo o un círculo lleva los tags de sus Gates', () => {
+  const grafo = Core.grafoMana([{ id: 'g1', tag: 'hielo' }, { id: 'g2', tag: 'oscuridad' }, { id: 'g3', tag: 'hielo' }], tagsDe());
+  assert.deepEqual(grafo.nodos.map((n) => [n.id, n.tags]), [['g1-g2', ['hielo', 'oscuridad']], ['g1-g3', ['hielo']], ['g2-g3', ['oscuridad', 'hielo']]]);
+  assert.deepEqual(grafo.circulos.map((c) => [c.id, c.tags]), [['g1-g2-g3', ['hielo', 'oscuridad']]]);
+});
+
+test('Mana force: cada potencia de 2 compra un Gate; el SX es un umbral', () => {
+  const cfg = contexto().mana;
+  assert.deepEqual([0, 1, 2, 3, 4, 7, 8, 16].map((mf) => Core.gatesPermitidos(mf, cfg)), [0, 1, 2, 2, 3, 3, 4, 5]);
+  assert.deepEqual([1, 2, 3, 4, 7, 8].map((k) => Core.mfDeGate(k, cfg)), [1, 2, 4, 8, 64, 128]);
+  assert.deepEqual([1, 4, 7, 8, 9].map((k) => Core.sxDeGate(k, cfg)), [10, 80, 640, 1280, 2560]);
+});
+
+test('personaje de ejemplo: 3 Gates con un par incompatible dan 5 slots, uno inscrito', () => {
+  const m = Core.calcularPersonaje(contexto(), ejemplo()).mana;
+  assert.equal(m.total, 120);
+  assert.deepEqual([m.fuerza.total, m.fuerza.base, m.fuerza.permitidos, m.fuerza.aportes.length], [4, 1, 3, 2]);
+  assert.deepEqual(m.gates.map((g) => [g.id, g.tag, g.funcion]), [['g1', 'hielo', 'capacidad'], ['g2', 'oscuridad', 'potencia'], ['g3', 'fuego', 'intensidad']]);
+  assert.deepEqual(m.slots.map((x) => [x.id, x.nivel]), [['g1', 1], ['g2', 1], ['g3', 1], ['g1-g2', 2], ['g2-g3', 2]]);
+  assert.deepEqual([m.totales.paresSinConexion, m.totales.ocupados, m.totales.libres], [1, 1, 4]);
+  assert.equal(m.slots.find((x) => x.id === 'g1').habilidad.id, 'power-attack');
+  assert.deepEqual([m.siguiente.numero, m.siguiente.mfRequerida, m.siguiente.mfFalta, m.siguiente.sxFalta, m.siguiente.disponible], [4, 8, 4, 0, false]);
+});
+
+test('un Gate exige Mana force, SX de mana, oportunidad y datos válidos', () => {
+  const ctx = contexto();
+  // MF 1 (humano) solo permite el primer Gate.
+  let r = Core.calcularPersonaje(ctx, pj([[xp(3000), SX(700), gate('g1', 'hielo'), gate('g2', 'viento')]]));
+  assert.match(errores(r)[0], /Gate 2 exige Mana force 2 y el personaje tiene 1/);
+  assert.equal(r.mana.totales.gates, 1);
+  r = Core.calcularPersonaje(ctx, pj([[xp(3000), SX(5), gate('g1', 'hielo')]]));
+  assert.match(errores(r)[0], /Gate 1 exige 10 SX de mana y el personaje tiene 5/);
+  r = Core.calcularPersonaje(ctx, base([gate('g1', 'hielo'), gate('g1', 'viento')]));
+  assert.match(errores(r)[0], /"g1" ya existe/);
+  r = Core.calcularPersonaje(ctx, base([gate('g-1', 'hielo')]));
+  assert.match(errores(r)[0], /sin guiones/);
+  r = Core.calcularPersonaje(ctx, base([gate('g1', 'sabor')]));
+  assert.match(errores(r)[0], /tag "sabor" no existe/);
+  r = Core.calcularPersonaje(ctx, base([gate('g1', 'hielo', 'sabor')]));
+  assert.match(errores(r)[0], /funcion debe ser capacidad, intensidad, potencia, sentidos/);
+  r = Core.calcularPersonaje(ctx, base([{ tipo: 'gate', id: 'g1', funcion: 'potencia', tag: 'hielo' }]));
+  assert.match(errores(r)[0], /falta la oportunidad/);
+  // Con MF y SX de sobra, tres Gates válidos se construyen sin errores (hielo y fuego no conectan: 5 slots).
+  r = Core.calcularPersonaje(ctx, base([gate('g1', 'hielo'), gate('g2', 'fuego'), gate('g3', 'viento')]));
+  assert.deepEqual([errores(r), r.mana.totales.slots], [[], 5]);
+});
+
+test('Mana force: fuente válida, y perderla exige nota y no baja de 0', () => {
+  const ctx = contexto();
+  let r = Core.calcularPersonaje(ctx, pj([[xp(3000), MF(1, 'sueño')]]));
+  assert.match(errores(r)[0], /fuente debe ser criatura-contratada, contrato-magico, otra/);
+  r = Core.calcularPersonaje(ctx, pj([[xp(3000), MF(0, 'otra')]]));
+  assert.match(errores(r)[0], /distinto de 0/);
+  r = Core.calcularPersonaje(ctx, pj([[xp(3000), MF(2, 'contrato-magico', 'pacto'), MF(-1, 'contrato-magico')]]));
+  assert.match(errores(r)[0], /exige una nota/);
+  r = Core.calcularPersonaje(ctx, pj([[xp(3000), MF(-2, 'otra', 'se rompió el pacto')]]));
+  assert.match(errores(r)[0], /quedaría en -1/);
+  r = Core.calcularPersonaje(ctx, pj([[xp(3000), MF(2, 'contrato-magico', 'pacto'), MF(-1, 'contrato-magico', 'se rompió')]]));
+  assert.deepEqual([errores(r).length, r.mana.fuerza.total], [0, 2]);
+});
+
+test('inscribir: el slot debe existir y estar libre, y la habilidad ser del personaje', () => {
+  const ctx = contexto();
+  const con = (extra) => Core.calcularPersonaje(ctx, base([{ tipo: 'feat', id: 'power-attack' }, gate('g1', 'hielo'), gate('g2', 'viento')].concat(extra)));
+  let r = con([{ tipo: 'inscribir', slot: 'g1-g2', habilidad: 'power-attack' }]);
+  assert.deepEqual(errores(r), []);
+  assert.equal(r.mana.slots.find((x) => x.id === 'g1-g2').habilidad.nombre, 'Power Attack');
+  assert.match(errores(con([{ tipo: 'inscribir', slot: 'g9', habilidad: 'power-attack' }]))[0], /slot "g9" no existe \(hay g1, g2, g1-g2\)/);
+  assert.match(errores(con([{ tipo: 'inscribir', slot: 'g1', habilidad: 'toughness' }]))[0], /no es una habilidad tipo conjuro del personaje/);
+  assert.match(errores(con([{ tipo: 'inscribir', slot: 'g1', habilidad: 'power-attack' }, { tipo: 'inscribir', slot: 'g1', habilidad: 'power-attack' }]))[0], /ya tiene "Power Attack"; usa desinscribir/);
+  // Desinscribir libera el slot; hacerlo en uno vacío es un error.
+  r = con([{ tipo: 'inscribir', slot: 'g1', habilidad: 'power-attack' }, { tipo: 'desinscribir', slot: 'g1' }]);
+  assert.deepEqual([errores(r), r.mana.totales.ocupados], [[], 0]);
+  assert.match(errores(con([{ tipo: 'desinscribir', slot: 'g1' }]))[0], /no tiene ninguna habilidad/);
+});
+
+test('la Mana force inicial puede venir de la raza', () => {
+  const ctx = contexto();
+  ctx.razas = ctx.razas.map((r) => Object.assign({}, r, { manaFuerza: 4 }));
+  const r = Core.calcularPersonaje(ctx, pj([[xp(3000)]]));
+  assert.deepEqual([r.mana.fuerza.total, r.mana.fuerza.fuenteBase, r.mana.fuerza.permitidos], [4, 'raza', 3]);
+});
+
+test('data/mana-tags.json y data/mana.json: tags únicos, pares simétricos y tablas crecientes', () => {
+  const ctx = contexto();
+  const ids = ctx.manaTags.map((t) => t.id);
+  assert.equal(new Set(ids).size, ids.length, 'ids únicos');
+  const tags = tagsDe();
+  ctx.manaTags.forEach((t) => {
+    assert.ok(!(t.incompatibles || []).includes(t.id), t.id + ' no puede chocar consigo mismo');
+    (t.incompatibles || []).forEach((o) => {
+      assert.ok(tags[o], t.id + ' cita el tag inexistente ' + o);
+      assert.ok((tags[o].incompatibles || []).includes(t.id), t.id + ' y ' + o + ' deben listarse en los dos sentidos');
+    });
+  });
+  const sx = ctx.mana.sxPorGate;
+  assert.deepEqual(sx.slice().sort((a, b) => a - b), sx);
+  assert.ok(ctx.mana.mfBase >= 2 && ctx.mana.mfInicial.valor >= 0);
+  assert.ok(ctx.mana.funciones.length === 4 && ctx.mana.fuentesMF.length >= 1);
 });
 
 // ------------------------------------------------------ personaje de ejemplo

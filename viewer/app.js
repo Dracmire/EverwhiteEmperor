@@ -94,6 +94,8 @@
     if (!e || typeof e !== 'object') return false;
     if (e.tipo === 'feat' || e.tipo === 'achievement') return typeof e.id === 'string';
     if (e.tipo === 'tirada') return (e.recurso === 'hp' || e.recurso === 'mp') && typeof e.dado === 'string' && typeof e.resultado === 'number';
+    if (e.tipo === 'inscribir') return typeof e.slot === 'string' && typeof e.habilidad === 'string';
+    if (e.tipo === 'desinscribir') return typeof e.slot === 'string';
     return false;
   }
 
@@ -131,9 +133,9 @@
   }
   /** Fila de una línea de una lista: etiqueta opcional, nombre, relleno (chips) y valor o enlace a la derecha. */
   function fila(o) {
-    return '<li class="ren' + (o.clase ? ' ' + o.clase : '') + '"' + tip(o.tip) + '>' +
+    return '<li class="ren' + (o.clase ? ' ' + o.clase : '') + '"' + (o.tipEnNombre ? '' : tip(o.tip)) + '>' +
       (o.etiqueta ? '<span class="et">' + esc(o.etiqueta) + '</span>' : '') +
-      '<span class="nm">' + esc(o.nombre) + '</span>' + (o.medio || '') +
+      '<span class="nm"' + (o.tipEnNombre ? tip(o.tip) : '') + '>' + esc(o.nombre) + '</span>' + (o.medio || '') +
       (o.der ? '<span class="der">' + o.der + '</span>' : '') + '</li>';
   }
 
@@ -301,33 +303,48 @@
       (r.pendientes.length ? '<span class="chip warn">Faltan tiradas: ' + (r.pendientes.length === 1 ? 'nivel ' : 'niveles ') + esc(r.pendientes.join(', ')) + '</span>' : '') + '</div>';
   }
 
-  function nombreCorto(c) {
-    var n = c.nombre.replace('Descanso ', '');
-    return n.charAt(0).toUpperCase() + n.slice(1);
+  /** Dados de Golpe gastados desde el último descanso largo; viven con el HP actual, solo en este navegador. */
+  function dadosGastados(pj) {
+    var v = actualesDe(pj).dg;
+    return typeof v === 'number' && v > 0 ? Math.floor(v) : 0;
+  }
+  function fijarDadosGastados(pj, n) {
+    var a = actualesDe(pj);
+    if (n > 0) a.dg = n; else delete a.dg;
+    guardar('ewe-actual-' + idPj(pj), JSON.stringify(a));
   }
 
-  /** Fórmula legible de un descanso: la del largo desglosada, y los demás como parte proporcional de él. */
-  function textoDescanso(c, cfg) {
-    var d = cfg.descanso;
-    if (c.horas === d.horasLargo) {
-      var cuerpo = c.porNivel ? c.nivel + ' niv × (' + d.curacionPorNivel + ' + ' + c.mod + ' ' + c.atributo + ')' : c.nivel + ' niv × ' + d.curacionPorNivel + ' + ' + c.mod + ' ' + c.atributo;
-      return nombreCorto(c) + ' ' + c.horas + ' h: ' + cuerpo + ' = ' + c.hp + ' HP';
-    }
-    return nombreCorto(c) + ' ' + c.horas + ' h: ' + c.horas + '/' + d.horasLargo + ' del largo (' + c.largo + ') = ' + c.hp + ' HP';
-  }
-
-  /** Recuperación (vista Jugar): cada descanso suma HP hasta el máximo; el MP no se toca. */
+  /** Recuperación (vista Jugar), con la regla de D&D 5e: el largo devuelve el HP y el corto gasta Dados de Golpe. El MP no se toca. */
   function bloqueRecuperacion(calcB, pj) {
     var cfg = estado.ctx.vitalidad;
-    var max = calcB.recursos.hp.maximo;
-    var lleno = valorActual(pj, 'hp', max) >= max;
-    var attr = cfg.descanso.bonoCuerpo.atributo;
-    var cs = cfg.descanso.tipos.map(function (t) { return Core.curacionDescanso(cfg, t.id, calcB.nivel.nivel, valorAtributo(calcB, attr)); });
-    var botones = cs.map(function (c) {
-      return '<button class="btn" type="button" data-accion="descanso" data-id="' + c.tipo + '"' + (lleno ? ' disabled' : '') + '><span>' + esc(c.nombre) + ' · ' + c.horas + ' h</span><b class="num">+' + c.hp + ' HP</b></button>';
-    }).join('');
-    return '<div class="recup"><span class="eyebrow">Recuperación</span><div class="recup-btns">' + botones + '</div>' +
-      '<span class="mute pie-vital">' + esc(cs.map(function (c) { return textoDescanso(c, cfg); }).join(' · ')) + (lleno ? '. HP ya está al máximo' : '') + '. El descanso no recupera MP.</span></div>';
+    var d = cfg.descanso;
+    var hp = calcB.recursos.hp;
+    var act = valorActual(pj, 'hp', hp.maximo);
+    var dg = Core.dadosDeGolpe(calcB.nivel.nivel, dadosGastados(pj), cfg);
+    var ultima = hp.tiradas.length ? hp.tiradas[hp.tiradas.length - 1] : null;
+    var attr = d.dadosDeGolpe.atributo;
+    var mod = Core.modAtributo(valorAtributo(calcB, attr));
+    var lleno = act >= hp.maximo;
+    var largo = Core.descansoLargo(act, hp.maximo, calcB.nivel.nivel, dg.gastados, cfg);
+    var puedeLargo = hp.maximo > 0 && (!lleno || dg.gastados > 0);
+    var puedeDado = !!ultima && dg.disponibles > 0 && !lleno;
+    var pips = '';
+    for (var i = 0; i < dg.total; i++) pips += '<i class="' + (i < dg.disponibles ? '' : 'vacia') + '"></i>';
+    var dadoTxt = ultima ? ultima.dado + ' ' + (mod < 0 ? '−' : '+') + ' ' + Math.abs(mod) + ' ' + attr : 'sin tiradas de HP';
+    var motivo = !ultima ? 'Faltan las tiradas de HP: el dado de golpe es el dado de tu HP.'
+      : !dg.disponibles ? 'No quedan dados de golpe: un descanso largo recupera ' + Math.max(1, Math.floor(dg.total * d.dadosDeGolpe.recuperaLargo)) + '.'
+      : lleno ? 'HP ya está al máximo.' : '';
+    return '<div class="recup"><span class="eyebrow">Recuperación</span>' +
+      '<div class="recup-btns"><button class="btn" type="button" data-accion="descanso-largo"' + (puedeLargo ? '' : ' disabled') + '><span>' + esc(d.largo.nombre) + ' · ' + d.largo.horas + ' h</span>' +
+      '<b class="num">' + (largo.curado > 0 ? '+' + largo.curado + ' HP' : 'HP al máximo') + '</b></button></div>' +
+      '<div class="dg"><div class="row-between" style="align-items:center"><b>' + esc(d.corto.nombre) + ' · ' + d.corto.horas + ' h</b>' +
+      '<span class="mute num" style="font-size:13px">Dados de golpe <b>' + dg.disponibles + '</b> de ' + dg.total + ' · ' + esc(dadoTxt) + '</span></div>' +
+      '<div class="cargas" aria-hidden="true">' + pips + '</div>' +
+      '<div class="acc-fila"><button class="btn" type="button" data-accion="gastar-dado"' + (puedeDado ? '' : ' disabled') + '>Gastar 1 dado (tira el visor)</button>' +
+      '<label class="campo-et">Resultado de tu dado<input class="campo" type="number" inputmode="numeric" min="1"' + (ultima ? ' max="' + ultima.caras + '"' : '') + ' id="dg-res" placeholder="Ej.: 6" style="width:130px;min-width:0"' + (puedeDado ? '' : ' disabled') + '></label>' +
+      '<button class="btn" type="button" data-accion="registrar-dado"' + (puedeDado ? '' : ' disabled') + '>Registrar</button></div></div>' +
+      '<span class="mute pie-vital">' + (motivo ? esc(motivo) + ' ' : '') + 'El largo devuelve todo el HP y ' + (dg.gastados ? 'recupera ' + largo.dadosRecuperados + ' de los ' + dg.gastados + ' dados gastados' : 'recupera la mitad de los dados gastados') +
+      '. Cada dado del corto cura el dado más el modificador de ' + attr + ' (mínimo ' + d.dadosDeGolpe.minimoPorDado + '). El descanso no recupera MP.</span></div>';
   }
 
   function htmlVitales(calcB, pj, juego) {
@@ -401,26 +418,131 @@
     return desplegable('zeo', 'Zeo', resumen, cuerpo);
   }
 
-  function seccionMana(calc) {
-    var manaPartes = calc.sesiones.filter(function (s) { return s.mana > 0; }).map(function (s) { return '+' + s.mana; });
-    var cuerpo = '<div class="big"><b class="num">' + f(calc.mana.total) + '</b><span class="mute">de mana ganado</span></div>' +
-      '<p class="mute" style="font-size:14px">Magic reemplaza el casteo por mana: las habilidades tipo conjuro lo gastan.' + (manaPartes.length ? ' Ganado por sesión: ' + manaPartes.join(', ') + '.' : '') + '</p>' +
-      (calc.mana.tabla ? '' : '<span class="chip soft" style="align-self:flex-start">Tabla de niveles de mana: pendiente</span>');
-    return desplegable('mana', 'Mana', chip(f(calc.mana.total) + ' de mana ganado', 'acc'), cuerpo);
+  /** Grafo circular de los Gates: equidistantes; la línea continua conecta, la roja discontinua no, y el triángulo sombreado es un círculo. */
+  function svgGrafoMana(m) {
+    var n = m.gates.length;
+    var cx = 200, cy = 170, R = n === 1 ? 0 : 95;
+    var pos = {};
+    m.gates.forEach(function (g, i) {
+      var ang = -Math.PI / 2 + i * 2 * Math.PI / n;
+      pos[g.id] = { x: cx + R * Math.cos(ang), y: cy + R * Math.sin(ang), c: Math.cos(ang), s: Math.sin(ang) };
+    });
+    var punto = function (id) { return pos[id].x.toFixed(1) + ',' + pos[id].y.toFixed(1); };
+    var capas = m.circulos.map(function (c) { return '<polygon class="g-circulo" points="' + c.gates.map(punto).join(' ') + '"/>'; }).join('') +
+      m.conexiones.map(function (c) {
+        return '<line class="g-arista' + (c.conecta ? '' : ' rota') + '" x1="' + pos[c.a].x.toFixed(1) + '" y1="' + pos[c.a].y.toFixed(1) + '" x2="' + pos[c.b].x.toFixed(1) + '" y2="' + pos[c.b].y.toFixed(1) + '"/>';
+      }).join('');
+    var nodos = m.gates.map(function (g) {
+      var p = pos[g.id];
+      var lleno = m.slots.some(function (x) { return x.id === g.id && x.habilidad; });
+      var lx = n === 1 ? cx : cx + (R + 40) * p.c;
+      var ly = n === 1 ? cy + 44 : cy + (R + 40) * p.s;
+      var ancla = n === 1 || Math.abs(p.c) < 0.3 ? 'middle' : p.c > 0 ? 'start' : 'end';
+      var fn = (m.funciones.find(function (x) { return x.id === g.funcion; }) || {}).nombre || g.funcion;
+      return '<circle class="g-nodo' + (lleno ? ' lleno' : '') + '" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="22"/>' +
+        '<text class="g-id" x="' + p.x.toFixed(1) + '" y="' + (p.y + 5).toFixed(1) + '" text-anchor="middle">' + esc(g.id) + '</text>' +
+        '<text class="g-tag" x="' + lx.toFixed(1) + '" y="' + (ly - 2).toFixed(1) + '" text-anchor="' + ancla + '">' + esc(g.tagNombre) + '</text>' +
+        '<text class="g-fn" x="' + lx.toFixed(1) + '" y="' + (ly + 12).toFixed(1) + '" text-anchor="' + ancla + '">' + esc(fn) + '</text>';
+    }).join('');
+    var resumen = plural(n, 'Gate', 'Gates') + ', ' + plural(m.nodos.length, 'nodo', 'nodos') + ' y ' + plural(m.circulos.length, 'círculo', 'círculos') +
+      (m.totales.paresSinConexion ? '; ' + plural(m.totales.paresSinConexion, 'par sin conexión', 'pares sin conexión') : '');
+    // Recorta el alto al contenido: con pocos Gates el círculo queda ancho y bajo, y un alto fijo dejaba aire vacío.
+    var ys = m.gates.map(function (g) { return pos[g.id].y; });
+    var arriba = Math.min.apply(null, ys) - (n === 1 ? 34 : 56);
+    var abajo = Math.max.apply(null, ys.map(function (y, i) { return y + (n === 1 ? 70 : Math.max(36, 40 * Math.abs(pos[m.gates[i].id].s) + 36)); }));
+    var vb = '0 ' + Math.floor(arriba) + ' 400 ' + Math.ceil(abajo - arriba);
+    return '<svg class="grafo-mana" viewBox="' + vb + '" role="img" aria-label="Grafo de Gates: ' + esc(resumen) + '">' + capas + nodos + '</svg>';
   }
 
-  function seccionMagia(calc) {
-    var hab = calc.feats.lista.filter(function (x) { return x.tipo === 'habilidad-tipo-conjuro'; });
+  function nombreSlot(x, m) {
+    var nombres = x.gates.map(function (id) { return id; }).join('–');
+    var tags = x.tags.map(function (t) { var g = m.gates.find(function (y) { return y.tag === t; }); return g ? g.tagNombre : t; }).join(' + ');
+    return nombres + ' · ' + tags;
+  }
+
+  function ayudaSlot(x, m) {
+    var nivel = x.nivel === 1 ? 'Gate: equivale a un conjuro de nivel 1.' : x.nivel === 2 ? 'Nodo: dos Gates que conectan; equivale a un conjuro de nivel 2.' : 'Círculo: tres Gates cuyos tres pares conectan; equivale a un conjuro de nivel 3.';
+    if (x.nivel === 1) {
+      var g = m.gates.find(function (y) { return y.id === x.id; });
+      var fn = (m.funciones.find(function (f) { return f.id === g.funcion; }) || {}).nombre || g.funcion;
+      return nivel + '\nFunción: ' + fn + '. Tag: ' + g.tagNombre + '.\nOportunidad: ' + g.oportunidad + '.';
+    }
+    return nivel + '\nHereda los tags de sus Gates.';
+  }
+
+  /** Contabilidad de la Mana force: la base y cada aporte con su fuente, su nota y la sesión. */
+  function contabilidadMF(calc, m) {
+    var mf = m.fuerza;
+    var nombreFuente = function (id) {
+      var c = estado.ctx.mana.fuentesMF.find(function (x) { return x.id === id; });
+      return c ? c.nombre : id;
+    };
+    var filas = fila({ etiqueta: 'Base', nombre: mf.fuenteBase === 'raza' ? 'Mana force de la raza' : 'Mana force de partida (' + mf.fuenteBase + ')', der: '<span class="pts mas num">+' + mf.base + '</span>' }) +
+      mf.aportes.map(function (a) {
+        return fila({ etiqueta: nombreFuente(a.fuente), nombre: a.nota || 'Sin nota', tip: 'Aporte de ' + etiquetaSesion(calc, a.sesion) + '.',
+          der: '<span class="pts ' + (a.cantidad > 0 ? 'mas' : 'menos') + ' num">' + (a.cantidad > 0 ? '+' : '−') + Math.abs(a.cantidad) + '</span>' });
+      }).join('');
+    var cuerpo = '<ul class="ren-lista">' + filas + '</ul><p class="mute" style="font-size:13px">Total <b>' + mf.total + '</b>. Cada potencia de 2 compra un Gate: MF ' + mf.total + ' permite ' + plural(mf.permitidos, 'Gate', 'Gates') + '.</p>';
+    return desplegable('mf', 'Contabilidad de Mana force', chip('MF ' + mf.total, 'acc') + chip(plural(mf.aportes.length + 1, 'aporte', 'aportes'), 'soft'), cuerpo);
+  }
+
+  function filaSlot(x, m, habilidades, con) {
+    var nivel = x.nivel === 1 ? 'Gate' : x.nivel === 2 ? 'Nodo' : 'Círculo';
+    var der;
+    if (x.habilidad) {
+      der = chip(x.habilidad.nombre, 'acc') + (con ? '<button class="btn mini" type="button" data-accion="desinscribir" data-slot="' + esc(x.id) + '">Quitar</button>' : '');
+    } else if (con && habilidades.length) {
+      der = '<select class="btn" id="insc-' + esc(x.id) + '" aria-label="Habilidad para ' + esc(x.id) + '">' + habilidades.map(function (h) {
+        return '<option value="' + esc(h.id) + '">' + esc(h.nombre) + '</option>';
+      }).join('') + '</select><button class="btn mini" type="button" data-accion="inscribir" data-slot="' + esc(x.id) + '">Inscribir</button>';
+    } else {
+      der = '<span class="mute">Libre</span>';
+    }
+    return fila({ etiqueta: nivel, nombre: nombreSlot(x, m), tip: ayudaSlot(x, m), tipEnNombre: true, der: der });
+  }
+
+  function seccionMana(calc, calcB, pj, con) {
+    var m = calcB.mana;
+    var mf = m.fuerza;
+    var sig = m.siguiente;
+    var habilidades = calcB.feats.lista.filter(function (x) { return x.tipo === 'habilidad-tipo-conjuro'; });
+    var caja = function (rotuloTxt, valor) { return '<div class="caja"><small>' + rotuloTxt + '</small><b>' + valor + '</b></div>'; };
+    var cajas = '<div class="cajas">' + caja('SX de mana', f(m.total)) + caja('Mana force', mf.total) + caja('Gates', m.totales.gates + ' de ' + mf.permitidos) + caja('Slots', m.totales.slots) + '</div>';
+    var proximo = sig
+      ? '<p class="mute" style="font-size:14px">Próximo Gate (' + sig.numero + '): ' +
+        'Mana force ' + sig.mfRequerida + (sig.mfFalta ? ' (te faltan ' + sig.mfFalta + ')' : ' (cumples)') + ' y ' + f(sig.sxRequerido) + ' SX' + (sig.sxFalta ? ' (te faltan ' + f(sig.sxFalta) + ')' : ' (cumples)') +
+        ', más una oportunidad para construirlo.' + (sig.disponible ? ' <b>Ya puedes construirlo.</b>' : '') + '</p>'
+      : '';
+    var cuerpo = (con ? '<p class="sub">Mana es una serie de poderes como Zeo, y crece con SX. Cada potencia de 2 de Mana force compra un Gate; los Gates conectan por defecto salvo tags incompatibles. Un Gate, un nodo (2 Gates conectados) y un círculo (3) son slots donde se inscribe una habilidad.</p>' : '') + cajas + proximo;
+    if (m.gates.length) {
+      var legend = '<p class="mute" style="font-size:13px">Línea continua: los Gates conectan. Línea roja discontinua: tags incompatibles, no conectan. Triángulo sombreado: círculo. Un Gate con relleno tiene su habilidad inscrita.</p>';
+      cuerpo += '<div class="mana-grid"><div class="mana-grafo">' + svgGrafoMana(m) + legend + '</div><div class="mana-slots"><span class="eyebrow">Slots · ' + m.totales.ocupados + ' de ' + m.totales.slots + ' con habilidad</span>' +
+        '<ul class="ren-lista una">' + m.slots.map(function (x) { return filaSlot(x, m, habilidades, con); }).join('') + '</ul>' +
+        (con && !habilidades.length ? '<p class="mute" style="font-size:13px">Para inscribir hace falta una habilidad tipo conjuro (un feat de ejecución activa).</p>' : '') + '</div></div>';
+    } else {
+      cuerpo += '<p class="mute">Todavía no hay Gates. Con Mana force ' + mf.total + ' se permite ' + plural(mf.permitidos, 'Gate', 'Gates') + '.</p>';
+    }
+    cuerpo += contabilidadMF(calc, m) +
+      (con ? '<p class="mute" style="font-size:13px">Por ahora los Gates y la Mana force se agregan escribiendo su entrada en el registro (<code>gate</code> y <code>mana-fuerza</code>, ver la especificación 4.1.2); el visor valida y deriva todo. La inscripción sí se hace desde aquí.</p>' : '');
+    var resumen = chip('MF ' + mf.total, 'acc') + chip(plural(m.totales.gates, 'Gate', 'Gates'), 'soft') + chip(plural(m.totales.slots, 'slot', 'slots') + (m.totales.ocupados ? ' · ' + m.totales.ocupados + ' inscrito' + (m.totales.ocupados === 1 ? '' : 's') : ''), 'soft') +
+      chip(f(m.total) + ' SX', 'soft');
+    return desplegable('mana', 'Mana', resumen, cuerpo);
+  }
+
+  function seccionMagia(calcB) {
+    var m = calcB.mana;
+    var hab = calcB.feats.lista.filter(function (x) { return x.tipo === 'habilidad-tipo-conjuro'; });
     var lista = hab.map(function (x) {
       var cat = estado.indiceFeats[x.convertidoDe];
+      var slots = m.slots.filter(function (sl) { return sl.habilidad && sl.habilidad.id === x.id; }).map(function (sl) { return sl.id; });
       return '<div class="item"><div class="t"><b>' + esc(x.nombre) + '</b><small>Convertido del feat ' + esc(cat ? cat.nombre : x.convertidoDe) + '</small>' +
         (cat && cat.resumen ? '<small>' + esc(cat.resumen) + '</small>' : '') + '</div>' +
-        '<span class="chip soft">Costo en mana: pendiente</span>' + enlaceFeat(cat) + '</div>';
+        (slots.length ? chip('Inscrita en ' + slots.join(', '), 'acc') : chip('Sin inscribir', 'soft')) + enlaceFeat(cat) + '</div>';
     }).join('');
-    var cuerpo = '<p class="sub">Magia es lo que reemplaza el casteo: habilidades tipo conjuro que gastan mana. Hoy salen de los feats de ejecución activa de Pathfinder, que se reclasifican aquí. El catálogo de conjuros y el costo en mana de cada habilidad están pendientes de diseño.</p>' +
+    var cuerpo = '<p class="sub">Magia es lo que reemplaza el casteo: habilidades tipo conjuro que se inscriben en los slots de Mana (Gates, nodos y círculos). Hoy salen de los feats de ejecución activa de Pathfinder, que se reclasifican aquí. El catálogo de conjuros y el costo de usar cada habilidad están pendientes de diseño.</p>' +
       '<div class="lista">' + (lista || '<p class="mute">Todavía no hay habilidades tipo conjuro. Un feat de ejecución activa aparece aquí al ganarlo.</p>') + '</div>' +
-      '<div class="cajas"><div class="caja"><small>Mana ganado</small><b>' + f(calc.mana.total) + '</b></div><div class="caja"><small>Habilidades</small><b>' + hab.length + '</b></div></div>';
-    return desplegable('magia', 'Magia', chip(plural(hab.length, 'habilidad tipo conjuro', 'habilidades tipo conjuro'), 'acc') + chip('Mana ' + f(calc.mana.total), 'soft'), cuerpo);
+      '<div class="cajas"><div class="caja"><small>Habilidades</small><b>' + hab.length + '</b></div><div class="caja"><small>Slots con habilidad</small><b>' + m.totales.ocupados + ' de ' + m.totales.slots + '</b></div></div>';
+    return desplegable('magia', 'Magia', chip(plural(hab.length, 'habilidad tipo conjuro', 'habilidades tipo conjuro'), 'acc') + chip(m.totales.libres + ' slots libres', 'soft'), cuerpo);
   }
 
   function etiquetaSesion(calc, id) {
@@ -660,6 +782,11 @@
       var a = estado.indiceLogros[e.id];
       return 'Achievement · ' + (a ? a.nombre : e.id) + (typeof e.fate === 'number' ? ' (fate ' + e.fate + ')' : '');
     }
+    if (e.tipo === 'inscribir') {
+      var h = estado.indiceFeats[e.habilidad];
+      return 'Inscribir · ' + (h ? h.nombre : e.habilidad) + ' en ' + e.slot;
+    }
+    if (e.tipo === 'desinscribir') return 'Desinscribir · ' + e.slot;
     return e.recurso.toUpperCase() + ' · ' + e.dado + ' → ' + e.resultado;
   }
 
@@ -878,7 +1005,7 @@
       (con ? seccionBorrador(calcB, pj, borr) + seccionFeats(calc, calcB, pj, con) : '') +
       seccionLogros(calc, calcB, con) +
       (con ? seccionEquipo(calc, con) + seccionMeritos(calc, pj, con) + seccionTiradas(calcB, con) : '') +
-      seccionZeo(calcB) + seccionMana(calcB) + seccionMagia(calcB) + '</section>';
+      seccionZeo(calcB) + seccionMana(calc, calcB, pj, con) + seccionMagia(calcB) + '</section>';
     return '<div class="page">' +
       '<header class="topbar"><div class="brand"><b>EverwhiteEmperor</b><span class="eyebrow">Visor de personajes</span></div>' +
       '<div class="tools">' + selectorModo() + (pj.datosDeEjemplo ? chip('Datos de ejemplo · personaje inventado', 'gold') : '') + sel +
@@ -1069,6 +1196,33 @@
     lector.readAsDataURL(file);
   }
 
+  /** Descanso corto: gasta un Dado de Golpe (el del HP) y cura su resultado más el modificador de CON. */
+  function gastarDado(modo) {
+    var v = estado.vista, pj = pjActual(), cfg = estado.ctx.vitalidad;
+    var hp = v.calcB.recursos.hp;
+    var ultima = hp.tiradas.length ? hp.tiradas[hp.tiradas.length - 1] : null;
+    if (!ultima) { toast('Faltan las tiradas de HP: el dado de golpe es el dado de tu HP.', true); return; }
+    var dg = Core.dadosDeGolpe(v.calcB.nivel.nivel, dadosGastados(pj), cfg);
+    if (!dg.disponibles) { toast('No quedan dados de golpe: un descanso largo recupera parte de ellos.', true); return; }
+    var resultado;
+    if (modo === 'azar') {
+      resultado = 1 + Math.floor(Math.random() * ultima.caras);
+    } else {
+      var campo = document.getElementById('dg-res');
+      var n = campo ? Number(campo.value) : NaN;
+      if (!Number.isInteger(n) || n < 1 || n > ultima.caras) { toast('El resultado de un ' + ultima.dado + ' es un entero entre 1 y ' + ultima.caras + '.', true); return; }
+      resultado = n;
+    }
+    var c = Core.curaDadoDeGolpe(resultado, valorAtributo(v.calcB, cfg.descanso.dadosDeGolpe.atributo), cfg);
+    var max = hp.maximo;
+    var antes = valorActual(pj, 'hp', max);
+    var despues = Math.min(max, antes + c.cura);
+    fijarActual(pj, 'hp', despues, max);
+    fijarDadosGastados(pj, dg.gastados + 1);
+    refrescarVitales('[data-accion="gastar-dado"]');
+    toast(cfg.descanso.corto.nombre + ': ' + ultima.dado + ' → ' + resultado + ' ' + (c.mod < 0 ? '−' : '+') + ' ' + Math.abs(c.mod) + ' ' + c.atributo + ', +' + (despues - antes) + ' HP (de ' + conSigno(antes) + ' a ' + conSigno(despues) + ').');
+  }
+
   function accion(boton) {
     var a = boton.getAttribute('data-accion');
     var pj = pjActual();
@@ -1091,16 +1245,29 @@
       var actual = valorActual(pj, rec, max);
       fijarActual(pj, rec, delta === 'max' ? max : Math.max(minimoVital(rec, max), Math.min(max, actual + Number(delta))), max);
       refrescarVitales('[data-accion="rec"][data-recurso="' + rec + '"][data-delta="' + delta + '"]');
-    } else if (a === 'descanso') {
+    } else if (a === 'descanso-largo') {
       var vc = estado.vista.calcB;
       var cfg = estado.ctx.vitalidad;
-      var cur = Core.curacionDescanso(cfg, boton.getAttribute('data-id'), vc.nivel.nivel, valorAtributo(vc, cfg.descanso.bonoCuerpo.atributo));
       var tope = vc.recursos.hp.maximo;
       var antes = valorActual(pj, 'hp', tope);
-      var despues = Math.min(tope, antes + cur.hp);
-      fijarActual(pj, 'hp', despues, tope);
-      refrescarVitales('[data-accion="descanso"][data-id="' + cur.tipo + '"]');
-      toast(cur.nombre + ' (' + cur.horas + ' h): +' + (despues - antes) + ' HP, de ' + conSigno(antes) + ' a ' + conSigno(despues) + '.');
+      var res = Core.descansoLargo(antes, tope, vc.nivel.nivel, dadosGastados(pj), cfg);
+      fijarActual(pj, 'hp', res.hp, tope);
+      fijarDadosGastados(pj, res.gastados);
+      refrescarVitales('[data-accion="descanso-largo"]');
+      toast(cfg.descanso.largo.nombre + ' (' + cfg.descanso.largo.horas + ' h): HP de ' + conSigno(antes) + ' a ' + res.hp + (res.dadosRecuperados ? ' y ' + plural(res.dadosRecuperados, 'dado de golpe recuperado', 'dados de golpe recuperados') : '') + '.');
+    } else if (a === 'inscribir') {
+      var slot = boton.getAttribute('data-slot');
+      var sel = document.getElementById('insc-' + slot);
+      if (!sel || !sel.value) { toast('Elige la habilidad que quieres inscribir.', true); return; }
+      var hab = estado.indiceFeats[sel.value];
+      agregar({ tipo: 'inscribir', slot: slot, habilidad: sel.value }, '«' + (hab ? hab.nombre : sel.value) + '» inscrita en ' + slot + ' (borrador).');
+    } else if (a === 'desinscribir') {
+      var slotD = boton.getAttribute('data-slot');
+      agregar({ tipo: 'desinscribir', slot: slotD }, 'Se quitará la habilidad de ' + slotD + ' (borrador).');
+    } else if (a === 'gastar-dado') {
+      gastarDado('azar');
+    } else if (a === 'registrar-dado') {
+      gastarDado('manual');
     } else if (a === 'quitar') {
       var borr = borradorDe(pj).slice();
       borr.splice(Number(boton.getAttribute('data-indice')), 1);
@@ -1257,6 +1424,7 @@
   });
   app.addEventListener('keydown', function (ev) {
     if (ev.key === 'Escape') ocultarTip();
+    if (ev.key === 'Enter' && ev.target.id === 'dg-res') { ev.preventDefault(); gastarDado('manual'); return; }
     var m = /^tr-(hp|mp)-res$/.exec(ev.target.id || '');
     if (m && ev.key === 'Enter') { ev.preventDefault(); tirar(m[1], 'manual'); }
   });

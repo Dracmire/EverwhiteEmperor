@@ -1,0 +1,55 @@
+{
+  "version": "0.8.3",
+  "nota": "Reglas de Mana por Gates (docs/ESPECIFICACION.md, 4.1.2). TODAS las cifras de este archivo son SUPUESTOS de ejemplo hasta que el diseñador las fije: cuántos SX cuesta cada Gate y la regla de Mana force por Gate (el Gate k exige MF ≥ mfBase^(k−1), de modo que cada potencia de 2 compra un Gate).",
+  "mfInicial": {
+    "valor": 1,
+    "fuente": "humano"
+  },
+  "mfBase": 2,
+  "sxPorGate": [
+    10,
+    20,
+    40,
+    80,
+    160,
+    320,
+    640
+  ],
+  "sxGasta": false,
+  "fuentesMF": [
+    {
+      "id": "criatura-contratada",
+      "nombre": "Criatura contratada"
+    },
+    {
+      "id": "contrato-magico",
+      "nombre": "Contrato mágico"
+    },
+    {
+      "id": "otra",
+      "nombre": "Otra fuente"
+    }
+  ],
+  "funciones": [
+    {
+      "id": "capacidad",
+      "nombre": "Capacidad",
+      "detalle": "Efecto por definir."
+    },
+    {
+      "id": "intensidad",
+      "nombre": "Intensidad",
+      "detalle": "Efecto por definir."
+    },
+    {
+      "id": "potencia",
+      "nombre": "Potencia",
+      "detalle": "Efecto por definir."
+    },
+    {
+      "id": "sentidos",
+      "nombre": "Sentidos",
+      "detalle": "Efecto por definir."
+    }
+  ]
+}

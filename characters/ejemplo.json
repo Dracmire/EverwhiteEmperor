@@ -292,6 +292,19 @@
           "tipo": "xp-subsistema",
           "subsistema": "mana",
           "cantidad": 10
+        },
+        {
+          "tipo": "mana-fuerza",
+          "cantidad": 1,
+          "fuente": "criatura-contratada",
+          "nota": "Contrato con el lobo blanco"
+        },
+        {
+          "tipo": "gate",
+          "id": "g1",
+          "funcion": "capacidad",
+          "tag": "hielo",
+          "oportunidad": "El altar del glaciar"
         }
       ]
     },
@@ -405,6 +418,13 @@
           "tipo": "objeto",
           "id": "tobillera-del-corredor",
           "accion": "recargar"
+        },
+        {
+          "tipo": "gate",
+          "id": "g2",
+          "funcion": "potencia",
+          "tag": "oscuridad",
+          "oportunidad": "La grieta bajo el mercado"
         }
       ]
     },
@@ -482,6 +502,19 @@
           "tipo": "xp-subsistema",
           "subsistema": "mana",
           "cantidad": 15
+        },
+        {
+          "tipo": "mana-fuerza",
+          "cantidad": 2,
+          "fuente": "contrato-magico",
+          "nota": "Pacto con el fuego del faro"
+        },
+        {
+          "tipo": "gate",
+          "id": "g3",
+          "funcion": "intensidad",
+          "tag": "fuego",
+          "oportunidad": "Las brasas del faro"
         }
       ]
     },
@@ -531,6 +564,11 @@
           "tipo": "xp-subsistema",
           "subsistema": "mana",
           "cantidad": 25
+        },
+        {
+          "tipo": "inscribir",
+          "slot": "g1",
+          "habilidad": "power-attack"
         }
       ]
     }

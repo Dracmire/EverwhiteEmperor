@@ -376,7 +376,15 @@
       cargas: {},
       puntosIniciales: null,
       tiradas: { hp: [], mp: [] },
+      mf: [],
+      gates: [],
+      inscritas: {},
     };
+    const manaCfg = ctx.mana || null;
+    const manaTags = indexar(ctx.manaTags || []);
+    const mfBase = raza && raza.manaFuerza !== undefined ? raza.manaFuerza : (manaCfg ? manaCfg.mfInicial.valor : 0);
+    const mfFuente = raza && raza.manaFuerza !== undefined ? 'raza' : (manaCfg ? manaCfg.mfInicial.fuente : '');
+    const mfActual = function () { return estado.mf.reduce(function (a, x) { return a + x.cantidad; }, mfBase); };
     zeo.ramas.forEach(function (r) { estado.sx[r] = 0; });
 
     const sesionesOut = [];
@@ -402,6 +410,9 @@
         objetos: [],
         tiradas: [],
         ajustes: [],
+        mf: [],
+        gates: [],
+        inscripciones: [],
       };
 
       function error(i, msg) {
@@ -577,6 +588,53 @@
             s.tiradas.push(reg);
             return;
           }
+          case 'mana-fuerza': {
+            if (!manaCfg) throw new Error('mana-fuerza: falta data/mana.json');
+            if (!esEntero(e.cantidad) || e.cantidad === 0) throw new Error('mana-fuerza: cantidad debe ser un entero distinto de 0');
+            if (!manaCfg.fuentesMF.some(function (f) { return f.id === e.fuente; })) {
+              throw new Error('mana-fuerza: fuente debe ser ' + manaCfg.fuentesMF.map(function (f) { return f.id; }).join(', '));
+            }
+            if (e.cantidad < 0 && !e.nota) throw new Error('perder Mana force exige una nota');
+            if (mfActual() + e.cantidad < 0) throw new Error('la Mana force quedaría en ' + (mfActual() + e.cantidad));
+            const reg = { cantidad: e.cantidad, fuente: e.fuente, nota: e.nota || '', sesion: ses.id };
+            estado.mf.push(reg);
+            s.mf.push(reg);
+            return;
+          }
+          case 'gate': {
+            if (!manaCfg) throw new Error('gate: falta data/mana.json');
+            if (typeof e.id !== 'string' || !/^[a-z0-9]+$/i.test(e.id)) throw new Error('gate: id debe ser un texto de letras y números, sin guiones (por ejemplo g1)');
+            if (estado.gates.some(function (g) { return g.id === e.id; })) throw new Error('el Gate "' + e.id + '" ya existe');
+            if (!manaCfg.funciones.some(function (f) { return f.id === e.funcion; })) throw new Error('gate: funcion debe ser ' + manaCfg.funciones.map(function (f) { return f.id; }).join(', '));
+            if (!manaTags[e.tag]) throw new Error('gate: el tag "' + e.tag + '" no existe en data/mana-tags.json');
+            if (typeof e.oportunidad !== 'string' || !e.oportunidad.trim()) throw new Error('gate: falta la oportunidad que permitió construirlo');
+            const k = estado.gates.length + 1;
+            const mfNecesaria = mfDeGate(k, manaCfg);
+            if (mfActual() < mfNecesaria) throw new Error('el Gate ' + k + ' exige Mana force ' + mfNecesaria + ' y el personaje tiene ' + mfActual());
+            const sxNecesario = sxDeGate(k, manaCfg);
+            if (estado.mana < sxNecesario) throw new Error('el Gate ' + k + ' exige ' + sxNecesario + ' SX de mana y el personaje tiene ' + estado.mana);
+            const reg = { id: e.id, orden: k, funcion: e.funcion, tag: e.tag, tagNombre: manaTags[e.tag].nombre, oportunidad: e.oportunidad.trim(), sesion: ses.id, mfRequerida: mfNecesaria, sxRequerido: sxNecesario };
+            estado.gates.push(reg);
+            s.gates.push(reg);
+            return;
+          }
+          case 'inscribir': {
+            const slot = grafoMana(estado.gates, manaTags).slots.find(function (x) { return x.id === e.slot; });
+            if (!slot) throw new Error('inscribir: el slot "' + e.slot + '" no existe (hay ' + grafoMana(estado.gates, manaTags).slots.map(function (x) { return x.id; }).join(', ') + ')');
+            if (estado.inscritas[e.slot]) throw new Error('el slot "' + e.slot + '" ya tiene "' + estado.inscritas[e.slot].nombre + '"; usa desinscribir antes');
+            const hab = estado.feats.find(function (x) { return x.tipo === 'habilidad-tipo-conjuro' && x.id === e.habilidad; });
+            if (!hab) throw new Error('inscribir: "' + e.habilidad + '" no es una habilidad tipo conjuro del personaje');
+            estado.inscritas[e.slot] = { id: hab.id, nombre: hab.nombre, sesion: ses.id };
+            s.inscripciones.push({ slot: e.slot, accion: 'inscribir', habilidad: hab.id, nombre: hab.nombre });
+            return;
+          }
+          case 'desinscribir': {
+            const previa = estado.inscritas[e.slot];
+            if (!previa) throw new Error('desinscribir: el slot "' + e.slot + '" no tiene ninguna habilidad');
+            delete estado.inscritas[e.slot];
+            s.inscripciones.push({ slot: e.slot, accion: 'desinscribir', habilidad: previa.id, nombre: previa.nombre });
+            return;
+          }
           case 'objeto': {
             aplicarObjeto(e);
             return;
@@ -664,6 +722,41 @@
 
     const nivelInfo = nivelDeXp(estado.xp, cfg);
 
+    /** Mana: los SX ganados (`total`), la Mana force con su contabilidad, los Gates y todo lo que se deriva del grafo. */
+    function resultadoMana() {
+      const mf = mfActual();
+      const grafo = grafoMana(estado.gates, manaTags);
+      const slots = grafo.slots.map(function (x) { return Object.assign({}, x, { habilidad: estado.inscritas[x.id] || null }); });
+      const sig = estado.gates.length + 1;
+      const mfSig = manaCfg ? mfDeGate(sig, manaCfg) : null;
+      const sxSig = manaCfg ? sxDeGate(sig, manaCfg) : null;
+      return {
+        total: estado.mana,
+        configurado: !!manaCfg,
+        fuerza: {
+          total: mf, base: mfBase, fuenteBase: mfFuente, aportes: estado.mf.slice(),
+          permitidos: manaCfg ? gatesPermitidos(mf, manaCfg) : 0,
+        },
+        gates: estado.gates.slice(),
+        conexiones: grafo.conexiones,
+        nodos: grafo.nodos,
+        circulos: grafo.circulos,
+        slots: slots,
+        totales: {
+          gates: estado.gates.length, nodos: grafo.nodos.length, circulos: grafo.circulos.length, slots: slots.length,
+          ocupados: slots.filter(function (x) { return x.habilidad; }).length,
+          libres: slots.filter(function (x) { return !x.habilidad; }).length,
+          paresSinConexion: grafo.conexiones.filter(function (c) { return !c.conecta; }).length,
+        },
+        siguiente: manaCfg ? {
+          numero: sig, mfRequerida: mfSig, sxRequerido: sxSig,
+          mfFalta: Math.max(0, mfSig - mf), sxFalta: Math.max(0, sxSig - estado.mana),
+          disponible: mf >= mfSig && estado.mana >= sxSig,
+        } : null,
+        funciones: manaCfg ? manaCfg.funciones : [],
+      };
+    }
+
     const ramas = zeo.ramas.map(function (r) { return detalleRama(r, estado.sx[r], zeo); });
     const minimo = Math.min.apply(null, ramas.map(function (r) { return r.nivel; }));
     ramas.forEach(function (r) { r.limita = r.nivel === minimo; });
@@ -723,7 +816,7 @@
       nivel: nivelInfo,
       sesiones: sesionesOut,
       zeo: { unidad: zeo.unidad, lectura: zeo.lectura, nivel: minimo, ramas: ramas, lineas: lineas, niveles: umbralesZeo(zeo) },
-      mana: { total: estado.mana, tabla: null },
+      mana: resultadoMana(),
       recursos: recursos,
       fate: estado.fate,
       feats: {
@@ -753,6 +846,70 @@
       },
       avisos: avisos,
     };
+  }
+
+  // ---- Mana por Gates (4.1.2): Mana force, Gates, conexiones, nodos, círculos y slots
+
+  /** Mana force necesaria para construir el Gate número `k` (1, 2, 4, 8… con mfBase 2). */
+  function mfDeGate(k, cfg) { return Math.pow(cfg.mfBase, k - 1); }
+
+  /** SX de mana que exige el Gate número `k`; pasada la tabla, sigue duplicando el último valor. */
+  function sxDeGate(k, cfg) {
+    const t = cfg.sxPorGate;
+    return k <= t.length ? t[k - 1] : t[t.length - 1] * Math.pow(2, k - t.length);
+  }
+
+  /** Cuántos Gates permite una Mana force dada: el mayor k con mfBase^(k−1) ≤ MF. */
+  function gatesPermitidos(mf, cfg) {
+    let k = 0;
+    while (mf >= mfDeGate(k + 1, cfg)) k++;
+    return k;
+  }
+
+  /** Dos tags chocan si alguno de los dos tiene al otro como incompatible; un tag nunca choca consigo mismo. */
+  function tagsIncompatibles(x, y, tagsPorId) {
+    if (x === y) return false;
+    const a = tagsPorId[x] || {};
+    const b = tagsPorId[y] || {};
+    return (a.incompatibles || []).indexOf(y) >= 0 || (b.incompatibles || []).indexOf(x) >= 0;
+  }
+
+  /**
+   * El grafo de Gates: equidistantes y conectados por defecto. Cada par que conecta es un nodo (slot de nivel 2)
+   * y cada trío con sus tres pares conectados es un círculo (slot de nivel 3); se suman a los Gates (nivel 1).
+   * `gates` va en orden de construcción y cada uno trae `id` y `tag`.
+   */
+  function grafoMana(gates, tagsPorId) {
+    const unicos = function (xs) { return xs.filter(function (x, i) { return xs.indexOf(x) === i; }); };
+    const n = gates.length;
+    const conecta = [];
+    const conexiones = [];
+    const nodos = [];
+    const circulos = [];
+    for (let i = 0; i < n; i++) {
+      conecta.push([]);
+    }
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const ok = !tagsIncompatibles(gates[i].tag, gates[j].tag, tagsPorId);
+        conecta[i][j] = ok;
+        conexiones.push({ a: gates[i].id, b: gates[j].id, conecta: ok });
+        if (ok) nodos.push({ id: gates[i].id + '-' + gates[j].id, gates: [gates[i].id, gates[j].id], tags: unicos([gates[i].tag, gates[j].tag]) });
+      }
+    }
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        for (let k = j + 1; k < n; k++) {
+          if (conecta[i][j] && conecta[i][k] && conecta[j][k]) {
+            circulos.push({ id: gates[i].id + '-' + gates[j].id + '-' + gates[k].id, gates: [gates[i].id, gates[j].id, gates[k].id], tags: unicos([gates[i].tag, gates[j].tag, gates[k].tag]) });
+          }
+        }
+      }
+    }
+    const slots = gates.map(function (g) { return { id: g.id, nivel: 1, tipo: 'gate', gates: [g.id], tags: [g.tag] }; })
+      .concat(nodos.map(function (x) { return { id: x.id, nivel: 2, tipo: 'nodo', gates: x.gates, tags: x.tags }; }))
+      .concat(circulos.map(function (x) { return { id: x.id, nivel: 3, tipo: 'circulo', gates: x.gates, tags: x.tags }; }));
+    return { conexiones: conexiones, nodos: nodos, circulos: circulos, slots: slots };
   }
 
   // ---- HP actual: fatiga, estados y descansos (el valor actual no se guarda en el registro)
@@ -787,22 +944,29 @@
     return { hp: hp, max: max, fatiga: fatiga, estado: estado, nivelFatiga: nivelFatiga };
   }
 
+  /** Dados de Golpe: tantos como niveles (por `porNivel`); `gastados` es lo gastado desde el último descanso largo. */
+  function dadosDeGolpe(nivel, gastados, cfg) {
+    const total = Math.max(0, Math.floor(nivel * cfg.descanso.dadosDeGolpe.porNivel));
+    const g = Math.max(0, Math.min(total, Math.floor(gastados || 0)));
+    return { total: total, gastados: g, disponibles: total - g };
+  }
+
+  /** Lo que cura un Dado de Golpe: el resultado más el modificador del atributo, con un mínimo por dado. */
+  function curaDadoDeGolpe(resultado, valorAtributo, cfg) {
+    const d = cfg.descanso.dadosDeGolpe;
+    const mod = modAtributo(valorAtributo);
+    return { resultado: resultado, mod: mod, atributo: d.atributo, cura: Math.max(d.minimoPorDado, resultado + mod) };
+  }
+
   /**
-   * HP que cura un descanso: nivel × curación por nivel, más el bono de cuerpo (el modificador del
-   * atributo, nunca negativo, por nivel si la regla lo dice), proporcional a las horas del descanso
-   * respecto del largo y con un mínimo de 1.
+   * Descanso largo: devuelve todo el HP y recupera una parte de los Dados de Golpe gastados
+   * (`recuperaLargo` del total, con un mínimo de uno). Con ningún dado gastado no recupera ninguno.
    */
-  function curacionDescanso(cfg, tipoId, nivel, valorAtributo) {
-    const d = cfg.descanso;
-    const tipo = d.tipos.find(function (t) { return t.id === tipoId; });
-    if (!tipo) throw new Error('descanso desconocido: ' + tipoId);
-    const mod = Math.max(0, modAtributo(valorAtributo));
-    const base = nivel * d.curacionPorNivel;
-    const bono = d.bonoCuerpo.porNivel ? mod * nivel : mod;
-    const largo = base + bono;
-    const hp = Math.max(1, Math.floor(largo * tipo.horas / d.horasLargo));
-    return { tipo: tipo.id, nombre: tipo.nombre, horas: tipo.horas, nivel: nivel, base: base, bono: bono, mod: mod,
-      atributo: d.bonoCuerpo.atributo, porNivel: !!d.bonoCuerpo.porNivel, largo: largo, hp: hp };
+  function descansoLargo(hp, max, nivel, gastados, cfg) {
+    const dg = dadosDeGolpe(nivel, gastados, cfg);
+    const recuperables = Math.max(1, Math.floor(dg.total * cfg.descanso.dadosDeGolpe.recuperaLargo));
+    const recuperados = Math.min(dg.gastados, recuperables);
+    return { hp: Math.max(hp, max), curado: Math.max(0, max - hp), dadosRecuperados: recuperados, gastados: dg.gastados - recuperados, total: dg.total };
   }
 
   /** Archivos de data/ que lee el motor, por clave de contexto. */
@@ -818,6 +982,8 @@
     traits: 'traits.json',
     classes: 'classes.json',
     vitalidad: 'vitalidad.json',
+    mana: 'mana.json',
+    manaTags: 'mana-tags.json',
   };
 
   /** Convierte los JSON de data/ (ya parseados, por clave de ARCHIVOS) en el contexto del motor. */
@@ -835,6 +1001,8 @@
       traits: raw.traits.traits,
       classes: raw.classes.clases,
       vitalidad: raw.vitalidad,
+      mana: raw.mana,
+      manaTags: raw.manaTags.tags,
     };
   }
 
@@ -856,11 +1024,18 @@
     validarAtributos: validarAtributos,
     umbralesVitales: umbralesVitales,
     estadoVital: estadoVital,
-    curacionDescanso: curacionDescanso,
+    dadosDeGolpe: dadosDeGolpe,
+    curaDadoDeGolpe: curaDadoDeGolpe,
+    descansoLargo: descansoLargo,
     babDeClase: babDeClase,
     evaluarRequisitos: evaluarRequisitos,
     contextoJugador: contextoJugador,
     tienePerfilRacial: tienePerfilRacial,
     calcularPersonaje: calcularPersonaje,
+    mfDeGate: mfDeGate,
+    sxDeGate: sxDeGate,
+    gatesPermitidos: gatesPermitidos,
+    tagsIncompatibles: tagsIncompatibles,
+    grafoMana: grafoMana,
   };
 });

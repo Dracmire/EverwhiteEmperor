@@ -1,27 +1,60 @@
 {
-  "version": "0.8.2",
-  "nota": "Reglas de HP actual: fatiga, estados y descansos. Los porcentajes de fatiga y de estados vienen del diseñador; la curación de los descansos y el bono de cuerpo son supuestos (ver docs/ESPECIFICACION.md, sección 10.7) y se cambian aquí sin tocar el código.",
+  "version": "0.8.3",
+  "nota": "Reglas de HP actual: fatiga, estados y descansos. Los porcentajes de fatiga y de estados vienen del diseñador; los descansos siguen la regla más generosa entre Pathfinder 1e y D&D 5e (SRD): el largo devuelve todo el HP y el corto gasta Dados de Golpe. Las cifras se cambian aquí sin tocar el código.",
   "fatiga": {
     "nota": "Penalizador acumulativo: cada umbral alcanzado suma el suyo. Con HP ≤ 50 % es −2, con HP ≤ 25 % es −6 en total (−2 y otro −4) y con HP ≤ 10 % es −10 en total (otro −4).",
     "umbrales": [
-      { "pct": 50, "penalizador": -2 },
-      { "pct": 25, "penalizador": -4 },
-      { "pct": 10, "penalizador": -4 }
+      {
+        "pct": 50,
+        "penalizador": -2
+      },
+      {
+        "pct": 25,
+        "penalizador": -4
+      },
+      {
+        "pct": 10,
+        "penalizador": -4
+      }
     ]
   },
   "estados": [
-    { "id": "down", "nombre": "DOWN", "pct": 0, "detalle": "HP en 0 o menos: fuera de combate." },
-    { "id": "ko", "nombre": "K.O.", "pct": -25, "detalle": "HP en −25 % del máximo o menos." },
-    { "id": "deadly", "nombre": "Deadly", "pct": -50, "detalle": "HP en −50 % del máximo o menos." }
+    {
+      "id": "down",
+      "nombre": "DOWN",
+      "pct": 0,
+      "detalle": "HP en 0 o menos: fuera de combate."
+    },
+    {
+      "id": "ko",
+      "nombre": "K.O.",
+      "pct": -25,
+      "detalle": "HP en −25 % del máximo o menos."
+    },
+    {
+      "id": "deadly",
+      "nombre": "Deadly",
+      "pct": -50,
+      "detalle": "HP en −50 % del máximo o menos."
+    }
   ],
   "descanso": {
-    "nota": "Pathfinder 1e cura 1 HP por nivel tras 8 h de descanso y no tiene descanso corto; el corto se calcula proporcional a las horas. El bono de cuerpo suma el modificador del atributo (mínimo 0) por nivel. No recupera MP: su relación con el mana sigue abierta.",
-    "horasLargo": 8,
-    "curacionPorNivel": 1,
-    "bonoCuerpo": { "atributo": "CON", "porNivel": true },
-    "tipos": [
-      { "id": "corto", "nombre": "Descanso corto", "horas": 2 },
-      { "id": "largo", "nombre": "Descanso largo", "horas": 8 }
-    ]
+    "nota": "D&D 5e (SRD): el descanso largo (8 h) devuelve todos los HP y recupera la mitad de los Dados de Golpe (mínimo uno); el corto permite gastar Dados de Golpe, hasta tantos como el nivel, y cada uno cura la tirada del dado más el modificador de CON. Es más generoso que Pathfinder 1e (1 HP por nivel en 8 h y ningún descanso corto). Un dado cura como mínimo 1, igual que la tirada de HP de cada nivel. El descanso no recupera MP todavía: su fórmula está diferida.",
+    "corto": {
+      "id": "corto",
+      "nombre": "Descanso corto",
+      "horas": 2
+    },
+    "largo": {
+      "id": "largo",
+      "nombre": "Descanso largo",
+      "horas": 8
+    },
+    "dadosDeGolpe": {
+      "porNivel": 1,
+      "recuperaLargo": 0.5,
+      "atributo": "CON",
+      "minimoPorDado": 1
+    }
   }
 }

@@ -136,6 +136,8 @@ h1 { font-size: 44px; line-height: 1.05; letter-spacing: -0.02em; font-weight: 7
 .vital-num.neg b { color: var(--warn); }
 .recup { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--line); padding-top: 14px; }
 .recup-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.dg { display: flex; flex-direction: column; gap: 8px; }
+.dg .acc-fila { align-items: flex-end; }
 .recup-btns .btn { flex: 1 1 140px; min-height: 56px; flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; padding: 6px 14px; text-align: left; background: var(--surf); }
 .recup-btns .btn span { font-size: 13px; font-weight: 600; }
 .recup-btns .btn b { font-family: Fraunces, Georgia, serif; font-size: 20px; line-height: 1.2; color: var(--hp); font-variant-numeric: lining-nums; white-space: nowrap; }
@@ -166,6 +168,22 @@ h1 { font-size: 44px; line-height: 1.05; letter-spacing: -0.02em; font-weight: 7
 .ren .pts { font-family: Fraunces, Georgia, serif; font-weight: 700; font-size: 18px; font-variant-numeric: lining-nums; min-width: 28px; text-align: right; }
 .ren .pts.mas { color: var(--acc); }
 .ren .pts.menos { color: var(--warn); }
+.ren .nm[data-tip] { text-decoration: underline dotted var(--mute); text-underline-offset: 4px; }
+.mana-grid { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.mana-grafo { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.mana-slots { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ren-lista.una { grid-template-columns: minmax(0, 1fr); }
+.ren select.btn { min-height: 44px; max-width: 190px; }
+.grafo-mana { width: 100%; max-width: 440px; height: auto; align-self: center; overflow: visible; }
+.g-arista { stroke: var(--acc); stroke-width: 2.5; opacity: 0.8; }
+.g-arista.rota { stroke: var(--warn); stroke-dasharray: 6 6; opacity: 0.9; }
+.g-circulo { fill: var(--accSoft); opacity: 0.85; stroke: none; }
+.g-nodo { fill: var(--surf); stroke: var(--acc); stroke-width: 3; }
+.g-nodo.lleno { fill: var(--accSoft); }
+.g-id { fill: var(--ink); font-size: 14px; font-weight: 700; }
+.g-tag { fill: var(--ink); font-size: 14px; font-weight: 600; }
+.g-fn { fill: var(--mute); font-size: 12px; }
+@media (min-width: 900px) { .mana-grid { grid-template-columns: minmax(0, 420px) minmax(0, 1fr); } }
 [data-tip] { cursor: help; }
 [data-tip]:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px; }
 .ren[data-tip] .nm { text-decoration: underline dotted var(--mute); text-underline-offset: 4px; }
