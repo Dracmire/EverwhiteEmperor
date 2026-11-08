@@ -996,29 +996,38 @@
     return { hp: hp, max: max, fatiga: fatiga, estado: estado, nivelFatiga: nivelFatiga };
   }
 
-  /** Dados de Golpe: tantos como niveles (por `porNivel`); `gastados` es lo gastado desde el último descanso largo. */
-  function dadosDeGolpe(nivel, gastados, cfg) {
-    const total = Math.max(0, Math.floor(nivel * cfg.descanso.dadosDeGolpe.porNivel));
-    const g = Math.max(0, Math.min(total, Math.floor(gastados || 0)));
-    return { total: total, gastados: g, disponibles: total - g };
-  }
-
-  /** Lo que cura un Dado de Golpe: el resultado más el modificador del atributo, con un mínimo por dado. */
-  function curaDadoDeGolpe(resultado, valorAtributo, cfg) {
-    const d = cfg.descanso.dadosDeGolpe;
-    const mod = modAtributo(valorAtributo);
-    return { resultado: resultado, mod: mod, atributo: d.atributo, cura: Math.max(d.minimoPorDado, resultado + mod) };
+  /**
+   * Recuperación de HP por hora (fórmula del diseñador). Con C = bono del atributo (nunca menor a `minimoBono`),
+   * H = (sumaFija + C)·V + constante + porBono·C  →  V = (H − constante − porBono·C) / (sumaFija + C)
+   * y R = C + V / divisorV, en HP por hora. R no baja de `minimoPorHora`: con HP muy bajos V sale negativo.
+   * Devuelve `c`, `v`, `bruta` (R sin recortar) y `porHora` (R ya recortada).
+   */
+  function recuperacionPorHora(hpMax, bono, cfg) {
+    const f = cfg.descanso.formula;
+    const c = Math.max(f.minimoBono, bono);
+    const divisor = f.sumaFija + c;
+    if (!(hpMax > 0) || !(divisor > 0)) return { c: c, v: 0, bruta: 0, porHora: 0 };
+    const v = (hpMax - f.constante - f.porBono * c) / divisor;
+    const bruta = c + v / f.divisorV;
+    return { c: c, v: v, bruta: bruta, porHora: Math.max(f.minimoPorHora, bruta) };
   }
 
   /**
-   * Descanso largo: devuelve todo el HP y recupera una parte de los Dados de Golpe gastados
-   * (`recuperaLargo` del total, con un mínimo de uno). Con ningún dado gastado no recupera ninguno.
+   * Descansar `horas`: cura R × horas, redondeado hacia abajo, sin pasar del máximo. Un HP que ya está sobre el
+   * máximo no se baja; desde un HP negativo se cura igual.
    */
-  function descansoLargo(hp, max, nivel, gastados, cfg) {
-    const dg = dadosDeGolpe(nivel, gastados, cfg);
-    const recuperables = Math.max(1, Math.floor(dg.total * cfg.descanso.dadosDeGolpe.recuperaLargo));
-    const recuperados = Math.min(dg.gastados, recuperables);
-    return { hp: Math.max(hp, max), curado: Math.max(0, max - hp), dadosRecuperados: recuperados, gastados: dg.gastados - recuperados, total: dg.total };
+  function descansar(hp, max, horas, bono, cfg) {
+    const r = recuperacionPorHora(max, bono, cfg);
+    const h = Math.max(0, horas || 0);
+    const bruto = Math.max(0, Math.floor(r.porHora * h + 1e-9));
+    const nuevo = Math.max(hp, Math.min(max, hp + bruto));
+    return { hp: nuevo, curado: nuevo - hp, horas: h, porHora: r.porHora, c: r.c };
+  }
+
+  /** Horas que faltan para llegar al máximo a R HP por hora (0 si ya está al máximo; null si R es 0). */
+  function horasParaMaximo(hp, max, porHora) {
+    if (hp >= max) return 0;
+    return porHora > 0 ? (max - hp) / porHora : null;
   }
 
   /** Archivos de data/ que lee el motor, por clave de contexto. */
@@ -1076,9 +1085,9 @@
     validarAtributos: validarAtributos,
     umbralesVitales: umbralesVitales,
     estadoVital: estadoVital,
-    dadosDeGolpe: dadosDeGolpe,
-    curaDadoDeGolpe: curaDadoDeGolpe,
-    descansoLargo: descansoLargo,
+    recuperacionPorHora: recuperacionPorHora,
+    descansar: descansar,
+    horasParaMaximo: horasParaMaximo,
     babDeClase: babDeClase,
     evaluarRequisitos: evaluarRequisitos,
     contextoJugador: contextoJugador,

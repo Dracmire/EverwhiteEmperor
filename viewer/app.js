@@ -309,48 +309,41 @@
       (r.pendientes.length ? '<span class="chip warn">Faltan tiradas: ' + (r.pendientes.length === 1 ? 'nivel ' : 'niveles ') + esc(r.pendientes.join(', ')) + '</span>' : '') + '</div>';
   }
 
-  /** Dados de Golpe gastados desde el último descanso largo; viven con el HP actual, solo en este navegador. */
-  function dadosGastados(pj) {
-    var v = actualesDe(pj).dg;
-    return typeof v === 'number' && v > 0 ? Math.floor(v) : 0;
-  }
-  function fijarDadosGastados(pj, n) {
-    var a = actualesDe(pj);
-    if (n > 0) a.dg = n; else delete a.dg;
-    guardar('ewe-actual-' + idPj(pj), JSON.stringify(a));
-  }
+  /** Un decimal con coma y los decimales pedidos: 1,77. */
+  function dec(n, d) { return Number(n).toFixed(d).replace('.', ','); }
 
-  /** Recuperación (vista Jugar), con la regla de D&D 5e: el largo devuelve el HP y el corto gasta Dados de Golpe. El MP no se toca. */
+  /**
+   * Recuperación (vista Jugar). La fórmula del diseñador da HP por hora a partir del HP máximo y del bono de CON;
+   * el descanso corto (2 h), el largo (8 h) y un número libre de horas curan esa tasa por las horas. El MP no se toca.
+   */
   function bloqueRecuperacion(calcB, pj) {
     var cfg = estado.ctx.vitalidad;
     var d = cfg.descanso;
     var hp = calcB.recursos.hp;
     var act = valorActual(pj, 'hp', hp.maximo);
-    var dg = Core.dadosDeGolpe(calcB.nivel.nivel, dadosGastados(pj), cfg);
-    var ultima = hp.tiradas.length ? hp.tiradas[hp.tiradas.length - 1] : null;
-    var attr = d.dadosDeGolpe.atributo;
-    var mod = Core.modAtributo(valorAtributo(calcB, attr));
+    var bono = Core.modAtributo(valorAtributo(calcB, d.formula.atributo));
+    var r = Core.recuperacionPorHora(hp.maximo, bono, cfg);
     var lleno = act >= hp.maximo;
-    var largo = Core.descansoLargo(act, hp.maximo, calcB.nivel.nivel, dg.gastados, cfg);
-    var puedeLargo = hp.maximo > 0 && (!lleno || dg.gastados > 0);
-    var puedeDado = !!ultima && dg.disponibles > 0 && !lleno;
-    var pips = '';
-    for (var i = 0; i < dg.total; i++) pips += '<i class="' + (i < dg.disponibles ? '' : 'vacia') + '"></i>';
-    var dadoTxt = ultima ? ultima.dado + ' ' + (mod < 0 ? '−' : '+') + ' ' + Math.abs(mod) + ' ' + attr : 'sin tiradas de HP';
-    var motivo = !ultima ? 'Faltan las tiradas de HP: el dado de golpe es el dado de tu HP.'
-      : !dg.disponibles ? 'No quedan dados de golpe: un descanso largo recupera ' + Math.max(1, Math.floor(dg.total * d.dadosDeGolpe.recuperaLargo)) + '.'
+    var puede = hp.maximo > 0 && !lleno && r.porHora > 0;
+    var horasMax = Core.horasParaMaximo(act, hp.maximo, r.porHora);
+    var motivo = hp.maximo <= 0 ? 'Faltan las tiradas de HP: sin HP máximo no hay recuperación.'
+      : r.porHora <= 0 ? 'Con ' + hp.maximo + ' de HP máximo y bono ' + signo(r.c) + ' la fórmula da 0 HP por hora: no hay recuperación natural.'
       : lleno ? 'HP ya está al máximo.' : '';
-    return '<div class="recup"><span class="eyebrow">Recuperación</span>' +
-      '<div class="recup-btns"><button class="btn" type="button" data-accion="descanso-largo"' + (puedeLargo ? '' : ' disabled') + '><span>' + esc(d.largo.nombre) + ' · ' + d.largo.horas + ' h</span>' +
-      '<b class="num">' + (largo.curado > 0 ? '+' + largo.curado + ' HP' : 'HP al máximo') + '</b></button></div>' +
-      '<div class="dg"><div class="row-between" style="align-items:center"><b>' + esc(d.corto.nombre) + ' · ' + d.corto.horas + ' h</b>' +
-      '<span class="mute num" style="font-size:13px">Dados de golpe <b>' + dg.disponibles + '</b> de ' + dg.total + ' · ' + esc(dadoTxt) + '</span></div>' +
-      '<div class="cargas" aria-hidden="true">' + pips + '</div>' +
-      '<div class="acc-fila"><button class="btn" type="button" data-accion="gastar-dado"' + (puedeDado ? '' : ' disabled') + '>Gastar 1 dado (tira el visor)</button>' +
-      '<label class="campo-et">Resultado de tu dado<input class="campo" type="number" inputmode="numeric" min="1"' + (ultima ? ' max="' + ultima.caras + '"' : '') + ' id="dg-res" placeholder="Ej.: 6" style="width:130px;min-width:0"' + (puedeDado ? '' : ' disabled') + '></label>' +
-      '<button class="btn" type="button" data-accion="registrar-dado"' + (puedeDado ? '' : ' disabled') + '>Registrar</button></div></div>' +
-      '<span class="mute pie-vital">' + (motivo ? esc(motivo) + ' ' : '') + 'El largo devuelve todo el HP y ' + (dg.gastados ? 'recupera ' + largo.dadosRecuperados + ' de los ' + dg.gastados + ' dados gastados' : 'recupera la mitad de los dados gastados') +
-      '. Cada dado del corto cura el dado más el modificador de ' + attr + ' (mínimo ' + d.dadosDeGolpe.minimoPorDado + '). El descanso no recupera MP.</span></div>';
+    var ayuda = 'R = C + V / ' + d.formula.divisorV + '\nV = (H − ' + d.formula.constante + ' − ' + d.formula.porBono + '·C) / (C + ' + d.formula.sumaFija + ')\n' +
+      'H = ' + hp.maximo + ' (HP máximo), C = ' + signo(r.c) + ' (bono de ' + d.formula.atributo + (bono < r.c || bono < 0 ? ', los negativos cuentan como 0' : '') + ')\n' +
+      'V = ' + dec(r.v, 2) + '  →  R = ' + dec(r.porHora, 2) + ' HP por hora' + (r.bruta < r.porHora ? ' (la fórmula da ' + dec(r.bruta, 2) + ' y no baja de ' + d.formula.minimoPorHora + ')' : '');
+    var btn = function (x) {
+      var res = Core.descansar(act, hp.maximo, x.horas, bono, cfg);
+      return '<button class="btn" type="button" data-accion="descansar" data-horas="' + x.horas + '" data-nombre="' + esc(x.nombre) + '"' + (puede ? '' : ' disabled') + '><span>' + esc(x.nombre) + ' · ' + x.horas + ' h</span>' +
+        '<b class="num">' + (res.curado > 0 ? '+' + res.curado + ' HP' : lleno ? 'HP al máximo' : '+0 HP') + '</b></button>';
+    };
+    return '<div class="recup"><div class="row-between" style="align-items:center"><span class="eyebrow">Recuperación</span>' +
+      chipTip(dec(r.porHora, 2) + ' HP por hora', r.porHora > 0 ? 'acc' : 'soft', ayuda) + '</div>' +
+      '<div class="recup-btns">' + btn(d.corto) + btn(d.largo) + '</div>' +
+      '<div class="acc-fila"><label class="campo-et">Horas de descanso<input class="campo" type="number" inputmode="decimal" min="0.5" step="0.5" id="desc-h" value="1" style="width:130px;min-width:0"' + (puede ? '' : ' disabled') + '></label>' +
+      '<button class="btn" type="button" data-accion="descansar-horas"' + (puede ? '' : ' disabled') + '>Descansar</button></div>' +
+      '<span class="mute pie-vital">' + (motivo ? esc(motivo) + ' ' : '') + (horasMax ? 'Al ritmo de ' + dec(r.porHora, 2) + ' HP por hora llegas al máximo en ' + dec(horasMax, 1) + ' h. ' : '') +
+      'Cada descanso cura la tasa por las horas, redondeada hacia abajo. El descanso no recupera MP.</span></div>';
   }
 
   function htmlVitales(calcB, pj, juego) {
@@ -1299,31 +1292,16 @@
     lector.readAsDataURL(file);
   }
 
-  /** Descanso corto: gasta un Dado de Golpe (el del HP) y cura su resultado más el modificador de CON. */
-  function gastarDado(modo) {
+  /** Descansar un número de horas: cura la tasa de recuperación por hora, hasta el máximo. El MP no se toca. */
+  function descansarHoras(horas, nombre, foco) {
     var v = estado.vista, pj = pjActual(), cfg = estado.ctx.vitalidad;
     var hp = v.calcB.recursos.hp;
-    var ultima = hp.tiradas.length ? hp.tiradas[hp.tiradas.length - 1] : null;
-    if (!ultima) { toast('Faltan las tiradas de HP: el dado de golpe es el dado de tu HP.', true); return; }
-    var dg = Core.dadosDeGolpe(v.calcB.nivel.nivel, dadosGastados(pj), cfg);
-    if (!dg.disponibles) { toast('No quedan dados de golpe: un descanso largo recupera parte de ellos.', true); return; }
-    var resultado;
-    if (modo === 'azar') {
-      resultado = 1 + Math.floor(Math.random() * ultima.caras);
-    } else {
-      var campo = document.getElementById('dg-res');
-      var n = campo ? Number(campo.value) : NaN;
-      if (!Number.isInteger(n) || n < 1 || n > ultima.caras) { toast('El resultado de un ' + ultima.dado + ' es un entero entre 1 y ' + ultima.caras + '.', true); return; }
-      resultado = n;
-    }
-    var c = Core.curaDadoDeGolpe(resultado, valorAtributo(v.calcB, cfg.descanso.dadosDeGolpe.atributo), cfg);
-    var max = hp.maximo;
-    var antes = valorActual(pj, 'hp', max);
-    var despues = Math.min(max, antes + c.cura);
-    fijarActual(pj, 'hp', despues, max);
-    fijarDadosGastados(pj, dg.gastados + 1);
-    refrescarVitales('[data-accion="gastar-dado"]');
-    toast(cfg.descanso.corto.nombre + ': ' + ultima.dado + ' → ' + resultado + ' ' + (c.mod < 0 ? '−' : '+') + ' ' + Math.abs(c.mod) + ' ' + c.atributo + ', +' + (despues - antes) + ' HP (de ' + conSigno(antes) + ' a ' + conSigno(despues) + ').');
+    var bono = Core.modAtributo(valorAtributo(v.calcB, cfg.descanso.formula.atributo));
+    var antes = valorActual(pj, 'hp', hp.maximo);
+    var res = Core.descansar(antes, hp.maximo, horas, bono, cfg);
+    fijarActual(pj, 'hp', res.hp, hp.maximo);
+    refrescarVitales(foco);
+    toast((nombre || 'Descanso') + ' (' + dec(horas, Number.isInteger(horas) ? 0 : 1) + ' h a ' + dec(res.porHora, 2) + ' HP por hora): +' + res.curado + ' HP, de ' + conSigno(antes) + ' a ' + conSigno(res.hp) + '.');
   }
 
   /** El valor entero de un campo numérico, o null si está vacío o no es entero. */
@@ -1355,16 +1333,13 @@
       var actual = valorActual(pj, rec, max);
       fijarActual(pj, rec, delta === 'max' ? max : Math.max(minimoVital(rec, max), Math.min(max, actual + Number(delta))), max);
       refrescarVitales('[data-accion="rec"][data-recurso="' + rec + '"][data-delta="' + delta + '"]');
-    } else if (a === 'descanso-largo') {
-      var vc = estado.vista.calcB;
-      var cfg = estado.ctx.vitalidad;
-      var tope = vc.recursos.hp.maximo;
-      var antes = valorActual(pj, 'hp', tope);
-      var res = Core.descansoLargo(antes, tope, vc.nivel.nivel, dadosGastados(pj), cfg);
-      fijarActual(pj, 'hp', res.hp, tope);
-      fijarDadosGastados(pj, res.gastados);
-      refrescarVitales('[data-accion="descanso-largo"]');
-      toast(cfg.descanso.largo.nombre + ' (' + cfg.descanso.largo.horas + ' h): HP de ' + conSigno(antes) + ' a ' + res.hp + (res.dadosRecuperados ? ' y ' + plural(res.dadosRecuperados, 'dado de golpe recuperado', 'dados de golpe recuperados') : '') + '.');
+    } else if (a === 'descansar') {
+      var hrs = Number(boton.getAttribute('data-horas'));
+      descansarHoras(hrs, boton.getAttribute('data-nombre'), '[data-accion="descansar"][data-horas="' + hrs + '"]');
+    } else if (a === 'descansar-horas') {
+      var hl = Number((document.getElementById('desc-h') || {}).value);
+      if (!(hl > 0)) { toast('Escribe cuántas horas descansas: un número mayor que 0.', true); return; }
+      descansarHoras(hl, 'Descanso', '[data-accion="descansar-horas"]');
     } else if (a === 'inscribir') {
       var slot = boton.getAttribute('data-slot');
       var sel = document.getElementById('insc-' + slot);
@@ -1405,10 +1380,6 @@
       var aE = { tipo: 'sx-asignar', subsistema: aP[0], cantidad: aN };
       if (aP[0] === 'zeo') aE.rama = aP[1];
       agregar(aE, aN + ' SX asignados a ' + destinoSx(aP[0], aP[1]) + ' (borrador).');
-    } else if (a === 'gastar-dado') {
-      gastarDado('azar');
-    } else if (a === 'registrar-dado') {
-      gastarDado('manual');
     } else if (a === 'quitar') {
       var borr = borradorDe(pj).slice();
       borr.splice(Number(boton.getAttribute('data-indice')), 1);
@@ -1565,7 +1536,7 @@
   });
   app.addEventListener('keydown', function (ev) {
     if (ev.key === 'Escape') ocultarTip();
-    if (ev.key === 'Enter' && ev.target.id === 'dg-res') { ev.preventDefault(); gastarDado('manual'); return; }
+    if (ev.key === 'Enter' && ev.target.id === 'desc-h') { ev.preventDefault(); accion(document.querySelector('[data-accion="descansar-horas"]')); return; }
     var m = /^tr-(hp|mp)-res$/.exec(ev.target.id || '');
     if (m && ev.key === 'Enter') { ev.preventDefault(); tirar(m[1], 'manual'); }
   });

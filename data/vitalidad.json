@@ -1,6 +1,6 @@
 {
-  "version": "0.8.3",
-  "nota": "Reglas de HP actual: fatiga, estados y descansos. Los porcentajes de fatiga y de estados vienen del diseñador; los descansos siguen la regla más generosa entre Pathfinder 1e y D&D 5e (SRD): el largo devuelve todo el HP y el corto gasta Dados de Golpe. Las cifras se cambian aquí sin tocar el código.",
+  "version": "0.8.5",
+  "nota": "Reglas de HP actual: fatiga, estados y recuperación. Los porcentajes de fatiga y de estados y la fórmula de recuperación vienen del diseñador. Las cifras se cambian aquí sin tocar el código.",
   "fatiga": {
     "nota": "Penalizador acumulativo: cada umbral alcanzado suma el suyo. Con HP ≤ 50 % es −2, con HP ≤ 25 % es −6 en total (−2 y otro −4) y con HP ≤ 10 % es −10 en total (otro −4).",
     "umbrales": [
@@ -39,7 +39,7 @@
     }
   ],
   "descanso": {
-    "nota": "D&D 5e (SRD): el descanso largo (8 h) devuelve todos los HP y recupera la mitad de los Dados de Golpe (mínimo uno); el corto permite gastar Dados de Golpe, hasta tantos como el nivel, y cada uno cura la tirada del dado más el modificador de CON. Es más generoso que Pathfinder 1e (1 HP por nivel en 8 h y ningún descanso corto). Un dado cura como mínimo 1, igual que la tirada de HP de cada nivel. El descanso no recupera MP todavía: su fórmula está diferida.",
+    "nota": "La recuperación se mide en HP por hora: R = C + V/10, con C el bono de CON y V la incógnita que se despeja de H = (2 + C + 3)·V + 5 + 5·C, donde H es el HP máximo. Un descanso cura R × horas (redondeado hacia abajo). El corto dura 2 h y el largo 8 h, y también se puede descansar un número libre de horas. Reemplaza al descanso de D&D 5e y a los Dados de Golpe de la v0.8.3. El descanso no recupera MP todavía: su fórmula está diferida.",
     "corto": {
       "id": "corto",
       "nombre": "Descanso corto",
@@ -50,11 +50,14 @@
       "nombre": "Descanso largo",
       "horas": 8
     },
-    "dadosDeGolpe": {
-      "porNivel": 1,
-      "recuperaLargo": 0.5,
+    "formula": {
       "atributo": "CON",
-      "minimoPorDado": 1
+      "minimoBono": 0,
+      "sumaFija": 5,
+      "constante": 5,
+      "porBono": 5,
+      "divisorV": 10,
+      "minimoPorHora": 0
     }
   }
 }
