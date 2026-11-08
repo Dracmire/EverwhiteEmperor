@@ -1,9 +1,71 @@
 {
-  "version": "0.6",
+  "version": "0.8",
+  "nota": "Catálogo de achievement feats. fate (opcional) es el fate que otorga por defecto; la entrada del registro puede fijar otro valor. Las entradas con fuente \"ejemplo\" son de muestra: reemplazar por la lista real del sistema.",
   "achievements": [
     {
       "id": "guardian-del-paso",
       "nombre": "Guardián del paso",
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "primera-sangre",
+      "nombre": "Primera sangre",
+      "fate": 1,
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "mano-firme",
+      "nombre": "Mano firme",
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "voluntad-de-hierro",
+      "nombre": "Voluntad de hierro",
+      "fate": 1,
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "rompe-asedios",
+      "nombre": "Rompe-asedios",
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "paso-de-sombra",
+      "nombre": "Paso de sombra",
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "eco-de-la-tormenta",
+      "nombre": "Eco de la tormenta",
+      "fate": 2,
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "ultimo-en-caer",
+      "nombre": "Último en caer",
+      "fate": 1,
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "lengua-de-plata",
+      "nombre": "Lengua de plata",
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "cartografo-de-lo-imposible",
+      "nombre": "Cartógrafo de lo imposible",
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "cazador-de-presagios",
+      "nombre": "Cazador de presagios",
+      "fate": 1,
+      "fuente": "ejemplo"
+    },
+    {
+      "id": "juramento-cumplido",
+      "nombre": "Juramento cumplido",
+      "fate": 2,
       "fuente": "ejemplo"
     }
   ]

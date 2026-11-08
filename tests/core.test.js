@@ -21,7 +21,7 @@ const ejemplo = () => leer('characters/ejemplo.json');
 function pj(entradasPorSesion, extra) {
   return Object.assign({
     personaje: 't', nombre: 'Test', raza: 'raza-ejemplo', clase: 'fighter',
-    atributos: { STR: 17, DEX: 13, CON: 15, INT: 10, WIS: 12, CHA: 8 },
+    atributos: { STR: 17, DEX: 13, PER: 12, INT: 10, WIS: 12, CHA: 8 },
     extremidades: ['mano-derecha', 'mano-izquierda', 'pie-derecho', 'pie-izquierdo'],
     sesiones: entradasPorSesion.map((entradas, i) => ({ id: 's' + i, fecha: '2026-01-0' + (i + 1), titulo: 'S' + i, entradas: entradas })),
   }, extra || {});
@@ -168,7 +168,7 @@ test('un feat sin slot libre o sin requisitos es rechazado', () => {
   assert.equal(r.feats.lista.length, 1);
   assert.match(errores(r)[0], /no hay slot de feat libre en el nivel 1/);
   // Power Attack exige STR 13.
-  const debil = Core.calcularPersonaje(ctx, pj([[{ tipo: 'feat', id: 'power-attack' }]], { atributos: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 } }));
+  const debil = Core.calcularPersonaje(ctx, pj([[{ tipo: 'feat', id: 'power-attack' }]], { atributos: { STR: 10, DEX: 10, PER: 10, INT: 10, WIS: 10, CHA: 10 } }));
   assert.match(errores(debil)[0], /exige STR 13/);
   // Un feat repetido o inexistente.
   const raro = Core.calcularPersonaje(ctx, pj([[xp(3000), { tipo: 'feat', id: 'toughness' }, { tipo: 'feat', id: 'toughness' }, { tipo: 'feat', id: 'no-existe' }]]));
@@ -225,8 +225,8 @@ test('racial: de otra raza se rechaza; de la propia baja el costo solo con perfi
   assert.deepEqual(errores(propia), []);
   const sangre = propia.meritos.lista[0];
   assert.deepEqual([sangre.costoBase, sangre.descuento, sangre.puntos], [4, 1, 3]);
-  // Sin el perfil (STR y CON no son los más altos): sin descuento.
-  const sinPerfil = Core.calcularPersonaje(ctx, pj([ganar], { atributos: { STR: 10, DEX: 16, CON: 10, INT: 10, WIS: 10, CHA: 10 } }));
+  // Sin el perfil (STR y DEX no son los más altos): sin descuento.
+  const sinPerfil = Core.calcularPersonaje(ctx, pj([ganar], { atributos: { STR: 10, DEX: 10, PER: 16, INT: 10, WIS: 10, CHA: 10 } }));
   assert.equal(sinPerfil.personaje.perfilRacial, false);
   assert.deepEqual([sinPerfil.meritos.lista[0].descuento, sinPerfil.meritos.lista[0].puntos], [0, 4]);
 });
@@ -448,6 +448,135 @@ test('el catálogo importado es consistente', () => {
   assert.ok(clases.has('fighter') && clases.has('wizard'));
 });
 
+// ---------------------------------------------------- atributos derivados
+
+test('CON, SPR y MND se derivan como el menor de sus dos atributos base', () => {
+  const base = { STR: 17, DEX: 13, PER: 12, INT: 10, WIS: 12, CHA: 8 };
+  assert.deepEqual(Core.derivarAtributos(base), { CON: 13, SPR: 8, MND: 10 });
+  assert.deepEqual(Core.derivarAtributos({ STR: 9, DEX: 14, PER: 7, INT: 15, WIS: 11, CHA: 18 }), { CON: 9, SPR: 11, MND: 7 });
+  assert.equal(Object.keys(Core.atributosCompletos(base)).length, 9);
+  assert.deepEqual([Core.modAtributo(10), Core.modAtributo(11), Core.modAtributo(8), Core.modAtributo(7), Core.modAtributo(17)], [0, 0, -1, -2, 3]);
+  const r = Core.calcularPersonaje(contexto(), pj([[xp(6000)]]));
+  assert.deepEqual(r.personaje.derivados, { CON: 13, SPR: 8, MND: 10 });
+  assert.deepEqual(Object.keys(r.personaje.atributos), ['STR', 'DEX', 'PER', 'INT', 'WIS', 'CHA']);
+});
+
+test('escribir un atributo derivado o dejar un base sin valor es un error', () => {
+  const ctx = contexto();
+  const conCon = Core.calcularPersonaje(ctx, pj([[xp(6000)]], { atributos: { STR: 17, DEX: 13, CON: 15, PER: 12, INT: 10, WIS: 12, CHA: 8 } }));
+  assert.ok(errores(conCon).some((m) => /CON se deriva/.test(m)));
+  assert.deepEqual(conCon.personaje.derivados.CON, 13, 'el valor escrito se ignora');
+  const sinPer = Core.calcularPersonaje(ctx, pj([[xp(6000)]], { atributos: { STR: 17, DEX: 13, INT: 10, WIS: 12, CHA: 8 } }));
+  assert.ok(errores(sinPer).some((m) => /PER falta/.test(m)));
+  const raro = Core.calcularPersonaje(ctx, pj([[xp(6000)]], { atributos: { STR: 17, DEX: 13, PER: 12, INT: 10, WIS: 12, CHA: 8, LCK: 5 } }));
+  assert.ok(errores(raro).some((m) => /desconocido: LCK/.test(m)));
+});
+
+test('los requisitos de atributo de un feat usan el CON derivado', () => {
+  const ctx = contexto();
+  ctx.feats = ctx.feats.concat([
+    { id: 'prueba-con-14', nombre: 'Prueba CON 14', tipo: 'general', libro: 'x', fuente: 'prueba', requisitos: { atributos: { CON: 14 } } },
+    { id: 'prueba-con-13', nombre: 'Prueba CON 13', tipo: 'general', libro: 'x', fuente: 'prueba', requisitos: { atributos: { CON: 13 } } },
+  ]);
+  // STR 17 y DEX 13: CON derivado = 13.
+  const r = Core.calcularPersonaje(ctx, pj([[xp(6000), { tipo: 'feat', id: 'prueba-con-14' }, { tipo: 'feat', id: 'prueba-con-13' }]]));
+  assert.deepEqual(r.feats.lista.map((f) => f.id), ['prueba-con-13']);
+  assert.match(errores(r)[0], /exige CON 14/);
+});
+
+// ------------------------------------------------------------- HP y MP (dados)
+
+const tira = (recurso, dado, resultado, extra) => Object.assign({ tipo: 'tirada', recurso: recurso, dado: dado, resultado: resultado }, extra || {});
+
+test('HP y MP: cada nivel suma max(1, tirada + modificador); CON da HP y SPR da MP', () => {
+  const ctx = contexto();
+  // CON 13 (mod +1) y SPR 8 (mod -1). Nivel 3.
+  const r = Core.calcularPersonaje(ctx, pj([[
+    xp(2000),
+    tira('hp', 'd10', 7), tira('hp', 'd10', 1), tira('hp', 'd10', 10),
+    tira('mp', 'd6', 4), tira('mp', 'd6', 1), tira('mp', 'd6', 6),
+  ]]));
+  assert.deepEqual(errores(r), []);
+  assert.equal(r.nivel.nivel, 3);
+  assert.deepEqual([r.recursos.hp.atributo, r.recursos.hp.mod, r.recursos.mp.atributo, r.recursos.mp.mod], ['CON', 1, 'SPR', -1]);
+  assert.deepEqual(r.recursos.hp.tiradas.map((t) => [t.nivel, t.resultado, t.ganado]), [[1, 7, 8], [2, 1, 2], [3, 10, 11]]);
+  assert.equal(r.recursos.hp.maximo, 21);
+  // MP: 4-1=3, 1-1=0 -> mínimo 1, 6-1=5.
+  assert.deepEqual(r.recursos.mp.tiradas.map((t) => t.ganado), [3, 1, 5]);
+  assert.equal(r.recursos.mp.maximo, 9);
+  assert.deepEqual(r.recursos.hp.pendientes, []);
+  assert.deepEqual(r.avisos.filter((a) => a.nivel === 'aviso'), []);
+  assert.equal(r.sesiones[0].tiradas.length, 6);
+});
+
+test('HP y MP: la tirada se asigna al primer nivel sin tirada, o al nivel indicado', () => {
+  const ctx = contexto();
+  const r = Core.calcularPersonaje(ctx, pj([[xp(2000), tira('hp', 'd8', 5, { nivel: 3 }), tira('hp', 'd8', 4), tira('hp', 'd8', 6)]]));
+  assert.deepEqual(errores(r), []);
+  assert.deepEqual(r.recursos.hp.tiradas.map((t) => [t.nivel, t.resultado]), [[1, 4], [2, 6], [3, 5]]);
+});
+
+test('HP y MP: tiradas inválidas se rechazan y los niveles sin tirada avisan', () => {
+  const ctx = contexto();
+  const r = Core.calcularPersonaje(ctx, pj([[
+    xp(1000),
+    tira('hp', 'd8', 9),               // fuera del dado
+    tira('hp', 'd8', 0),               // cero
+    tira('hp', '8', 4),                // dado mal escrito
+    tira('hp', 'd1', 1),               // dado de una cara
+    tira('xx', 'd8', 4),               // recurso desconocido
+    tira('hp', 'd8', 4, { nivel: 3 }), // nivel que aún no se alcanza
+    tira('hp', 'd8', 4, { nivel: 1 }),
+    tira('hp', 'd8', 5, { nivel: 1 }), // nivel repetido
+    tira('hp', 'd8', 2, { nivel: 2 }),
+    tira('hp', 'd8', 3),               // ya no queda nivel libre
+  ]]));
+  assert.equal(errores(r).length, 8);
+  assert.deepEqual(r.recursos.hp.tiradas.map((t) => [t.nivel, t.resultado]), [[1, 4], [2, 2]]);
+  // MP sin ninguna tirada: avisa de los niveles 1 y 2, sin ser un error.
+  assert.deepEqual(r.recursos.mp.pendientes, [1, 2]);
+  const aviso = r.avisos.find((a) => a.nivel === 'aviso');
+  assert.match(aviso.mensaje, /faltan tiradas de MP en los niveles 1, 2/);
+});
+
+// ------------------------------------------------------------- achievements
+
+test('achievement: el fate por defecto sale del catálogo y la entrada puede fijar otro', () => {
+  const ctx = contexto();
+  assert.equal(ctx.achievements.find((a) => a.id === 'primera-sangre').fate, 1);
+  const a = Core.calcularPersonaje(ctx, pj([[xp(6000), { tipo: 'achievement', id: 'primera-sangre' }]]));
+  assert.deepEqual(errores(a), []);
+  assert.equal(a.fate, 1);
+  const b = Core.calcularPersonaje(ctx, pj([[xp(6000), { tipo: 'achievement', id: 'primera-sangre', fate: 0 }]]));
+  assert.equal(b.fate, 0);
+  // Un achievement sin fate en el catálogo da 0.
+  const c = Core.calcularPersonaje(ctx, pj([[xp(6000), { tipo: 'achievement', id: 'mano-firme' }]]));
+  assert.equal(c.fate, 0);
+  // Máximo 1 por nivel y sin repetir.
+  const d = Core.calcularPersonaje(ctx, pj([[xp(6000), { tipo: 'achievement', id: 'mano-firme' }, { tipo: 'achievement', id: 'primera-sangre' }]]));
+  assert.match(errores(d)[0], /máximo 1 por nivel/);
+});
+
+test('el catálogo de achievements es consistente', () => {
+  const lista = contexto().achievements;
+  assert.ok(lista.length >= 10, 'hay una lista con la que probar el scroll');
+  assert.equal(new Set(lista.map((a) => a.id)).size, lista.length, 'ids únicos');
+  lista.forEach((a) => {
+    assert.ok(a.nombre && a.fuente, a.id);
+    if (a.fate !== undefined) assert.ok(Number.isInteger(a.fate) && a.fate >= 0, a.id + ' fate');
+  });
+});
+
+// ------------------------------------------------------------------ retrato
+
+test('el retrato se pasa tal cual y es opcional', () => {
+  const ctx = contexto();
+  assert.equal(Core.calcularPersonaje(ctx, pj([[xp(0)]])).personaje.imagen, null);
+  const uri = 'data:image/png;base64,AAAA';
+  assert.equal(Core.calcularPersonaje(ctx, pj([[xp(0)]], { imagen: uri })).personaje.imagen, uri);
+  assert.equal(Core.calcularPersonaje(ctx, pj([[xp(0)]], { imagen: 42 })).personaje.imagen, null);
+});
+
 // ------------------------------------------------------ personaje de ejemplo
 
 test('personaje de ejemplo: todo lo derivado coincide y no hay avisos', () => {
@@ -472,4 +601,9 @@ test('personaje de ejemplo: todo lo derivado coincide y no hay avisos', () => {
   const cargas = Object.fromEntries(r.equipo.objetos.filter((o) => o.cargas).map((o) => [o.id, o.cargas.actuales]));
   assert.deepEqual(cargas, { 'varita-curar-leves': 9, 'tobillera-del-corredor': 3 });
   assert.equal(r.personaje.perfilRacial, true);
+  // HP (d10, CON 13 → +1) y MP (d6, SPR 8 → −1) tirados en los siete niveles.
+  assert.deepEqual([r.recursos.hp.pendientes, r.recursos.mp.pendientes], [[], []]);
+  assert.equal(r.recursos.hp.maximo, 56);
+  assert.equal(r.recursos.mp.maximo, 20);
+  assert.deepEqual(r.personaje.derivados, { CON: 13, SPR: 8, MND: 10 });
 });

@@ -2,12 +2,13 @@
   "personaje": "ejemplo",
   "datosDeEjemplo": true,
   "nombre": "Aldric Vael",
+  "imagen": "retratos/ejemplo.svg",
   "raza": "raza-ejemplo",
   "clase": "fighter",
   "atributos": {
     "STR": 17,
     "DEX": 13,
-    "CON": 15,
+    "PER": 12,
     "INT": 10,
     "WIS": 12,
     "CHA": 8
@@ -30,6 +31,90 @@
           "campo": "xp",
           "cantidad": 6000,
           "motivo": "Inicio de campaña en nivel 7"
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d10",
+          "resultado": 10
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d10",
+          "resultado": 7
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d10",
+          "resultado": 6
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d10",
+          "resultado": 9
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d10",
+          "resultado": 4
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d10",
+          "resultado": 8
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "hp",
+          "dado": "d10",
+          "resultado": 5
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 4
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 3
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 6
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 2
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 5
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 3
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 4
         },
         {
           "tipo": "feat",

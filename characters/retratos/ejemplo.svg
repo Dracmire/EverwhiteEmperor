@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 400" role="img" aria-label="Retrato de ejemplo: figura encapuchada bajo la nieve">
+  <defs>
+    <linearGradient id="cielo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#25446e"/>
+      <stop offset="1" stop-color="#0e1621"/>
+    </linearGradient>
+    <radialGradient id="luz" cx="50%" cy="40%" r="48%">
+      <stop offset="0" stop-color="#d4e8ff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#d4e8ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="320" height="400" fill="url(#cielo)"/>
+  <rect width="320" height="400" fill="url(#luz)"/>
+  <g fill="#eaf3ff" opacity="0.75">
+    <circle cx="36" cy="52" r="2.5"/><circle cx="92" cy="30" r="1.8"/><circle cx="258" cy="48" r="2.8"/>
+    <circle cx="296" cy="104" r="1.8"/><circle cx="24" cy="148" r="2"/><circle cx="62" cy="214" r="3"/>
+    <circle cx="276" cy="196" r="2.4"/><circle cx="214" cy="26" r="1.6"/><circle cx="140" cy="44" r="2"/>
+    <circle cx="300" cy="260" r="2"/><circle cx="18" cy="288" r="2.6"/><circle cx="252" cy="130" r="1.6"/>
+  </g>
+  <path d="M0 400V332C44 292 112 270 160 270s116 22 160 62v68z" fill="#2a3b55"/>
+  <path d="M160 66c-54 0-80 50-76 104 2 32 14 58 38 82h76c24-24 36-50 38-82 4-54-22-104-76-104z" fill="#142030"/>
+  <ellipse cx="160" cy="178" rx="45" ry="57" fill="#dde9f5"/>
+  <path d="M113 156c14-30 80-30 94 0-12-10-82-10-94 0z" fill="#142030"/>
+  <path d="M138 176h16M166 176h16" stroke="#142030" stroke-width="4" stroke-linecap="round"/>
+  <path d="M148 212c8 5 16 5 24 0" stroke="#8a9db4" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M108 264c22 24 82 24 104 0l6 40c-26 20-90 20-116 0z" fill="#41567a"/>
+  <path d="M160 288v26M147 297l26 8M173 297l-26 8" stroke="#dde9f5" stroke-width="3" stroke-linecap="round"/>
+</svg>

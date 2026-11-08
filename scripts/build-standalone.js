@@ -15,6 +15,20 @@ const indice = JSON.parse(leer('characters/index.json'));
 const personajes = {};
 indice.personajes.forEach((id) => { personajes[id] = JSON.parse(leer('characters/' + id + '.json')); });
 
+// El retrato (campo "imagen") puede ser una ruta relativa a characters/. En el archivo único no hay carpeta:
+// se convierte en un data: URI. Una URL o un data: ya escrito se deja tal cual.
+const MIME = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml' };
+Object.keys(personajes).forEach((id) => {
+  const ruta = personajes[id].imagen;
+  if (typeof ruta !== 'string' || /^(data:|https?:|blob:)/i.test(ruta)) return;
+  const abs = path.resolve(raiz, 'characters', ruta);
+  if (!abs.startsWith(path.join(raiz, 'characters') + path.sep)) throw new Error(id + ': la imagen "' + ruta + '" sale de characters/');
+  const mime = MIME[path.extname(abs).toLowerCase()];
+  if (!mime) throw new Error(id + ': tipo de imagen no admitido en "' + ruta + '"');
+  if (!fs.existsSync(abs)) throw new Error(id + ': no existe la imagen "' + ruta + '"');
+  personajes[id].imagen = 'data:' + mime + ';base64,' + fs.readFileSync(abs).toString('base64');
+});
+
 // Evita que un "</script>" o "<!--" dentro de los datos cierre el bloque.
 const embebido = JSON.stringify({ data, personajes }).replace(/</g, '\\u003c');
 

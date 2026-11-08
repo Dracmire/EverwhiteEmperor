@@ -182,6 +182,57 @@
     };
   }
 
+  // ------------------------------------------------------------- atributos
+
+  /** Atributos base: los únicos que se escriben en el JSON del personaje. */
+  const ATRIBUTOS_BASE = ['STR', 'DEX', 'PER', 'INT', 'WIS', 'CHA'];
+  /** Atributos derivados: cada uno es el menor de sus dos atributos base. */
+  const DERIVADOS = { CON: ['STR', 'DEX'], SPR: ['WIS', 'CHA'], MND: ['PER', 'INT'] };
+
+  /** Modificador de un atributo. [SUPUESTO] floor((valor - 10) / 2), como en Pathfinder 1e. */
+  function modAtributo(valor) {
+    return Math.floor((valor - 10) / 2);
+  }
+
+  /** Solo los seis atributos base, como números (0 si falta alguno). */
+  function atributosBase(atributos) {
+    const base = {};
+    ATRIBUTOS_BASE.forEach(function (k) {
+      const v = (atributos || {})[k];
+      base[k] = typeof v === 'number' ? v : 0;
+    });
+    return base;
+  }
+
+  /** CON = min(STR, DEX), SPR = min(WIS, CHA), MND = min(PER, INT). */
+  function derivarAtributos(atributos) {
+    const base = atributosBase(atributos);
+    const out = {};
+    Object.keys(DERIVADOS).forEach(function (k) {
+      out[k] = Math.min.apply(null, DERIVADOS[k].map(function (a) { return base[a]; }));
+    });
+    return out;
+  }
+
+  /** Los nueve atributos juntos (base + derivados). */
+  function atributosCompletos(atributos) {
+    return Object.assign({}, atributosBase(atributos), derivarAtributos(atributos));
+  }
+
+  /** Problemas del bloque `atributos` del personaje, como lista de textos. */
+  function validarAtributos(atributos) {
+    const a = atributos || {};
+    const problemas = [];
+    ATRIBUTOS_BASE.forEach(function (k) {
+      if (!esEntero(a[k]) || a[k] < 1) problemas.push('el atributo ' + k + ' falta o no es un entero positivo');
+    });
+    Object.keys(a).forEach(function (k) {
+      if (DERIVADOS[k]) problemas.push(k + ' se deriva (' + DERIVADOS[k].join(', ') + '); no se escribe en el personaje');
+      else if (ATRIBUTOS_BASE.indexOf(k) < 0) problemas.push('atributo desconocido: ' + k);
+    });
+    return problemas;
+  }
+
   // ----------------------------------------------------------------- feats
 
   function slotsDeFeats(nivel) {
@@ -245,7 +296,7 @@
   function contextoJugador(ctx, pj, resultado) {
     const clase = (ctx.classes || []).find(function (c) { return c.id === pj.clase; }) || null;
     return {
-      atributos: pj.atributos || {}, nivel: resultado.nivel.nivel, claseId: pj.clase, clase: clase,
+      atributos: atributosCompletos(pj.atributos), nivel: resultado.nivel.nivel, claseId: pj.clase, clase: clase,
       feats: resultado.feats.lista.map(function (x) { return x.id; }),
     };
   }
@@ -254,14 +305,14 @@
 
   /**
    * [SUPUESTO] El personaje "tiene el perfil" si el más bajo de sus atributos
-   * preferidos no es menor que el más alto de los demás. La definición exacta
-   * está pendiente (sección 5.2).
+   * preferidos no es menor que el más alto de los demás atributos base (los
+   * derivados no cuentan). La definición exacta está pendiente (sección 5.2).
    */
   function tienePerfilRacial(raza, atributos) {
     if (!raza || !raza.atributosPreferidos || raza.atributosPreferidos.length === 0) return false;
     const pref = raza.atributosPreferidos;
     const valoresPref = pref.map(function (k) { return atributos[k] || 0; });
-    const otros = Object.keys(atributos).filter(function (k) { return pref.indexOf(k) < 0; }).map(function (k) { return atributos[k]; });
+    const otros = ATRIBUTOS_BASE.filter(function (k) { return pref.indexOf(k) < 0; }).map(function (k) { return atributos[k]; });
     const minPref = Math.min.apply(null, valoresPref);
     const maxOtros = otros.length ? Math.max.apply(null, otros) : -Infinity;
     return minPref >= maxOtros;
@@ -300,11 +351,16 @@
     const clases = indexar(ctx.classes);
 
     const raza = razas[pj.raza] || null;
-    const atributos = pj.atributos || {};
+    const atributos = atributosBase(pj.atributos);
+    const derivados = derivarAtributos(pj.atributos);
+    const todos = Object.assign({}, atributos, derivados);
     const extremidades = pj.extremidades || [];
     const perfil = tienePerfilRacial(raza, atributos);
 
     const avisos = [];
+    validarAtributos(pj.atributos).forEach(function (m) {
+      avisos.push({ nivel: 'error', sesion: null, indice: null, mensaje: m });
+    });
     const estado = {
       xp: 0,
       sx: {},
@@ -319,6 +375,7 @@
       equipado: {},
       cargas: {},
       puntosIniciales: null,
+      tiradas: { hp: [], mp: [] },
     };
     zeo.ramas.forEach(function (r) { estado.sx[r] = 0; });
 
@@ -343,6 +400,7 @@
         rasgos: [],
         traits: [],
         objetos: [],
+        tiradas: [],
         ajustes: [],
       };
 
@@ -418,7 +476,7 @@
               throw new Error('no hay slot de feat libre en el nivel ' + nivel + ' (' + slotsDeFeats(nivel) + ' slots)');
             }
             const evaluacion = evaluarRequisitos(f, {
-              atributos: atributos, nivel: nivel, claseId: pj.clase, clase: clases[pj.clase] || null,
+              atributos: todos, nivel: nivel, claseId: pj.clase, clase: clases[pj.clase] || null,
               feats: estado.feats.map(function (x) { return x.id; }),
             }, feats);
             const faltan = evaluacion.detalle.filter(function (d) { return d.estado === 'falta'; });
@@ -440,7 +498,7 @@
             const nivel = nivelActual();
             if (estado.logrosPorNivel[nivel]) throw new Error('ya hay un achievement feat en el nivel ' + nivel + ' (máximo 1 por nivel)');
             if (estado.logros.some(function (x) { return x.id === e.id; })) throw new Error('el achievement "' + a.nombre + '" ya está ganado');
-            const fate = e.fate === undefined ? 0 : e.fate;
+            const fate = e.fate === undefined ? (a.fate || 0) : e.fate;
             if (!esEntero(fate) || fate < 0) throw new Error('fate debe ser un entero mayor o igual a 0');
             estado.logrosPorNivel[nivel] = true;
             estado.fate += fate;
@@ -491,6 +549,32 @@
               estado.traits.splice(estado.traits.indexOf(e.id), 1);
             }
             s.traits.push({ id: e.id, nombre: t.nombre, accion: e.accion });
+            return;
+          }
+          case 'tirada': {
+            if (e.recurso !== 'hp' && e.recurso !== 'mp') throw new Error('tirada: recurso debe ser hp o mp');
+            const m = /^d(\d{1,3})$/.exec(e.dado || '');
+            const caras = m ? Number(m[1]) : 0;
+            if (caras < 2) throw new Error('tirada: dado debe tener la forma dN con N de 2 a 999 (por ejemplo d8)');
+            if (!esEntero(e.resultado) || e.resultado < 1 || e.resultado > caras) {
+              throw new Error('tirada: el resultado debe ser un entero entre 1 y ' + caras);
+            }
+            const etiqueta = e.recurso.toUpperCase();
+            const actual = nivelActual();
+            const hechas = estado.tiradas[e.recurso];
+            const hay = function (n) { return hechas.some(function (t) { return t.nivel === n; }); };
+            let nivel = e.nivel;
+            if (nivel === undefined) {
+              nivel = 1;
+              while (nivel <= actual && hay(nivel)) nivel++;
+              if (nivel > actual) throw new Error('no hay nivel sin tirada de ' + etiqueta + ' (nivel ' + actual + ')');
+            } else {
+              if (!esEntero(nivel) || nivel < 1 || nivel > actual) throw new Error('tirada: el nivel debe estar entre 1 y ' + actual);
+              if (hay(nivel)) throw new Error('el nivel ' + nivel + ' ya tiene tirada de ' + etiqueta);
+            }
+            const reg = { recurso: e.recurso, nivel: nivel, dado: e.dado, caras: caras, resultado: e.resultado, sesion: ses.id };
+            hechas.push(reg);
+            s.tiradas.push(reg);
             return;
           }
           case 'objeto': {
@@ -607,11 +691,32 @@
 
     const sl = slotsDeFeats(nivelInfo.nivel);
 
+    /** Puntos de un recurso: cada nivel suma max(1, tirada + modificador del atributo). */
+    function recurso(rec, atributo) {
+      const mod = modAtributo(todos[atributo]);
+      const tiradas = estado.tiradas[rec].slice().sort(function (a, b) { return a.nivel - b.nivel; }).map(function (t) {
+        return Object.assign({}, t, { mod: mod, ganado: Math.max(1, t.resultado + mod) });
+      });
+      const pendientes = [];
+      for (let n = 1; n <= nivelInfo.nivel; n++) {
+        if (!tiradas.some(function (t) { return t.nivel === n; })) pendientes.push(n);
+      }
+      if (pendientes.length) {
+        avisos.push({ nivel: 'aviso', sesion: null, indice: null, mensaje: 'faltan tiradas de ' + rec.toUpperCase() + ' en los niveles ' + pendientes.join(', ') });
+      }
+      return {
+        atributo: atributo, mod: mod, tiradas: tiradas, pendientes: pendientes,
+        maximo: tiradas.reduce(function (a, t) { return a + t.ganado; }, 0),
+      };
+    }
+    const recursos = { hp: recurso('hp', 'CON'), mp: recurso('mp', 'SPR') };
+
     return {
       personaje: {
         id: pj.personaje, nombre: pj.nombre, raza: pj.raza, razaNombre: raza ? raza.nombre : rotulo(pj.raza || '—'),
         clase: pj.clase, claseNombre: clases[pj.clase] ? clases[pj.clase].nombre : rotulo(pj.clase || '—'),
-        atributos: atributos, extremidades: extremidades,
+        atributos: atributos, derivados: derivados, extremidades: extremidades,
+        imagen: typeof pj.imagen === 'string' ? pj.imagen : null,
         preferidos: raza ? raza.atributosPreferidos || [] : [], perfilRacial: perfil,
       },
       xp: estado.xp,
@@ -619,6 +724,7 @@
       sesiones: sesionesOut,
       zeo: { unidad: zeo.unidad, lectura: zeo.lectura, nivel: minimo, ramas: ramas, lineas: lineas, niveles: umbralesZeo(zeo) },
       mana: { total: estado.mana, tabla: null },
+      recursos: recursos,
       fate: estado.fate,
       feats: {
         lista: estado.feats,
@@ -690,6 +796,12 @@
     umbralesZeo: umbralesZeo,
     detalleLinea: detalleLinea,
     slotsDeFeats: slotsDeFeats,
+    ATRIBUTOS_BASE: ATRIBUTOS_BASE,
+    DERIVADOS: DERIVADOS,
+    modAtributo: modAtributo,
+    derivarAtributos: derivarAtributos,
+    atributosCompletos: atributosCompletos,
+    validarAtributos: validarAtributos,
     babDeClase: babDeClase,
     evaluarRequisitos: evaluarRequisitos,
     contextoJugador: contextoJugador,

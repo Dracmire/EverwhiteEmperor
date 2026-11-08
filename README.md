@@ -1,6 +1,6 @@
 # EverwhiteEmperor
 
-Tracker de personajes de TTRPG basado en Pathfinder 1e, para un sistema propio: una clase por personaje, XP por tags y grados, subsistemas (zeo y mana), méritos y defectos, traits, feats, achievements, fate y equipo por extremidad. Todo se deriva de un registro por sesión.
+Tracker de personajes de TTRPG basado en Pathfinder 1e, para un sistema propio: una clase por personaje, atributos STR, DEX, PER, INT, WIS y CHA (CON, SPR y MND se derivan), HP y MP con dados, XP por tags y grados, subsistemas (zeo y mana), méritos y defectos, traits, feats, achievements, fate y equipo por extremidad. Todo se deriva de un registro por sesión.
 
 Estado: borrador. La especificación está en [`docs/ESPECIFICACION.md`](docs/ESPECIFICACION.md).
 
@@ -9,9 +9,9 @@ Estado: borrador. La especificación está en [`docs/ESPECIFICACION.md`](docs/ES
 | Ruta | Contenido |
 |---|---|
 | `data/` | Reglas y catálogos en JSON: curva y tags de XP, zeo, razas, méritos y defectos, objetos, achievements, traits, y el catálogo de Pathfinder 1e (665 feats y 37 clases, importados). Los catálogos de ejemplo están marcados. |
-| `characters/` | Un JSON por personaje (el registro por sesión). `ejemplo.json` es un personaje inventado de nivel 7. |
-| `src/core.js` | Motor de cálculo: reproduce el registro y devuelve XP, nivel, zeo, mana, fate, feats, méritos, equipo y avisos. |
-| `viewer/` | Visor (HTML, CSS y JS sin dependencias) con vistas Jugar y Construir y un selector de feats. No escribe en los personajes: el borrador se copia como JSON. |
+| `characters/` | Un JSON por personaje (el registro por sesión). `ejemplo.json` es un personaje inventado de nivel 7; sus retratos van en `characters/retratos/` (campo `imagen`). |
+| `src/core.js` | Motor de cálculo: reproduce el registro y devuelve XP, nivel, atributos derivados, HP y MP, zeo, mana, fate, feats, méritos, equipo y avisos. |
+| `viewer/` | Visor (HTML, CSS y JS sin dependencias): ficha con retrato, HP y MP y atributos, secciones plegadas y registro de sesiones; vistas Jugar y Construir con selector de feats, asignación de achievements y tiradas. No escribe en los personajes: el borrador se copia como JSON. |
 | `tests/` | Pruebas del motor con los casos de la sección 12 de la especificación. |
 | `scripts/build-standalone.js` | Empaqueta el visor y los datos en un solo HTML. |
 | `scripts/import-*.js` | Importan clases y feats de Pathfinder 1e desde otros repos (ver `docs/FUENTES.md`). |
@@ -38,7 +38,7 @@ node scripts/build-standalone.js
 # dist/visor.html
 ```
 
-En la cabecera del visor, **Jugar** es la versión reducida para la mesa y **Construir** la amplia, con el selector de feats. Zeo, Mana y Magia se pliegan. «Abrir otro personaje» carga cualquier `.json` con el mismo formato que `characters/ejemplo.json`; las entradas del registro que rompen una regla se listan como avisos y no se aplican.
+El visor muestra arriba la ficha (retrato, nivel, HP y MP, atributos) y abajo el registro de sesiones; en medio, Feats, Achievements, Equipo, Méritos, Defectos, Tiradas, Zeo, Mana y Magia, plegados. En la cabecera, **Jugar** es la versión reducida para la mesa y **Construir** la amplia, con los selectores de feats y achievements, el borrador y las tiradas. «Abrir otro personaje» carga cualquier `.json` con el mismo formato que `characters/ejemplo.json`; las entradas del registro que rompen una regla se listan como avisos y no se aplican.
 
 ## Licencia y avisos
 

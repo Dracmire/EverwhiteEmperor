@@ -1,6 +1,6 @@
-# EverwhiteEmperor — Especificación del tracker de personajes (v0.7)
+# EverwhiteEmperor — Especificación del tracker de personajes (v0.8)
 
-Estado: borrador del 2026-11-07. La v0.7 carga el catálogo de feats y de clases de Pathfinder 1e, fija los slots de feats, añade al visor las vistas Jugar y Construir con un selector de feats, y documenta las notas de jugadores y del GM (ver "Cambios respecto a versiones anteriores" al final).
+Estado: borrador del 2026-11-07. La v0.8 cambia los atributos (STR, DEX, PER, INT, WIS y CHA; CON, SPR y MND se derivan), añade HP y MP con tiradas de dados, y rehace la ficha del visor: retrato, base y atributos arriba, todo lo demás plegado y el registro de sesiones abajo, con achievements asignables desde una lista con scroll (ver "Cambios respecto a versiones anteriores" al final).
 
 Convención del documento:
 - **[PENDIENTE]**: falta un dato o una decisión del diseñador.
@@ -32,6 +32,31 @@ Fuera de alcance de la v0 **[PENDIENTE confirmar]**: habilidades (skills; solo s
 Restricciones:
 - Se aloja en GitHub (sitio estático con GitHub Pages, sin backend).
 - Es un proyecto gratuito. El contenido de Pathfinder 1e se usa bajo la OGL 1.0a y la Community Use Policy de Paizo, que no permite cobrar por el contenido. El sitio muestra el aviso de no afiliación con Paizo.
+
+### 1.1 Atributos, HP y MP (v0.8) [DECIDIDO salvo lo marcado]
+
+**Atributos base**: STR, DEX, PER (percepción), INT, WIS y CHA. Son los únicos que se escriben en el JSON del personaje (`atributos`). **CON no se usa como atributo propio**: se deriva.
+
+| Derivado | Regla | Para qué se usa |
+|---|---|---|
+| CON | menor de STR y DEX | bonifica HP **[SUPUESTO]** |
+| SPR (espíritu) | menor de WIS y CHA | bonifica mana (MP) |
+| MND (mente) | menor de PER e INT | sin efecto definido todavía **[PENDIENTE]** |
+
+- Si el JSON trae CON, SPR o MND, o un atributo desconocido, o le falta uno de los seis base, el motor lo avisa como error. El valor escrito de un derivado se ignora.
+- Los requisitos de feats de Pathfinder que piden CON usan el CON derivado (el catálogo no pide PER, SPR ni MND).
+- El perfil racial (5.2) solo mira los seis atributos base.
+- **[SUPUESTO]** El modificador de un atributo es `floor((valor − 10) / 2)`, como en Pathfinder 1e.
+
+**HP y MP se tiran con dados.** Cada nivel tiene una tirada de HP y una de MP, y suma `max(1, resultado + modificador)`: el modificador de CON para HP y el de SPR para MP. El máximo es la suma de todos los niveles.
+
+- Cada tirada es una entrada `tirada` del registro (sección 8) con `recurso` (`hp` o `mp`), `dado` (`dN`, por ejemplo `d10`) y `resultado` (entre 1 y N). Se guarda el resultado, no solo el máximo, igual que la XP guarda sus datos de entrada.
+- **[SUPUESTO]** La tirada se asigna al primer nivel sin tirada que ya se alcanzó, o al `nivel` indicado en la entrada. No se puede tirar para un nivel que el personaje no alcanzó ni repetir un nivel.
+- **[SUPUESTO]** El nivel 1 también se tira (no hay valor fijo) y el modificador se aplica a todos los niveles con el valor actual del atributo (si el atributo cambia, el máximo se recalcula).
+- Los niveles sin tirada no son un error: el motor avisa («faltan tiradas de HP en los niveles…») y el máximo solo suma las tiradas hechas.
+- **[SUPUESTO]** El HP y el MP *actuales* (el daño recibido o el mana gastado) no son parte del registro por sesión. El visor los lleva con botones −5, −1, +1, +5 y «Máx», guardados solo en el navegador de quien mira, por personaje.
+- **[PENDIENTE]** Qué dado usa cada clase para HP y para MP (el visor ofrece d4 a d20; el ejemplo usa d10 para HP y d6 para MP), y si MND tiene algún efecto.
+- **[PENDIENTE]** Si el MP máximo es lo mismo que el «mana ganado» del subsistema de mana (4.1) o son cosas separadas. Hoy el motor las trata por separado: `recursos.mp` (tiradas) y `mana.total` (XP de mana).
 
 ---
 
@@ -218,6 +243,7 @@ No hay otro sistema conocido que tenga a la vez 1000 XP fijos por nivel y una ta
 - **[DECIDIDO]** `zeo` no es el sistema Xeno de los documentos del proyecto. Su estructura está en 4.1.1.
 - **[SUPUESTO]** "Atributo expensive" de mana significa un atributo que se **gasta** al usarlo (un fondo de puntos que baja y se recupera). **[PENDIENTE confirmar]**
 - **[PENDIENTE]** La tabla de XP de mana, qué desbloquea cada nivel de mana y de zeo, y si reciben XP de las mismas actividades que la principal.
+- **[PENDIENTE]** Relación entre el mana del subsistema y el MP que se tira (1.1).
 
 ```json
 {
@@ -349,14 +375,14 @@ La raza se conserva como un **perfil racial**, no como los rasgos de raza de Pat
 {
   "id": "slug-de-raza",
   "nombre": "Nombre",
-  "atributosPreferidos": ["STR", "CON"],
+  "atributosPreferidos": ["STR", "DEX"],
   "racials": ["id-de-merito-racial", "id-de-defecto-racial"],
   "descuentoPorRareza": { "normal": 0, "raro": 0, "extraordinario": 0, "epico": 0, "heroico": 0, "legendario": 0 }
 }
 ```
 
 - Los valores de `descuentoPorRareza` son de ejemplo hasta que el diseñador los defina (`data/razas.json` usa 1 punto de descuento para la rareza `raro` y 0 para el resto).
-- **[SUPUESTO]** El motor considera que un personaje "tiene el perfil" cuando el más bajo de sus atributos preferidos no es menor que el más alto de los demás (con STR 17 y CON 15 contra 13, 12, 10 y 8, el perfil se cumple).
+- **[SUPUESTO]** El motor considera que un personaje "tiene el perfil" cuando el más bajo de sus atributos preferidos no es menor que el más alto de los demás (con STR 17 y DEX 13 contra 12, 10, 12 y 8, el perfil se cumple). Solo cuentan los seis atributos base: los derivados no.
 - **[SUPUESTO]** El descuento solo se aplica a los racials que *reducen* su costo; hay racials que no lo tienen.
 - **[PENDIENTE]** Cuánto descuenta cada rareza, qué cuenta como "tener el perfil" (todos los atributos preferidos, un mínimo de cada uno, los más altos del personaje…), qué razas existen y cuáles son sus racials.
 
@@ -431,8 +457,9 @@ La mayoría de los feats de Pathfinder que representan una **ejecución activa**
 - Se ganan por logros de la historia.
 - **Regla: máximo 1 achievement feat por nivel de personaje.** Se registra el nivel en que se ganó; una segunda ganancia en el mismo nivel es un error de validación.
 - **[SUPUESTO]** "Por nivel" significa por cada nivel del personaje: si ganó uno siendo nivel 7, el siguiente solo puede ganarse a partir del nivel 8.
-- Un achievement puede otorgar fate (sección 4.4).
-- **[PENDIENTE]** Lista de achievement feats, condiciones de cada uno y sus efectos.
+- Un achievement puede otorgar fate (sección 4.4). `data/achievements.json` puede traer un `fate` por defecto en cada achievement; la entrada del registro lo toma de ahí o fija otro valor con su propio `fate`.
+- Desde la v0.8 el visor lista el catálogo en un recuadro con scroll y buscador, y «Asignar» suma el achievement al borrador (10.5). Se deshabilita si el nivel ya tiene su achievement o si ya se ganó.
+- **[PENDIENTE]** Lista de achievement feats, condiciones de cada uno y sus efectos. El catálogo trae 12 entradas de ejemplo (`fuente: "ejemplo"`) para probar la lista.
 
 ---
 
@@ -469,6 +496,8 @@ Es el núcleo del tracker. Es la **fuente de verdad**: el estado del personaje (
 {
   "personaje": "slug",
   "raza": "slug-de-raza",
+  "imagen": "retratos/slug.png",
+  "atributos": { "STR": 17, "DEX": 13, "PER": 12, "INT": 10, "WIS": 12, "CHA": 8 },
   "sesiones": [
     {
       "id": "2026-11-06-01",
@@ -483,6 +512,7 @@ Es el núcleo del tracker. Es la **fuente de verdad**: el estado del personaje (
         { "tipo": "feat", "id": "power-attack" },
         { "tipo": "feat", "id": "weapon-focus", "eleccion": "espada larga" },
         { "tipo": "achievement", "id": "slug", "fate": 1 },
+        { "tipo": "tirada", "recurso": "hp", "dado": "d10", "resultado": 7 },
         { "tipo": "fate", "cantidad": -1, "motivo": "gasto" },
         { "tipo": "rasgo", "id": "slug", "accion": "ganar | perder" },
         { "tipo": "trait", "id": "slug", "accion": "ganar | perder" },
@@ -502,6 +532,8 @@ Reglas:
 4. Validaciones al reproducir el registro:
    - achievement feats: máximo 1 por nivel;
    - `xp-subsistema` solo para zeo y mana; para zeo exige `rama` (`heaven`, `void` o `earth`);
+   - los seis atributos base existen y no se escriben CON, SPR ni MND (1.1);
+   - `tirada`: `recurso` hp o mp, `dado` con la forma `dN`, `resultado` entre 1 y N, un nivel ya alcanzado y sin tirada previa del mismo recurso;
    - `zeo-linea` solo con líneas existentes; los pisos 4 y 5 de una línea solo se usan con 10 y 20 niveles acumulados en ella;
    - `pct` de un grado `cumple` entre 0.25 y 0.30;
    - un racial solo lo puede tener un personaje de la raza a la que pertenece;
@@ -513,6 +545,8 @@ Reglas:
    - saldo de fate no negativo;
    - nivel máximo 20.
 5. Los ajustes manuales exigen un motivo.
+
+`imagen` (opcional) es el retrato: una ruta relativa a `characters/` (el visor la lee de ahí y `scripts/build-standalone.js` la convierte en un `data:` URI), un `data:` URI o una URL. En el visor también se puede elegir un retrato local con «Cambiar retrato» (se recorta a 4:5 y se guarda solo en ese navegador, y gana al del archivo).
 
 Persistencia v0: un archivo JSON por personaje (`characters/<id>.json`) que se exporta e importa desde el navegador; el historial de Git sirve de auditoría. Se usa `localStorage` solo como borrador. El visor (sección 10) lee esos mismos archivos.
 
@@ -539,6 +573,7 @@ data/
 characters/
   <id>.json
   ejemplo.json              # personaje de ejemplo (ya creado)
+  retratos/                 # imágenes de los personajes (ruta en el campo `imagen`)
 ```
 
 - Cada registro tiene `id` estable (slug) y `fuente` (`pf1` | `homebrew`).
@@ -606,21 +641,35 @@ El visor de solo lectura ya existe en `viewer/` y se construye dentro del repo (
 - **[SUPUESTO]** El nivel para Δ se evalúa por entrada, en el orden del registro; el saldo de puntos y de fate se comprueba al cierre de cada sesión; los puntos iniciales se calculan con el nivel al cierre de la primera sesión.
 - No importa pixelkeep: el visor no edita. La importación de pixelkeep (M0) queda para el editor.
 
-### 10.5 Vistas Jugar y Construir, y selector de feats (v0.7) [DECIDIDO]
+### 10.5 Ficha, secciones plegadas y selectores (v0.7, ajustada en v0.8) [DECIDIDO]
 
-El visor tiene dos vistas (botón en la cabecera; la última elegida se recuerda en el navegador):
+**Distribución de la página** (v0.8). Solo tres cosas están siempre a la vista; todo lo demás está plegado al abrir:
 
-- **Jugar**: la versión reducida para la mesa. Nombre, nivel, barra de XP y atributos; cifras de mana, fate, nivel zeo y slots libres; feats y equipo en listas cortas (con las cargas); y plegados: Zeo, Mana, Magia y Méritos y defectos.
-- **Construir**: la versión amplia, con todo lo anterior más fate y achievement feats, el detalle de méritos, el **selector de feats**, el equipo por extremidad y la línea de tiempo de sesiones.
+1. **La base** (tarjeta de ficha): retrato, nombre, clase y raza, nivel y barra de XP, y HP y MP con sus barras y botones de ajuste. En pantalla ancha va en tres columnas (retrato · nombre y nivel · HP y MP); en pantalla media el retrato y el nombre arriba y HP y MP debajo; en el celular se apila.
+2. **Los atributos**: los seis base en una fila (tres por fila en pantallas angostas) y, debajo, los tres derivados con trazo punteado y su fórmula.
+3. **El registro de sesiones** (los «logs»), al final.
 
-**Zeo, Mana y Magia** son secciones plegables en las dos vistas. Cada una muestra en su cabecera la cifra que importa (nivel zeo y sx por rama; mana ganado; número de habilidades tipo conjuro) y recuerda si estaba abierta. **Magia** lista las habilidades tipo conjuro (los feats activos convertidos, 6.2) con el costo en mana marcado como pendiente.
+Entre la ficha y el registro hay una lista de secciones plegables, todas cerradas la primera vez (el estado se recuerda en el navegador): Borrador (solo en Construir), **Feats**, **Achievements y fate**, **Equipo**, **Méritos**, **Defectos**, **Tiradas de HP y MP**, **Zeo**, **Mana** y **Magia**. Cada cabecera muestra la cifra que importa (slots, fate, saldo de puntos, HP y MP máximos, nivel zeo, mana…).
 
-**Selector de feats** (vista Construir):
+**Retrato.** Si el personaje trae `imagen` se muestra en el marco 4:5; si no, aparece un marco con las iniciales. En Construir, «Cambiar retrato» elige una imagen local (solo en ese navegador) y «Quitar» la descarta.
 
-1. Búsqueda por nombre, filtro por tipo y «solo los que puedo tomar».
+**Vistas.** Un botón en la cabecera (la última elegida se recuerda):
+
+- **Jugar**: la versión reducida para la mesa. Misma ficha y mismas secciones plegables, con listas cortas y sin selectores, sin borrador y sin el formulario de tiradas.
+- **Construir**: agrega los selectores, el borrador, las explicaciones de las reglas y el formulario de tiradas.
+
+**Selector de feats** (dentro de Feats, vista Construir):
+
+1. Búsqueda por nombre, filtro por tipo y «solo los que puedo tomar». La lista está en un recuadro con scroll propio (alto máximo de unos 440 px).
 2. Cada feat muestra sus requisitos como chips: «✓» se cumple, «✗» no se cumple y «?» el visor no lo puede comprobar. «Elegir» se habilita solo si se cumplen los requisitos comprobables y hay un slot libre; los feats repetibles piden una elección.
-3. Lo elegido va a un **borrador**: una sesión provisional que el motor calcula como si ya estuviera en el personaje (slots, feats previos, habilidades tipo conjuro). Se puede quitar cualquier entrada; si una entrada deja de ser válida se marca con su error.
-4. El borrador se copia como JSON y se pega en la lista `entradas` de una sesión de `characters/<id>.json`. **El visor no escribe en los personajes**: el borrador solo vive en el navegador (`localStorage`), por personaje.
+
+**Achievements** (dentro de Achievements y fate, vista Construir): el catálogo completo con buscador y recuadro con scroll; cada fila muestra su fate y un botón «Asignar», que se deshabilita si el nivel ya tiene achievement (con un aviso que explica por qué) o si ya está ganado.
+
+**Tiradas de HP y MP** (vista Construir): lista las tiradas por nivel (dado, resultado, modificador y total) y, si faltan niveles, ofrece elegir el dado y **Tirar** (el visor tira por ti) o escribir el resultado de tus dados y **Registrar**.
+
+**Borrador.** Todo lo que se elige, asigna o tira va a un borrador: una sesión provisional que el motor calcula como si ya estuviera en el personaje (slots, requisitos, máximo por nivel, fate). Cada acción muestra un aviso flotante con un acceso directo a «Ver borrador». Se puede quitar cualquier entrada; si una entrada deja de ser válida se marca con su error. El borrador se copia como JSON y se pega en la lista `entradas` de una sesión de `characters/<id>.json`. **El visor no escribe en los personajes**: el borrador solo vive en el navegador (`localStorage`), por personaje.
+
+**Zeo, Mana y Magia** se pliegan igual que el resto. **Magia** lista las habilidades tipo conjuro (los feats activos convertidos, 6.2) con el costo en mana marcado como pendiente.
 
 ### 10.6 Notas de jugadores y del GM, y guardado simultáneo [PENDIENTE decidir el almacenamiento]
 
@@ -656,7 +705,7 @@ El visor tiene dos vistas (botón en la cabecera; la última elegida se recuerda
 
 ## 11. Hitos
 
-Estado en v0.7: el motor (M1) y el visor (M2) están implementados y probados localmente; M3 está avanzado (catálogo de 665 feats con requisitos estructurados, achievement feats y conversión de activos; faltan revisar los candidatos a activo y los efectos). Falta activar GitHub Pages. M0 (importar pixelkeep) sigue pendiente.
+Estado en v0.8: el motor (M1) y el visor (M2) están implementados y probados localmente (41 pruebas); M3 está avanzado (catálogo de 665 feats con requisitos estructurados, achievement feats y conversión de activos; faltan revisar los candidatos a activo y los efectos). Falta activar GitHub Pages. M0 (importar pixelkeep) sigue pendiente.
 
 | Hito | Contenido | Criterio de aceptación |
 |---|---|---|
@@ -717,6 +766,15 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 - Nivel zeo: heaven 34 sx (nivel 4), void 22 sx (nivel 3), earth 15 sx (nivel 2) → nivel zeo 2, el menor de los tres.
 - Pisos de una línea: con 9 niveles acumulados el piso 4 sigue cerrado; con 10 se abre; con 19 el piso 5 sigue cerrado; con 20 se abre.
 
+### Atributos derivados, HP y MP
+
+- STR 17, DEX 13, PER 12, INT 10, WIS 12, CHA 8: CON 13, SPR 8, MND 10 (modificadores +1, −1 y 0).
+- Un JSON que escribe CON, o que no trae PER: error de atributos.
+- Un feat que exige CON 14 con STR 17 y DEX 13: rechazado; con CON 13: aceptado.
+- Nivel 3, CON 13 (+1) y SPR 8 (−1): HP con d10 = 7, 1 y 10 da 8 + 2 + 11 = 21; MP con d6 = 4, 1 y 6 da 3 + 1 (mínimo) + 5 = 9.
+- Una tirada de 9 con d8, un dado `8`, un dado `d1`, un nivel aún no alcanzado o un nivel repetido: rechazada.
+- Niveles sin tirada: aviso, no error.
+
 ### Puntos de méritos y slots de feats
 
 | Nivel | Puntos iniciales `floor(n/2)+1` | Slots de feats (1 en el nivel 1, +1 cada 2 niveles) |
@@ -758,17 +816,29 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 11. Extremidades de un personaje por defecto, armas a dos manos y escudos.
 12. Revisar la maqueta del visor (sección 10.3) y confirmar que se construye dentro del repo.
 13. XP sobre 20,000, redondeo, evaluación del nivel por entrada o por sesión, y reparto de XP en grupo.
-14. Alcance de estadísticas derivadas (HP, skills, hechizos).
+14. Alcance de estadísticas derivadas: HP y MP ya están (1.1); faltan skills y hechizos.
 15. **[PENDIENTE]** Texto de los feats: incluir la OGL 1.0a completa y los avisos de la sección 15 de cada libro antes de copiar los beneficios, o escribir resúmenes propios en `data/feats.conversiones.json`.
 16. Revisar los 173 feats marcados `candidatoActivo` y decidir cuáles pasan a habilidad tipo conjuro (6.2).
 17. Feats repetibles: decidir si la elección (arma, escuela) debe exigirse siempre y si un requisito "con el arma elegida" debe comprobarse.
 18. Otros libros de feats (fuera de Core, APG, Ultimate Magic y Ultimate Combat), y qué hacer con los feats raciales de Pathfinder.
 19. Notas de jugadores y del GM: elegir cómo se guardan y comparten (10.6, opciones A, B o C).
 20. Clases: el catálogo trae las 37 clases de Pathfinder 1e con su progresión de ataque base; decidir cuáles se permiten en el sistema y si hay clases propias.
+21. HP y MP: dado de cada clase para HP y para MP, relación del MP con el mana ganado, si MND tiene efecto y si el HP y el MP actuales deben entrar al registro (1.1).
+22. Achievements: sustituir las 12 entradas de ejemplo por la lista real, con su fate y sus condiciones.
 
 ---
 
 ## Cambios respecto a versiones anteriores
+
+### v0.8
+
+- **Atributos [DECIDIDO]:** los base son STR, DEX, PER, INT, WIS y CHA. CON se deriva como el menor de STR y DEX, SPR (bonifica el mana) como el menor de WIS y CHA, y MND como el menor de PER e INT. El JSON del personaje solo trae los seis base; el motor avisa si trae un derivado o si falta uno. `data/razas.json` y el personaje de ejemplo migrados (preferidos STR y DEX; el ejemplo suma PER 12). Nueva sección 1.1.
+- **HP y MP [DECIDIDO que se tiran con dados]:** nueva entrada `tirada` del registro (`recurso`, `dado`, `resultado`, `nivel` opcional); cada nivel suma `max(1, resultado + modificador)` (CON para HP, SPR para MP); el motor devuelve `recursos.hp` y `recursos.mp` con el detalle por nivel y los niveles pendientes. El ejemplo trae sus 14 tiradas (HP 56, MP 20). Los supuestos y lo pendiente (dado por clase, relación con el mana ganado) están en 1.1.
+- **Visor:** ficha nueva con retrato (campo `imagen` o retrato local), nivel y XP, HP y MP con barras y ajuste manual, y los nueve atributos; **Feats, Achievements y fate, Equipo, Méritos, Defectos, Tiradas, Zeo, Mana y Magia plegados al abrir**, con el registro de sesiones siempre visible (10.5). Méritos y defectos son ahora dos secciones.
+- **Achievements asignables:** el catálogo se lista en un recuadro con scroll y buscador, con «Asignar» que suma al borrador; el catálogo admite `fate` por defecto y trae 12 entradas de ejemplo. El selector de feats pasa a vivir dentro de Feats, también con scroll propio.
+- **Borrador generalizado:** admite feats, achievements y tiradas; avisos flotantes con acceso a «Ver borrador»; la posición de la página y de las listas se conserva al agregar.
+- `scripts/build-standalone.js` convierte la ruta de `imagen` en un `data:` URI. Nuevo `characters/retratos/ejemplo.svg`.
+- 41 pruebas del motor (antes 32): atributos derivados, requisitos con CON derivado, tiradas de HP y MP, achievements y retrato.
 
 ### v0.7
 

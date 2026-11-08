@@ -4,7 +4,7 @@
   --bg: #ebf0f5; --surf: #f9fbfd; --surf2: #e3eaf1; --ink: #13202d; --mute: #455567; --line: #c8d3df;
   --acc: #1d5a96; --accSoft: #d6e5f5; --onAcc: #ffffff; --gold: #7a5200; --goldSoft: #f6e2a8;
   --heaven: #2c78b8; --void: #5a45a8; --earth: #a5651a; --track: #d3dde8;
-  --warn: #8a2a12; --warnSoft: #f9ddd3;
+  --warn: #8a2a12; --warnSoft: #f9ddd3; --hp: #b23a22; --mp: #2a63b5;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -12,7 +12,7 @@
     --bg: #0e1621; --surf: #162231; --surf2: #1d2b3d; --ink: #e8eef5; --mute: #a3b3c6; --line: #2b3c52;
     --acc: #8dbcf0; --accSoft: #223a57; --onAcc: #0e1621; --gold: #f0cc7a; --goldSoft: #4a3a12;
     --heaven: #6fb2ee; --void: #a798f0; --earth: #e3a559; --track: #2a3a50;
-    --warn: #ffb59e; --warnSoft: #4a2118;
+    --warn: #ffb59e; --warnSoft: #4a2118; --hp: #f0907a; --mp: #86b8f4;
     color-scheme: dark;
   }
 }
@@ -20,7 +20,7 @@
   --bg: #0e1621; --surf: #162231; --surf2: #1d2b3d; --ink: #e8eef5; --mute: #a3b3c6; --line: #2b3c52;
   --acc: #8dbcf0; --accSoft: #223a57; --onAcc: #0e1621; --gold: #f0cc7a; --goldSoft: #4a3a12;
   --heaven: #6fb2ee; --void: #a798f0; --earth: #e3a559; --track: #2a3a50;
-  --warn: #ffb59e; --warnSoft: #4a2118;
+  --warn: #ffb59e; --warnSoft: #4a2118; --hp: #f0907a; --mp: #86b8f4;
   color-scheme: dark;
 }
 
@@ -78,11 +78,11 @@ select.btn { padding-right: 8px; }
 .avisos { background: var(--warnSoft); color: var(--warn); border-radius: 14px; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px; }
 .avisos ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
 .avisos .vacio { color: var(--ink); }
+.avisos.suave { background: var(--surf2); color: var(--ink); }
 .aviso-carga { background: var(--surf); border: 1px solid var(--line); border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 10px; }
 code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em; background: var(--surf2); padding: 1px 6px; border-radius: 6px; }
 
 /* héroe */
-.hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); gap: 24px; align-items: stretch; }
 h1 { font-size: 44px; line-height: 1.05; letter-spacing: -0.02em; font-weight: 700; }
 .nivel-row { display: flex; align-items: center; flex-wrap: wrap; gap: 20px 28px; }
 .nivel-num { display: flex; flex-direction: column; align-items: center; min-width: 110px; }
@@ -92,12 +92,66 @@ h1 { font-size: 44px; line-height: 1.05; letter-spacing: -0.02em; font-weight: 7
 .xp-big small { font-size: 15px; font-weight: 500; color: var(--mute); }
 .bar { height: 14px; border-radius: 999px; background: var(--track); overflow: hidden; }
 .bar > i { display: block; height: 100%; background: var(--acc); }
-.attr { background: var(--surf2); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.attr { background: var(--surf2); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .attr .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .attr .ab { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: var(--mute); }
 .attr .mod { font-size: 13px; font-weight: 600; color: var(--acc); }
-.attr .score { font-family: Fraunces, Georgia, serif; font-size: 38px; line-height: 1.05; font-weight: 700; font-variant-numeric: lining-nums; }
+.attr .score { font-family: Fraunces, Georgia, serif; font-size: 34px; line-height: 1.05; font-weight: 700; font-variant-numeric: lining-nums; }
+.attr .nom { font-size: 13px; }
+.attr .formula { font-size: 12px; }
 .attr .chip { align-self: flex-start; margin-top: 4px; }
+
+/* ficha: retrato, nivel, HP y MP, atributos */
+.ficha { padding: 24px; gap: 24px; }
+.ficha-top { display: grid; gap: 16px 20px; align-items: start; grid-template-columns: 96px minmax(0, 1fr);
+  grid-template-areas: "ret nom" "niv niv" "vit vit"; }
+.retrato { grid-area: ret; margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.retrato .marco { aspect-ratio: 4 / 5; border-radius: 14px; overflow: hidden; background: var(--surf2); border: 1px solid var(--line); display: grid; place-items: center; }
+.retrato img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.retrato .inicial { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--mute); border: 2px dashed var(--line); border-radius: 12px; width: calc(100% - 12px); height: calc(100% - 12px); justify-content: center; }
+.retrato .inicial .serif { font-size: 40px; line-height: 1; font-weight: 700; color: var(--acc); }
+.retrato .inicial small { font-size: 12px; }
+.retrato-ctl { display: flex; flex-wrap: wrap; gap: 6px; }
+.btn.mini { min-height: 44px; padding: 0 12px; font-size: 13px; border-radius: 10px; }
+.solo-ancho { display: none; }
+.ficha-nombre { grid-area: nom; display: flex; flex-direction: column; gap: 6px; min-width: 0; align-self: center; }
+.ficha-nombre h1 { font-size: 30px; overflow-wrap: anywhere; }
+.ficha-nivel { grid-area: niv; display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; min-width: 0; }
+.ficha-nivel .xp-big { font-size: 26px; }
+.ficha-nivel .xp-block { flex: 1 1 190px; }
+.vitales { grid-area: vit; display: flex; flex-direction: column; gap: 16px; min-width: 0; background: var(--surf2); border-radius: 14px; padding: 16px; }
+.vital { display: flex; flex-direction: column; gap: 8px; }
+.vital-top { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
+.vital-top > span:first-child { font-size: 13px; }
+.vital-top b { font-size: 15px; }
+.vital-num { font-size: 15px; color: var(--mute); }
+.vital-num b { font-family: Fraunces, Georgia, serif; font-size: 30px; line-height: 1; color: var(--ink); font-variant-numeric: lining-nums; }
+.vital .bar { height: 12px; background: var(--track); }
+.vital.hp .bar > i { background: var(--hp); }
+.vital.mp .bar > i { background: var(--mp); }
+.vital-ctl { display: flex; flex-wrap: wrap; gap: 6px; }
+.vital-ctl .btn { flex: 1 1 44px; min-width: 44px; justify-content: center; padding: 0 6px; background: var(--surf); }
+.pie-vital { font-size: 12px; }
+.attrs { display: flex; flex-direction: column; gap: 16px; }
+.attrs-grupo { display: flex; flex-direction: column; gap: 8px; }
+.attrs-base { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.attrs-der { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); }
+.attr.der { background: transparent; border: 1px dashed var(--mute); display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 14px; align-items: center; }
+.attr.der .top { grid-column: 2; grid-row: 1; }
+.attr.der .score { grid-column: 1; grid-row: 1 / span 3; }
+.attr.der .nom, .attr.der .formula { grid-column: 2; }
+@media (min-width: 640px) {
+  .ficha-top { grid-template-columns: 150px minmax(0, 1fr); grid-template-areas: "ret nom" "ret niv" "vit vit"; }
+  .ficha-nombre h1 { font-size: 36px; }
+  .solo-ancho { display: inline; }
+  .attrs-base { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+@media (min-width: 940px) {
+  .ficha-top { grid-template-columns: 188px minmax(0, 1fr) minmax(300px, 360px); grid-template-areas: "ret nom vit" "ret niv vit"; gap: 20px 28px; }
+  .ficha-nombre { align-self: end; }
+  .ficha-nivel { align-self: start; }
+  .ficha-nombre h1 { font-size: 40px; }
+}
 
 /* zeo */
 .zeo-head { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px 32px; }
@@ -208,14 +262,28 @@ details.desp > summary h2 { font-size: 24px; flex: 0 0 auto; min-width: 84px; }
 details.desp[open] > summary { border-bottom: 1px solid var(--line); border-radius: 16px 16px 0 0; }
 details.desp[open] > summary .desp-flecha { transform: rotate(-135deg); margin-bottom: -4px; }
 .desp-cuerpo { padding: 24px; display: flex; flex-direction: column; gap: 22px; }
-.juego-hero { padding: 24px; gap: 20px; }
-.juego-hero h1 { font-size: 34px; }
 .nivel-num.chico { min-width: 84px; }
-.nivel-num.chico b { font-size: 72px; }
-.grid.compactos { grid-template-columns: repeat(auto-fit, minmax(min(96px, 100%), 1fr)); gap: 10px; }
-.compactos .attr { padding: 10px 12px; }
-.compactos .attr .score { font-size: 30px; }
+.nivel-num.chico b { font-size: 64px; }
 .borrador-aviso { background: var(--goldSoft); color: var(--gold); }
+
+/* listas con scroll propio (feats y achievements) */
+.scroll-lista { max-height: 440px; overflow-y: auto; overscroll-behavior: contain; padding: 10px 10px 10px 0; border-radius: 12px;
+  background:
+    linear-gradient(var(--surf) 30%, transparent) top / 100% 28px no-repeat local,
+    linear-gradient(transparent, var(--surf) 70%) bottom / 100% 28px no-repeat local,
+    radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, 0.18), transparent) top / 100% 10px no-repeat scroll,
+    radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, 0.18), transparent) bottom / 100% 10px no-repeat scroll;
+  scrollbar-width: thin; scrollbar-color: var(--mute) transparent; }
+.scroll-lista:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px; }
+.picker-bloque { display: flex; flex-direction: column; gap: 14px; border-top: 1px solid var(--line); padding-top: 22px; }
+.tirada-form { display: flex; flex-direction: column; gap: 10px; }
+.tirada-form .acc-fila { align-items: flex-end; }
+.toast { position: fixed; z-index: 20; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  margin-inline: auto; width: fit-content; max-width: min(560px, 100%); display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; padding: 12px 16px;
+  background: var(--ink); color: var(--bg); border-radius: 14px; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); }
+.toast[hidden] { display: none; }
+.toast.mala { background: var(--warn); color: var(--surf); }
+.toast .btn { background: transparent; color: inherit; border-color: currentColor; }
 
 /* selector de feats */
 .picker-controles { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; }
@@ -239,10 +307,11 @@ textarea.json:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px
 
 @media (max-width: 520px) {
   h1 { font-size: 36px; }
-  .juego-hero h1 { font-size: 30px; }
   .card { padding: 20px; }
   .nivel-num b { font-size: 88px; }
-  .nivel-num.chico b { font-size: 64px; }
+  .nivel-num.chico b { font-size: 56px; }
+  .ficha { padding: 18px; }
+  .vitales { padding: 14px; }
   details.desp > summary { padding: 12px 16px; }
   .desp-cuerpo { padding: 18px 16px; }
   .modo .btn { min-width: 76px; padding: 0 12px; }
