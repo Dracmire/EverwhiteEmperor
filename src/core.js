@@ -705,7 +705,7 @@
         avisos.push({ nivel: 'aviso', sesion: null, indice: null, mensaje: 'faltan tiradas de ' + rec.toUpperCase() + ' en los niveles ' + pendientes.join(', ') });
       }
       return {
-        atributo: atributo, mod: mod, tiradas: tiradas, pendientes: pendientes,
+        atributo: atributo, valor: todos[atributo], mod: mod, tiradas: tiradas, pendientes: pendientes,
         maximo: tiradas.reduce(function (a, t) { return a + t.ganado; }, 0),
       };
     }

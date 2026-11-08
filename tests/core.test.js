@@ -604,6 +604,7 @@ test('personaje de ejemplo: todo lo derivado coincide y no hay avisos', () => {
   // HP (d10, CON 13 → +1) y MP (d6, SPR 8 → −1) tirados en los siete niveles.
   assert.deepEqual([r.recursos.hp.pendientes, r.recursos.mp.pendientes], [[], []]);
   assert.equal(r.recursos.hp.maximo, 56);
+  assert.deepEqual([r.recursos.hp.valor, r.recursos.mp.valor], [13, 8]);
   assert.equal(r.recursos.mp.maximo, 20);
   assert.deepEqual(r.personaje.derivados, { CON: 13, SPR: 8, MND: 10 });
 });

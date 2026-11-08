@@ -30,7 +30,6 @@
     STR: 'Fuerza', DEX: 'Destreza', PER: 'Percepción', INT: 'Inteligencia', WIS: 'Sabiduría', CHA: 'Carisma',
     CON: 'Constitución', SPR: 'Espíritu', MND: 'Mente',
   };
-  var NOTA_DERIVADO = { CON: 'bonifica HP', SPR: 'bonifica MP', MND: '' };
   var DADOS = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20'];
   var DADO_INICIAL = { hp: 'd8', mp: 'd6' };
   var CLAVE_ABIERTOS = 'ewe-abiertos-v2';
@@ -158,22 +157,26 @@
     return html;
   }
 
-  function cajaAtributo(k, v, calc, derivado) {
-    var pref = !derivado && calc.personaje.preferidos.indexOf(k) >= 0;
-    var detalle = derivado
-      ? '<span class="mute formula">mín(' + Core.DERIVADOS[k].join(', ') + ')' + (NOTA_DERIVADO[k] ? ' · ' + NOTA_DERIVADO[k] : '') + '</span>'
-      : '';
-    return '<div class="attr' + (derivado ? ' der' : '') + '"><div class="top"><span class="ab">' + k + '</span><span class="mod num">' + signo(Core.modAtributo(v)) + '</span></div>' +
-      '<span class="score">' + v + '</span><span class="mute nom">' + ATRIBUTOS[k] + '</span>' + detalle +
-      (pref ? '<span class="chip acc">Preferido</span>' : '') + '</div>';
+  function cajaAtributo(k, v, calc) {
+    var pref = calc.personaje.preferidos.indexOf(k) >= 0;
+    return '<div class="attr"><div class="top"><span class="ab">' + k + '</span><span class="mod num">' + signo(Core.modAtributo(v)) + '</span></div>' +
+      '<span class="score">' + v + '</span><span class="mute nom">' + ATRIBUTOS[k] + '</span>' + (pref ? '<span class="chip acc">Preferido</span>' : '') + '</div>';
   }
 
-  /** Seis atributos base y, debajo, los tres derivados. */
+  function miniDerivado(k, v) {
+    var mod = signo(Core.modAtributo(v));
+    var formula = 'mín(' + Core.DERIVADOS[k].join(', ') + ')';
+    var destino = k === 'CON' ? 'HP' : k === 'SPR' ? 'MP' : '';
+    return '<span class="mini-der" title="' + formula + (destino ? ' · bonifica ' + destino : '') + '" aria-label="' + ATRIBUTOS[k] + ' ' + v + ', modificador ' + mod + ', ' + formula + (destino ? ', bonifica ' + destino : '') + '">' +
+      '<b>' + k + '</b><span class="num">' + v + '</span><span class="mod num">' + mod + '</span>' + (destino ? '<span class="mute">→ ' + destino + '</span>' : '') + '</span>';
+  }
+
+  /** Los seis atributos base y, en una sola línea, los tres derivados como mini tarjetas. */
   function bloqueAtributos(calc) {
-    var base = Core.ATRIBUTOS_BASE.map(function (k) { return cajaAtributo(k, calc.personaje.atributos[k], calc, false); }).join('');
-    var der = Object.keys(Core.DERIVADOS).map(function (k) { return cajaAtributo(k, calc.personaje.derivados[k], calc, true); }).join('');
+    var base = Core.ATRIBUTOS_BASE.map(function (k) { return cajaAtributo(k, calc.personaje.atributos[k], calc); }).join('');
+    var der = Object.keys(Core.DERIVADOS).map(function (k) { return miniDerivado(k, calc.personaje.derivados[k]); }).join('');
     return '<div class="attrs"><div class="attrs-grupo"><span class="eyebrow">Atributos</span><div class="attrs-base">' + base + '</div></div>' +
-      '<div class="attrs-grupo"><span class="eyebrow">Derivados</span><div class="attrs-der">' + der + '</div></div></div>';
+      '<div class="attrs-der" aria-label="Atributos derivados"><span class="eyebrow">Derivados</span>' + der + '</div></div>';
   }
 
   function textoProgreso(calc) {
@@ -246,7 +249,7 @@
     var btn = function (delta, texto, accesible) {
       return '<button class="btn mini" type="button" data-accion="rec" data-recurso="' + rec + '" data-delta="' + delta + '" aria-label="' + accesible + '">' + texto + '</button>';
     };
-    return '<div class="vital ' + rec + '"><div class="vital-top"><span><b>' + etiqueta + '</b> <span class="mute">dado + mod ' + r.atributo + ' (' + signo(r.mod) + ')</span></span>' +
+    return '<div class="vital ' + rec + '"><div class="vital-top"><span><b>' + etiqueta + '</b> <span class="mute">dado + ' + r.atributo + ' ' + r.valor + ' (' + signo(r.mod) + ')</span></span>' +
       '<span class="vital-num num" aria-live="polite"><b>' + act + '</b> / ' + max + '</span></div>' +
       '<div class="bar" role="progressbar" aria-label="' + etiqueta + ' actuales" aria-valuemin="0" aria-valuemax="' + max + '" aria-valuenow="' + act + '"><i style="width:' + ancho + '%"></i></div>' +
       '<div class="vital-ctl">' + btn(-5, '−5', 'Restar 5 de ' + etiqueta) + btn(-1, '−1', 'Restar 1 de ' + etiqueta) + btn(1, '+1', 'Sumar 1 a ' + etiqueta) + btn(5, '+5', 'Sumar 5 a ' + etiqueta) +
@@ -462,6 +465,30 @@
       (esBorrador ? chip('Borrador', 'gold') : '') +
       (x.categoria && conDetalle ? chip(TIPOS_FEAT[x.categoria] || x.categoria, 'soft') : '') +
       '<span class="chip ' + (activo ? 'acc' : '') + '">' + (activo ? 'Habilidad tipo conjuro' : 'Pasivo') + '</span>' + enlaceFeat(cat) + '</div>';
+  }
+
+  /** Vista Jugar: los feats pasivos son una lista corta; solo las habilidades activas llevan tarjeta. */
+  function seccionFeatsJuego(calc, calcB) {
+    var ft = calcB.feats;
+    var confirmados = calc.feats.lista.length;
+    var pasivos = [], activos = [];
+    ft.lista.forEach(function (x, i) { (x.tipo === 'habilidad-tipo-conjuro' ? activos : pasivos).push({ x: x, borrador: i >= confirmados }); });
+    var filas = pasivos.map(function (o) {
+      var cat = estado.indiceFeats[o.x.id];
+      return '<li class="pasivo"><span class="nm">' + esc(o.x.nombre) + '</span>' + (o.borrador ? chip('Borrador', 'gold') : '') +
+        (cat && cat.resumen ? '<span class="mute res">' + esc(cat.resumen) + '</span>' : '') + enlaceFeat(cat) + '</li>';
+    }).join('');
+    var tarjetas = activos.map(function (o) {
+      var cat = estado.indiceFeats[o.x.convertidoDe];
+      return '<div class="tarjeta-activa"><div class="row-between" style="align-items:center"><b>' + esc(o.x.nombre) + '</b>' + (o.borrador ? chip('Borrador', 'gold') : chip('Activa', 'acc')) + '</div>' +
+        (cat && cat.resumen ? '<small class="mute">' + esc(cat.resumen) + '</small>' : '') +
+        '<div class="acc-fila">' + chip('Costo en mana: pendiente', 'soft') + enlaceFeat(cat) + '</div></div>';
+    }).join('');
+    return '<section class="card feats-juego"><div class="row-between" style="align-items:center"><h2>Feats</h2>' +
+      '<span class="chips">' + chip(ft.slotsUsados + ' de ' + ft.slotsTotales + ' slots', ft.slotsLibres ? 'acc' : 'soft') + (ft.slotsLibres ? chip(plural(ft.slotsLibres, 'libre', 'libres'), 'gold') : '') + '</span></div>' +
+      '<div class="bloque-feats"><span class="eyebrow">Pasivos</span>' +
+      (filas ? '<ul class="pasivos">' + filas + '</ul>' : '<p class="mute">Sin feats pasivos.</p>') + '</div>' +
+      (tarjetas ? '<div class="bloque-feats"><span class="eyebrow">Activos</span><div class="grid g300">' + tarjetas + '</div></div>' : '') + '</section>';
   }
 
   function seccionFeats(calc, calcB, pj, con) {
@@ -736,8 +763,8 @@
       : '';
     // Todo lo que no es la base, los atributos o el registro de sesiones va plegado.
     var plegables = '<section class="desp-grupo">' +
-      (con ? seccionBorrador(calcB, pj, borr) : '') +
-      seccionFeats(calc, calcB, pj, con) + seccionLogros(calc, calcB, con) + seccionEquipo(calc, con) +
+      (con ? seccionBorrador(calcB, pj, borr) + seccionFeats(calc, calcB, pj, con) : '') +
+      seccionLogros(calc, calcB, con) + seccionEquipo(calc, con) +
       seccionMeritos(calc, pj, con) + seccionDefectos(calc, con) + seccionTiradas(calcB, con) +
       seccionZeo(calcB) + seccionMana(calcB) + seccionMagia(calcB) + '</section>';
     return '<div class="page">' +
@@ -745,7 +772,7 @@
       '<div class="tools">' + selectorModo() + (pj.datosDeEjemplo ? chip('Datos de ejemplo · personaje inventado', 'gold') : '') + sel +
       '<label class="btn file">Abrir otro personaje (.json)<input type="file" id="archivo" accept="application/json,.json"></label>' +
       '<button class="btn" id="tema" type="button" aria-pressed="' + tema + '">' + (tema ? 'Tema noche' : 'Tema hielo') + '</button></div></header>' +
-      '<div id="msg" role="status"></div>' + seccionAvisos(calcB) + seccionFicha(calc, calcB, pj, con) + avisoBorrador + plegables + seccionSesiones(calc) +
+      '<div id="msg" role="status"></div>' + seccionAvisos(calcB) + seccionFicha(calc, calcB, pj, con) + avisoBorrador + (con ? '' : seccionFeatsJuego(calc, calcB)) + plegables + seccionSesiones(calc) +
       '<footer><p class="pie">' + (pj.datosDeEjemplo ? 'Los nombres de raza, méritos, objetos y logros son inventados. ' : '') +
       'Las reglas de Pathfinder 1e se usan bajo la OGL 1.0a; el proyecto es gratuito y no tiene afiliación con Paizo. Los feats se importaron sin su texto: se leen en Archives of Nethys.</p></footer></div>';
   }

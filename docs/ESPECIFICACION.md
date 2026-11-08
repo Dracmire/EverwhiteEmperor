@@ -1,6 +1,6 @@
-# EverwhiteEmperor — Especificación del tracker de personajes (v0.8)
+# EverwhiteEmperor — Especificación del tracker de personajes (v0.8.1)
 
-Estado: borrador del 2026-11-07. La v0.8 cambia los atributos (STR, DEX, PER, INT, WIS y CHA; CON, SPR y MND se derivan), añade HP y MP con tiradas de dados, y rehace la ficha del visor: retrato, base y atributos arriba, todo lo demás plegado y el registro de sesiones abajo, con achievements asignables desde una lista con scroll (ver "Cambios respecto a versiones anteriores" al final).
+Estado: borrador del 2026-11-08. La v0.8.1 ajusta la vista Jugar (feats como lista, derivados en mini tarjetas) y documenta el diseño nuevo de Mana por Gates, Magia con conjuros y habilidades de clase por nivel, que todavía **no está implementado**. La v0.8 cambió los atributos (STR, DEX, PER, INT, WIS y CHA; CON, SPR y MND se derivan), añade HP y MP con tiradas de dados, y rehace la ficha del visor: retrato, base y atributos arriba, todo lo demás plegado y el registro de sesiones abajo, con achievements asignables desde una lista con scroll (ver "Cambios respecto a versiones anteriores" al final).
 
 Convención del documento:
 - **[PENDIENTE]**: falta un dato o una decisión del diseñador.
@@ -241,7 +241,7 @@ No hay otro sistema conocido que tenga a la vez 1000 XP fijos por nivel y una ta
 
 - Cada uno tiene su propia tabla de XP y su propio nivel, independientes de la XP principal.
 - **[DECIDIDO]** `zeo` no es el sistema Xeno de los documentos del proyecto. Su estructura está en 4.1.1.
-- **[SUPUESTO]** "Atributo expensive" de mana significa un atributo que se **gasta** al usarlo (un fondo de puntos que baja y se recupera). **[PENDIENTE confirmar]**
+- ~~**[SUPUESTO]** "Atributo expensive" de mana significa un atributo que se gasta al usarlo.~~ **Reemplazado en la v0.8.1** por el diseño de Gates (4.1.2): el mana no es un fondo que se gasta ni un «mana ganado», sino una serie de poderes que crece con SX.
 - **[PENDIENTE]** La tabla de XP de mana, qué desbloquea cada nivel de mana y de zeo, y si reciben XP de las mismas actividades que la principal.
 - **[PENDIENTE]** Relación entre el mana del subsistema y el MP que se tira (1.1).
 
@@ -307,11 +307,41 @@ Valores de `data/zeo.json`:
 }
 ```
 
-### 4.2 Magic
+### 4.1.2 Mana por Gates (v0.8.1) [DECIDIDO el diseño; el detalle está PENDIENTE; sin implementar]
 
-- Reemplaza el sistema de casteo de Pathfinder (espacios de conjuro, preparación) por **mana como recurso que se gasta**.
-- **[SUPUESTO]** Las habilidades tipo conjuro (sección 6.2) cuestan mana.
-- **[PENDIENTE]** Costo en mana de cada habilidad, tamaño del fondo de mana por nivel y regeneración.
+Mana es **una serie de poderes, como Zeo**, no un «mana ganado». Crece con SX y se construye con **Gates**.
+
+- **Mana force (MF):** la capacidad de mana medida del usuario. Un ser humano parte con **1** y gana más con criaturas contratadas, contratos mágicos y otras fuentes. Debe haber una **contabilidad de la MF**, desplegable en el visor: cada aporte con su fuente.
+- **Gates:** cada **potencia de 2** de MF compra un Gate (1, 2, 4, 8…). Construir un Gate necesita tres cosas: **SX**, **Mana force** y **una oportunidad para construir**. **[SUPUESTO]** el Gate número *k* exige MF ≥ 2^(k−1) (MF 1 permite 1 Gate, MF 2 permite 2, MF 4 permite 3, MF 8 permite 4).
+- Cada Gate tiene un **tag** elemental o de algún concepto (fuego, agua, silencio, sombra…), y una **función**: **capacidad**, **intensidad**, **potencia** o **sentidos**.
+- Cada Gate genera **un slot para una habilidad mágica**, que el usuario **inscribe**. Un Gate equivale a un conjuro de mago de nivel 1.
+- **2 Gates crean una línea llamada nodo**, equivalente a un conjuro de nivel 2.
+- **3 Gates crean un circuito cerrado llamado círculo**, equivalente a un conjuro de nivel 3.
+
+Propuesta de entradas del registro (**[SUPUESTO]**, no implementadas; el formato se cierra al confirmar lo pendiente):
+
+```json
+[
+  { "tipo": "mana-fuerza", "cantidad": 1, "fuente": "criatura-contratada", "nota": "Contrato con el lobo blanco" },
+  { "tipo": "gate", "id": "g1", "funcion": "capacidad", "tag": "hielo", "oportunidad": "El altar del glaciar", "sx": 10 },
+  { "tipo": "nodo", "id": "n1", "gates": ["g1", "g2"] },
+  { "tipo": "circulo", "id": "c1", "gates": ["g1", "g2", "g3"] },
+  { "tipo": "inscribir", "slot": "g1", "habilidad": "power-attack" }
+]
+```
+
+- **[PENDIENTE]** Cuánto SX cuesta cada Gate y si el SX se **gasta** o es solo un umbral; cuánto da cada fuente de MF; qué hace cada función (capacidad, intensidad, potencia, sentidos).
+- **[PENDIENTE]** Si un nodo o un círculo **consume** los Gates que lo forman (2 Gates → 1 slot de nivel 2) o se construye **sobre** ellos y suma slots (los Gates conservan su slot de nivel 1); cuántos nodos y círculos se pueden armar con un conjunto de Gates; si construirlos también pide una oportunidad.
+- **[PENDIENTE]** Si lo que se inscribe debe coincidir con el tag del Gate, y si hay niveles de mana con tabla de SX como en Zeo.
+- **[PENDIENTE]** Relación con el MP que se tira (1.1): ¿el MP es el combustible de las habilidades inscritas, o lo reemplazan los slots?
+
+### 4.2 Magia (conjuros) (v0.8.1) [DECIDIDO la dirección; sin implementar]
+
+- La Magia usa el sistema de Pathfinder o D&D, **con memorización de conjuros**. Los conjuros son más o menos estáticos, así que el proyecto necesita un **catálogo de conjuros** (`data/conjuros.json`): id, nombre, escuela, nivel por lista de clase y fuente.
+- Los conjuros están **limitados por el tipo de lanzador** (mago, hechicero…). Cada clase lanzadora anota su **lista de conjuros** y sus **escuelas permitidas y prohibidas**; esa anotación vive en el archivo de la clase (6.5).
+- **[SUPUESTO]** Los slots donde se memorizan los conjuros salen de los Gates, nodos y círculos (4.1.2), con niveles 1 a 3.
+- Las habilidades tipo conjuro de los feats activos (6.2) conviven con los conjuros del catálogo.
+- **[PENDIENTE]** Qué sistema y qué edición (Pathfinder 1e, D&D 3.5 o D&D 5e) y de dónde se importa el catálogo; qué se copia (nombre, escuela y nivel, o también el texto: la OGL y los avisos de copyright siguen pendientes, `docs/FUENTES.md`); qué pasa con los niveles 4 a 9; cómo se resuelven las escuelas de especialista y las líneas de sangre.
 
 ### 4.3 Racial
 
@@ -460,6 +490,16 @@ La mayoría de los feats de Pathfinder que representan una **ejecución activa**
 - Un achievement puede otorgar fate (sección 4.4). `data/achievements.json` puede traer un `fate` por defecto en cada achievement; la entrada del registro lo toma de ahí o fija otro valor con su propio `fate`.
 - Desde la v0.8 el visor lista el catálogo en un recuadro con scroll y buscador, y «Asignar» suma el achievement al borrador (10.5). Se deshabilita si el nivel ya tiene su achievement o si ya se ganó.
 - **[PENDIENTE]** Lista de achievement feats, condiciones de cada uno y sus efectos. El catálogo trae 12 entradas de ejemplo (`fuente: "ejemplo"`) para probar la lista.
+
+### 6.5 Habilidades de clase por nivel (v0.8.1) [DECIDIDO la dirección; sin implementar]
+
+Como el sistema es Pathfinder, cada clase da **habilidades por nivel**. El visor las muestra con un **tooltip** que trae el detalle de cada una.
+
+- **Se carga solo la clase en uso.** Cada clase vive en su propio archivo, `data/clases/<id>.json`; el visor pide solo el de la clase del personaje (y el archivo único incluye solo las clases de los personajes que empaqueta). `data/classes.json` sigue siendo el índice de las 37 clases con su ataque base.
+- Una habilidad tiene `nivel`, `nombre`, `ejecucion` (`pasivo` o `activo`) y `detalle` (el texto del tooltip). La lista del personaje es la de los niveles que ya alcanzó, y se ve igual que los feats: los pasivos en una lista corta y los activos en tarjetas.
+- La clase también anota, si lanza conjuros, su lista y sus escuelas permitidas y prohibidas (4.2).
+- **[SUPUESTO]** Las habilidades de clase de Pathfinder que dan feats extra (Bonus Feat del luchador) **no suman slots**: los slots de feats están decididos sin extras por clase (6.1).
+- **[PENDIENTE]** De dónde salen las habilidades de las 37 clases y su texto. El nombre y el nivel son datos de reglas; el texto del detalle es contenido de Paizo y sigue la regla de 15 (OGL y avisos pendientes). Alternativa: resúmenes propios, o solo enlace a Archives of Nethys, y escribir con texto completo únicamente las clases que se usen.
 
 ---
 
@@ -646,7 +686,7 @@ El visor de solo lectura ya existe en `viewer/` y se construye dentro del repo (
 **Distribución de la página** (v0.8). Solo tres cosas están siempre a la vista; todo lo demás está plegado al abrir:
 
 1. **La base** (tarjeta de ficha): retrato, nombre, clase y raza, nivel y barra de XP, y HP y MP con sus barras y botones de ajuste. En pantalla ancha va en tres columnas (retrato · nombre y nivel · HP y MP); en pantalla media el retrato y el nombre arriba y HP y MP debajo; en el celular se apila.
-2. **Los atributos**: los seis base en una fila (tres por fila en pantallas angostas) y, debajo, los tres derivados con trazo punteado y su fórmula.
+2. **Los atributos**: los seis base en una fila (tres por fila en pantallas angostas) y, debajo, los tres derivados como **mini tarjetas en una sola línea** (valor, modificador y «→ HP» o «→ MP»; la fórmula, en el tooltip). HP y MP citan su atributo: «dado + CON 13 (+1)».
 3. **El registro de sesiones** (los «logs»), al final.
 
 Entre la ficha y el registro hay una lista de secciones plegables, todas cerradas la primera vez (el estado se recuerda en el navegador): Borrador (solo en Construir), **Feats**, **Achievements y fate**, **Equipo**, **Méritos**, **Defectos**, **Tiradas de HP y MP**, **Zeo**, **Mana** y **Magia**. Cada cabecera muestra la cifra que importa (slots, fate, saldo de puntos, HP y MP máximos, nivel zeo, mana…).
@@ -655,7 +695,7 @@ Entre la ficha y el registro hay una lista de secciones plegables, todas cerrada
 
 **Vistas.** Un botón en la cabecera (la última elegida se recuerda):
 
-- **Jugar**: la versión reducida para la mesa. Misma ficha y mismas secciones plegables, con listas cortas y sin selectores, sin borrador y sin el formulario de tiradas.
+- **Jugar**: la versión reducida para la mesa. Misma ficha. **Feats no es un desplegable**: es una tarjeta siempre visible con los feats **pasivos como una lista corta** (nombre y enlace) y **una tarjeta solo para cada habilidad activa** (los feats activos reclasificados, 6.2). El resto va en secciones plegables, sin selectores, sin borrador y sin el formulario de tiradas.
 - **Construir**: agrega los selectores, el borrador, las explicaciones de las reglas y el formulario de tiradas.
 
 **Selector de feats** (dentro de Feats, vista Construir):
@@ -668,6 +708,8 @@ Entre la ficha y el registro hay una lista de secciones plegables, todas cerrada
 **Tiradas de HP y MP** (vista Construir): lista las tiradas por nivel (dado, resultado, modificador y total) y, si faltan niveles, ofrece elegir el dado y **Tirar** (el visor tira por ti) o escribir el resultado de tus dados y **Registrar**.
 
 **Borrador.** Todo lo que se elige, asigna o tira va a un borrador: una sesión provisional que el motor calcula como si ya estuviera en el personaje (slots, requisitos, máximo por nivel, fate). Cada acción muestra un aviso flotante con un acceso directo a «Ver borrador». Se puede quitar cualquier entrada; si una entrada deja de ser válida se marca con su error. El borrador se copia como JSON y se pega en la lista `entradas` de una sesión de `characters/<id>.json`. **El visor no escribe en los personajes**: el borrador solo vive en el navegador (`localStorage`), por personaje.
+
+**Añadir y quitar en Construir [PROPUESTA].** El registro es de solo añadir, así que *añadir* es crear una entrada en el borrador (hoy: feats, achievements y tiradas; a futuro: objetos, méritos, Gates y MF con el mismo patrón de tarjeta) y *quitar* es sacarla del borrador, o añadir la entrada compensatoria (`perder`, `desequipar`). **El JSON sigue siendo la fuente de verdad** y es el camino para corregir el historial; las tarjetas son una comodidad para armar entradas válidas sin escribir JSON a mano. Mientras no se elija cómo guardar (10.6), el paso del borrador al archivo sigue siendo copiar y pegar.
 
 **Zeo, Mana y Magia** se pliegan igual que el resto. **Magia** lista las habilidades tipo conjuro (los feats activos convertidos, 6.2) con el costo en mana marcado como pendiente.
 
@@ -806,7 +848,7 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 1. Valor de un dungeon o una misión completos (tabla de criatura según su nivel, o escala por tamaño). La base 40 está decidida como valor inicial; calibrarla con las sesiones por nivel es **[DIFERIDO]**.
 2. **[DIFERIDO]** Tags de combate: la lista completa (hoy `close-quarter-combat` y `combat-healer`), qué valor entre 25% y 30% usar por defecto en `cumple`, y el multiplicador propio de cada tag.
 3. Zeo: confirmar la lectura de la tabla de sx, a qué rama pertenece cada línea o técnica, cómo se ganan los niveles de técnica y los sx, y la lista de las 10 líneas base. Mana: su tabla de XP.
-4. Mana: confirmar que es un atributo que se gasta; costo de las habilidades tipo conjuro, tamaño del fondo y regeneración.
+4. Mana: ya no es un atributo que se gasta sino la serie de Gates (4.1.2). Queda el costo en SX, la contabilidad de MF y las reglas de nodos y círculos.
 5. Fate y achievement: cuánto fate da cada achievement, tope y en qué se gasta.
 6. Méritos y defectos: significado exacto de los puntos iniciales, costo de los méritos comunes, valor de cada defecto, tope de defectos y si la rareza cambia el costo.
 7. Razas: lista de razas, sus atributos preferidos, sus racials, cuánto descuenta cada rareza y qué cuenta como tener el perfil racial.
@@ -825,10 +867,18 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 20. Clases: el catálogo trae las 37 clases de Pathfinder 1e con su progresión de ataque base; decidir cuáles se permiten en el sistema y si hay clases propias.
 21. HP y MP: dado de cada clase para HP y para MP, relación del MP con el mana ganado, si MND tiene efecto y si el HP y el MP actuales deben entrar al registro (1.1).
 22. Achievements: sustituir las 12 entradas de ejemplo por la lista real, con su fate y sus condiciones.
+23. Mana por Gates: SX por Gate, fuentes de MF y su valor, qué hace cada función, y si nodos y círculos consumen Gates (4.1.2).
+24. Magia: sistema y edición del catálogo de conjuros, origen de los datos y escuelas por clase (4.2).
+25. Habilidades de clase: origen del dato y del texto de cada habilidad de las 37 clases; qué clases se permiten (6.5).
 
 ---
 
 ## Cambios respecto a versiones anteriores
+
+### v0.8.1
+
+- **Vista Jugar:** Feats deja de ser un desplegable: lista corta de pasivos y una tarjeta solo por cada habilidad activa. Los atributos derivados pasan a una línea de mini tarjetas con su referencia a HP y MP, y HP y MP citan su atributo con el valor (`recursos.*.valor`).
+- **Diseño nuevo, sin implementar:** Mana como serie de poderes por Gates con Mana force (4.1.2, reemplaza el «mana ganado» y el supuesto del atributo que se gasta), Magia con catálogo de conjuros y escuelas por clase (4.2), habilidades de clase por nivel con tooltip y carga de una sola clase (6.5), y la respuesta sobre añadir y quitar en Construir (10.5).
 
 ### v0.8
 
