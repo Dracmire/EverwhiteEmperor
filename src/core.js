@@ -306,35 +306,36 @@
   }
 
   /**
-   * Progresión de conjuros de una clase a un nivel (4.2). `detalle.conjuros.porDia` es la tabla de la clase y `retraso`
-   * los niveles que se atrasa: el personaje de nivel N usa la fila N - retraso. Los trucos (nivel 0) están desde el nivel 1.
-   * Devuelve null si la clase no lanza conjuros (su espacio en Magia lo ocupan las habilidades activas).
+   * Progresión de conjuros de una clase a un nivel (4.2). `detalle.conjuros.porDia` es la tabla de la clase (una fila por nivel
+   * de clase, un número por nivel de conjuro desde el 0). Los conjuros de nivel menor a `retrasaDesde` siguen la tabla tal cual;
+   * del nivel `retrasaDesde` en adelante se retrasan `retraso` niveles: el personaje de nivel N usa la fila N - retraso para ellos.
+   * Los trucos (nivel 0) están desde el nivel 1. Devuelve null si la clase no lanza conjuros (su espacio en Magia lo ocupan
+   * las habilidades activas).
    */
   function progresionConjuros(detalle, nivel) {
     const c = detalle && detalle.conjuros;
     if (!c || !Array.isArray(c.porDia) || !c.porDia.length) return null;
     const retraso = c.retraso || 0;
+    const desde = c.retrasaDesde === undefined ? 0 : c.retrasaDesde;
     const tabla = c.porDia;
+    const fila = function (n) { return tabla[Math.min(tabla.length, Math.max(1, n)) - 1]; };
+    const retrasado = function (l) { return l > 0 && l >= desde; };
     const maxNivelConjuro = Math.max.apply(null, tabla.map(function (f) { return f.length; })) - 1;
-    // Nivel de personaje en el que llega cada nivel de conjuro: la primera fila que lo trae, más el retraso.
+    // Nivel de personaje en el que llega cada nivel de conjuro: la primera fila que lo trae, más el retraso si se retrasa.
     const llegadas = [];
     for (let l = 0; l <= maxNivelConjuro; l++) {
-      const fila = tabla.findIndex(function (f) { return f.length > l; });
-      if (fila >= 0) llegadas.push({ nivelConjuro: l, enNivel: l === 0 ? 1 : fila + 1 + retraso });
+      const primera = tabla.findIndex(function (f) { return f.length > l; });
+      if (primera >= 0) llegadas.push({ nivelConjuro: l, enNivel: l === 0 ? 1 : primera + 1 + (retrasado(l) ? retraso : 0) });
     }
-    const idx = Math.min(tabla.length, Math.max(1, nivel - retraso)) - 1;
-    const fila = tabla[idx];
-    const porDia = [];
-    llegadas.forEach(function (ll) {
-      if (ll.enNivel > nivel) return;
-      // Antes de la primera fila (retraso) solo hay trucos, con la cantidad de la primera fila.
-      porDia.push({ nivelConjuro: ll.nivelConjuro, cantidad: fila[ll.nivelConjuro] === undefined ? 0 : fila[ll.nivelConjuro], enNivel: ll.enNivel });
+    const porDia = llegadas.filter(function (ll) { return ll.enNivel <= nivel; }).map(function (ll) {
+      const f = fila(retrasado(ll.nivelConjuro) ? nivel - retraso : nivel);
+      return { nivelConjuro: ll.nivelConjuro, cantidad: f[ll.nivelConjuro] === undefined ? 0 : f[ll.nivelConjuro], enNivel: ll.enNivel };
     });
-    const maxActual = porDia.length ? porDia[porDia.length - 1].nivelConjuro : -1;
     const sig = llegadas.find(function (ll) { return ll.enNivel > nivel; }) || null;
     return {
-      atributo: c.atributo || null, retraso: retraso, nota: c.nota || '',
-      nivelMax: maxActual, porDia: porDia, llegadas: llegadas,
+      atributo: c.atributo || null, retraso: retraso, retrasaDesde: desde === 0 ? null : desde, nota: c.nota || '',
+      nivelMax: porDia.length ? porDia[porDia.length - 1].nivelConjuro : -1, porDia: porDia, llegadas: llegadas,
+      total: porDia.reduce(function (a, x) { return a + x.cantidad; }, 0),
       proximo: sig ? { nivelConjuro: sig.nivelConjuro, enNivel: sig.enNivel } : null,
     };
   }
@@ -1154,9 +1155,9 @@
 
   /**
    * Recuperación por hora (fórmula del diseñador), igual para HP y para MP. Con C = bono del atributo
-   * (nunca menor a `minimoBono`) más `desplazamiento`:
+   * (nunca menor a `minimoBono`) más `desplazamiento` (hoy 0):
    * H = (sumaFija + C)·V + constante + porBono·C  →  V = (H − constante − porBono·C) / (sumaFija + C)
-   * y R = C + V / divisorV, multiplicada por el `multiplicador` del recurso (MP ×10). R no baja de `minimoPorHora`.
+   * y R = C + V / divisorV, multiplicada por el `multiplicador` del recurso (MP ×5). R no baja de `minimoPorHora`.
    * `recurso` es 'hp' o 'mp'. Devuelve `bono` (ya recortado), `c` (con el desplazamiento), `v`, `bruta` y `porHora`.
    */
   function recuperacionPorHora(max, bono, cfg, recurso) {

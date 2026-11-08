@@ -134,16 +134,16 @@ test('nivel de una rama de zeo (costo por nivel)', () => {
 
 test('opciones visibles: 3 al abrir un nivel, +1 por técnica extra del nivel anterior y tope por nivel', () => {
   const zeo = contexto().zeo;
-  assert.deepEqual(zeo.lineas.opcionesPorNivel, [3, 3, 5, 5, 3]);
+  assert.deepEqual(zeo.lineas.opcionesPorNivel, [1, 3, 5, 5, 3]);
   const ver = (nivel, previas) => Core.opcionesVisibles(zeo, nivel, previas);
-  // El nivel 1 muestra todo desde el inicio.
-  assert.equal(ver(1, 0), 3);
+  // El nivel 1 es la técnica inicial: una sola, desde el inicio.
+  assert.equal(ver(1, 0), 1);
   // Sin técnica en el nivel anterior no hay nada abierto.
   assert.deepEqual([2, 3, 4, 5].map((n) => ver(n, 0)), [0, 0, 0, 0]);
   // Una técnica abre 3; la segunda suma 1 y la tercera 1 más (tope del nivel).
   assert.deepEqual([1, 2, 3].map((k) => ver(3, k)), [3, 4, 5]);
   assert.deepEqual([1, 2, 3, 4, 5].map((k) => ver(4, k)), [3, 4, 5, 5, 5]);
-  // Los niveles 2 y 5 se quedan en 3 aunque se tomen más.
+  // Los niveles 2 y 5 se quedan en 3 aunque se tomen más técnicas en el nivel anterior.
   assert.deepEqual([1, 2, 3].map((k) => ver(2, k)), [3, 3, 3]);
   assert.deepEqual([1, 2, 3].map((k) => ver(5, k)), [3, 3, 3]);
 });
@@ -154,15 +154,15 @@ test('una línea de técnicas: 5 niveles, lo tomado y lo que queda por tomar', (
   const vacia = Core.detalleLinea('L01', [], zeo);
   assert.equal(vacia.ocupada, false);
   assert.equal(vacia.nivelMax, 0);
-  assert.deepEqual(vacia.niveles.map((n) => n.visibles), [3, 0, 0, 0, 0]);
-  const l = Core.detalleLinea('L02', [t(1), t(1), t(2), t(2), t(2), t(3)], zeo);
+  assert.deepEqual(vacia.niveles.map((n) => n.visibles), [1, 0, 0, 0, 0]);
+  const l = Core.detalleLinea('L02', [t(1), t(2), t(2), t(2), t(3)], zeo);
   assert.equal(l.ocupada, true);
-  assert.equal(l.total, 6);
+  assert.equal(l.total, 5);
   assert.equal(l.nivelMax, 3);
-  assert.deepEqual(l.niveles.map((n) => n.tomadas.length), [2, 3, 1, 0, 0]);
-  // L1: 3 visibles y 2 tomadas; L2: 3 por el tope aunque se tomaron 2 en L1; L3: 3 + 2 extras = 5; L4: 3 con 1 técnica en L3.
-  assert.deepEqual(l.niveles.map((n) => n.visibles), [3, 3, 5, 3, 0]);
-  assert.deepEqual(l.niveles.map((n) => n.libres), [1, 0, 4, 3, 0]);
+  assert.deepEqual(l.niveles.map((n) => n.tomadas.length), [1, 3, 1, 0, 0]);
+  // L1: 1 visible (la inicial); L2: 3; L3: 3 + 2 extras = 5; L4: 3 con 1 técnica en L3; L5 cerrado.
+  assert.deepEqual(l.niveles.map((n) => n.visibles), [1, 3, 5, 3, 0]);
+  assert.deepEqual(l.niveles.map((n) => n.libres), [0, 0, 4, 3, 0]);
   assert.deepEqual(l.niveles.map((n) => n.abierto), [true, true, true, true, false]);
 });
 
@@ -189,9 +189,9 @@ test('zeo exige rama; zeo-tecnica exige línea, nivel y cadena; zeo-linea ya no 
 test('zeo-tecnica: cadena de niveles, tope de opciones y nombres repetidos', () => {
   const ctx = contexto();
   const tec = (nivel, tecnica) => (tecnica ? { tipo: 'zeo-tecnica', linea: 'L03', nivel, tecnica } : { tipo: 'zeo-tecnica', linea: 'L03', nivel });
-  // L1 ×1 abre 3 opciones en L2; tomar 4 en L2 no cabe; una segunda L1 no agranda L2 (tope 3).
+  // L1 (una sola técnica inicial) abre 3 opciones en L2; tomar 4 en L2 no cabe; repetir el nombre de L1 también da error.
   const r = Core.calcularPersonaje(ctx, pj([[
-    tec(1, 'A'), tec(1, 'B'),
+    tec(1, 'A'),
     tec(2), tec(2), tec(2), tec(2),
     tec(1, 'a'),
   ]]));
@@ -200,7 +200,7 @@ test('zeo-tecnica: cadena de niveles, tope de opciones y nombres repetidos', () 
   assert.match(msgs[0], /L03: el nivel 2 solo muestra 3 opciones y ya están tomadas/);
   assert.match(msgs[1], /la técnica "a" ya está tomada en L03/);
   const l = r.zeo.lineas[2];
-  assert.deepEqual(l.niveles.map((n) => n.tomadas.length), [2, 3, 0, 0, 0]);
+  assert.deepEqual(l.niveles.map((n) => n.tomadas.length), [1, 3, 0, 0, 0]);
   // Cada técnica extra del nivel 2 suma una opción al 3, hasta 5.
   const r2 = Core.calcularPersonaje(ctx, pj([[tec(1), tec(2), tec(2), tec(2), tec(3), tec(3), tec(3), tec(3), tec(3), tec(3)]]));
   assert.equal(errores(r2).length, 1);
@@ -217,7 +217,7 @@ test('zeo: los slots de línea (ocupados y libres) y la primera libre', () => {
     { tipo: 'zeo-tecnica', linea: 'L03', nivel: 1 },
   ]]));
   assert.deepEqual(algo.zeo.slots, { total: 10, ocupados: 2, libres: 8, primeraLibre: 'L02' });
-  assert.deepEqual(algo.zeo.reglas, { opcionesPorNivel: [3, 3, 5, 5, 3], opcionesBase: 3, extraPorTecnica: 1 });
+  assert.deepEqual(algo.zeo.reglas, { opcionesPorNivel: [1, 3, 5, 5, 3], opcionesBase: 3, extraPorTecnica: 1 });
 });
 
 // ------------------------------------------------------- feats y achievements
@@ -678,12 +678,12 @@ test('sin máximo de HP no hay fatiga ni estado', () => {
   assert.deepEqual([e.fatiga, e.estado], [0, null]);
 });
 
-test('recuperación por hora: V se despeja de H y C (bono + 2) y R = C + V/10, con la comprobación de H', () => {
+test('recuperación por hora: V se despeja de H y C (el bono) y R = C + V/10, con la comprobación de H', () => {
   const cfg = contexto().vitalidad;
   const casos = [[5, 0], [5, 10], [500, 0], [500, 10], [56, 1], [56, 3], [1, 0], [20, 0]]; // [H, bono]
   casos.forEach(([h, bono]) => {
     const r = Core.recuperacionPorHora(h, bono, cfg, 'hp');
-    const c = bono + 2; // el desplazamiento: C = bono + 2
+    const c = bono; // sin desplazamiento (v0.9.2): C es el bono tal cual
     const v = (h - 5 - 5 * c) / (5 + c);
     assert.equal(r.c, c);
     assert.ok(Math.abs(r.v - v) < 1e-9, 'V para H ' + h + ' y bono ' + bono);
@@ -692,25 +692,23 @@ test('recuperación por hora: V se despeja de H y C (bono + 2) y R = C + V/10, c
     assert.ok(Math.abs((2 + c + 3) * r.v + 5 + 5 * c - h) < 1e-9, 'comprobación de H ' + h);
   });
   const hp = (h, b) => Core.recuperacionPorHora(h, b, cfg, 'hp').porHora;
-  assert.ok(Math.abs(hp(56, 1) - 3.45) < 1e-9);
-  assert.ok(Math.abs(hp(5, 0) - 1.8571428571) < 1e-6);
-  assert.ok(Math.abs(hp(500, 0) - 8.9285714286) < 1e-6);
-  assert.ok(Math.abs(hp(500, 10) - 14.5588235294) < 1e-6);
+  assert.ok(Math.abs(hp(56, 1) - 1.7666666667) < 1e-9);
+  assert.equal(hp(5, 0), 0);
+  assert.ok(Math.abs(hp(500, 0) - 9.9) < 1e-9);
+  assert.ok(Math.abs(hp(500, 10) - 12.9666666667) < 1e-9);
 });
 
-test('el desplazamiento quita el punto de 0: con bono 0 hay recuperación con cualquier HP', () => {
+test('el punto de 0: con bono 0 un máximo de 5 o menos no recupera y desde 6 sí', () => {
   const cfg = contexto().vitalidad;
-  for (let h = 1; h <= 500; h++) {
-    const r = Core.recuperacionPorHora(h, 0, cfg, 'hp');
-    assert.ok(r.bruta > 0 && r.porHora === r.bruta, 'H ' + h);
-  }
-  // Con bono 0, H 1 recupera casi 1,8 por hora; antes del desplazamiento daba 0.
-  assert.ok(Math.abs(Core.recuperacionPorHora(1, 0, cfg, 'hp').porHora - 1.8) < 1e-9);
+  for (let h = 1; h <= 5; h++) assert.equal(Core.recuperacionPorHora(h, 0, cfg, 'hp').porHora, 0, 'H ' + h);
+  // Con H menor a 5 la R bruta sale negativa y se recorta a 0 (`minimoPorHora`).
+  assert.ok(Core.recuperacionPorHora(1, 0, cfg, 'hp').bruta < 0);
+  assert.ok(Math.abs(Core.recuperacionPorHora(6, 0, cfg, 'hp').porHora - 0.02) < 1e-9);
 });
 
-test('con bono 0 o más, subir el bono nunca enlentece la recuperación hasta H 470', () => {
+test('subir el bono acelera la recuperación hasta H 270; con HP muy altos la enlentece (rareza conocida)', () => {
   const cfg = contexto().vitalidad;
-  [10, 56, 100, 250, 470].forEach((h) => {
+  [10, 56, 100, 250, 270].forEach((h) => {
     let anterior = 0;
     for (let b = 0; b <= 12; b++) {
       const r = Core.recuperacionPorHora(h, b, cfg, 'hp').porHora;
@@ -718,24 +716,26 @@ test('con bono 0 o más, subir el bono nunca enlentece la recuperación hasta H 
       anterior = r;
     }
   });
+  // H 500: bono 0 da 9,9 y bono +2 da 8,93.
+  assert.ok(Core.recuperacionPorHora(500, 2, cfg, 'hp').porHora < Core.recuperacionPorHora(500, 0, cfg, 'hp').porHora);
 });
 
 test('recuperación: un bono negativo cuenta como 0 y sin máximo no hay recuperación', () => {
   const cfg = contexto().vitalidad;
   const neg = Core.recuperacionPorHora(56, -4, cfg, 'hp');
   const cero = Core.recuperacionPorHora(56, 0, cfg, 'hp');
-  assert.deepEqual([neg.bono, neg.c, neg.porHora], [0, 2, cero.porHora]);
+  assert.deepEqual([neg.bono, neg.c, neg.porHora], [0, 0, cero.porHora]);
   assert.equal(Core.recuperacionPorHora(0, 3, cfg, 'hp').porHora, 0);
   assert.equal(Core.recuperacionPorHora(-5, 3, cfg, 'mp').porHora, 0);
 });
 
-test('MP: la misma fórmula con el multiplicador ×10 (los bonos los pone quien llama: SPR)', () => {
+test('MP: la misma fórmula con el multiplicador ×5 (los bonos los pone quien llama: SPR)', () => {
   const cfg = contexto().vitalidad;
   const hp = Core.recuperacionPorHora(20, 0, cfg, 'hp');
   const mp = Core.recuperacionPorHora(20, 0, cfg, 'mp');
-  assert.equal(mp.multiplicador, 10);
-  assert.ok(Math.abs(mp.porHora - 10 * hp.porHora) < 1e-9);
-  assert.ok(Math.abs(mp.porHora - 20.7142857143) < 1e-6);
+  assert.equal(mp.multiplicador, 5);
+  assert.ok(Math.abs(mp.porHora - 5 * hp.porHora) < 1e-9);
+  assert.ok(Math.abs(mp.porHora - 1.5) < 1e-9);
   assert.equal(cfg.descanso.recursos.mp.atributo, 'SPR');
   assert.equal(cfg.descanso.recursos.hp.atributo, 'CON');
 });
@@ -743,26 +743,26 @@ test('MP: la misma fórmula con el multiplicador ×10 (los bonos los pone quien 
 test('descansar: el corto recupera R × 2 h y el largo R × 8 h con un 50 % extra, hacia abajo y sin pasar del máximo', () => {
   const cfg = contexto().vitalidad;
   const { corto, largo } = cfg.descanso;
-  // HP 56 y bono +1 → R = 3,45 HP/h: corto 6,9 → 6; largo 3,45 × 8 × 1,5 = 41,4 → 41.
-  assert.equal(Core.descansar(10, 56, corto, 1, cfg, 'hp').recuperado, 6);
-  assert.equal(Core.descansar(10, 56, largo, 1, cfg, 'hp').recuperado, 41);
-  assert.equal(Core.descansar(10, 56, largo, 1, cfg, 'hp').valor, 51);
+  // HP 56 y bono +1 → R = 1,7667 HP/h: corto 3,53 → 3; largo 1,7667 × 8 × 1,5 = 21,2 → 21.
+  assert.equal(Core.descansar(10, 56, corto, 1, cfg, 'hp').recuperado, 3);
+  assert.equal(Core.descansar(10, 56, largo, 1, cfg, 'hp').recuperado, 21);
+  assert.equal(Core.descansar(10, 56, largo, 1, cfg, 'hp').valor, 31);
   assert.equal(largo.extra, 0.5);
   assert.equal(corto.extra, 0);
   // Llega al máximo y no pasa; un valor sobre el máximo no se baja; desde negativo se recupera igual.
-  assert.deepEqual([Core.descansar(30, 56, largo, 1, cfg, 'hp').valor, Core.descansar(30, 56, largo, 1, cfg, 'hp').recuperado], [56, 26]);
+  assert.deepEqual([Core.descansar(40, 56, largo, 1, cfg, 'hp').valor, Core.descansar(40, 56, largo, 1, cfg, 'hp').recuperado], [56, 16]);
   assert.equal(Core.descansar(60, 56, largo, 1, cfg, 'hp').valor, 60);
-  assert.equal(Core.descansar(-10, 56, corto, 1, cfg, 'hp').valor, -4);
+  assert.equal(Core.descansar(-10, 56, corto, 1, cfg, 'hp').valor, -7);
   // Sin máximo no recupera.
   assert.equal(Core.descansar(0, 0, largo, 3, cfg, 'hp').recuperado, 0);
 });
 
-test('descansar el MP: con MP 20 y bono SPR 0 el corto lo llena (41 > 20)', () => {
+test('descansar el MP: con MP 20 y bono SPR 0 son 1,5 por hora (3 en el corto, 18 en el largo)', () => {
   const cfg = contexto().vitalidad;
-  const r = Core.descansar(0, 20, cfg.descanso.corto, 0, cfg, 'mp');
-  assert.deepEqual([r.valor, r.recuperado], [20, 20]);
-  // Con un MP máximo grande se ve el ×10: MP 500, bono 0 → 89,29 por hora → 178 en 2 h y, en 8 h con el 50 % extra, el tope de 500.
-  assert.equal(Core.descansar(0, 500, cfg.descanso.corto, 0, cfg, 'mp').recuperado, 178);
+  assert.equal(Core.descansar(0, 20, cfg.descanso.corto, 0, cfg, 'mp').recuperado, 3);
+  assert.equal(Core.descansar(0, 20, cfg.descanso.largo, 0, cfg, 'mp').recuperado, 18);
+  // Con un MP máximo grande se ve el ×5: MP 500, bono 0 → 49,5 por hora → 99 en 2 h y, en 8 h con el 50 % extra, el tope de 500.
+  assert.equal(Core.descansar(0, 500, cfg.descanso.corto, 0, cfg, 'mp').recuperado, 99);
   assert.equal(Core.descansar(0, 500, cfg.descanso.largo, 0, cfg, 'mp').recuperado, 500);
 });
 
@@ -777,7 +777,8 @@ test('data/vitalidad.json: umbrales ordenados de mayor a menor, dos descansos y 
   assert.ok(cfg.descanso.corto.horas > 0 && cfg.descanso.corto.horas < cfg.descanso.largo.horas);
   const f = cfg.descanso.formula;
   ['desplazamiento', 'minimoBono', 'sumaFija', 'constante', 'porBono', 'divisorV', 'minimoPorHora'].forEach((k) => assert.equal(typeof f[k], 'number', k));
-  assert.equal(f.desplazamiento, 2);
+  assert.equal(f.desplazamiento, 0);
+  assert.deepEqual([cfg.descanso.recursos.hp.multiplicador, cfg.descanso.recursos.mp.multiplicador], [1, 5]);
   assert.ok(f.sumaFija > 0 && f.divisorV > 0 && f.minimoBono >= 0 && f.minimoPorHora >= 0);
   assert.deepEqual(Object.keys(cfg.descanso.recursos).sort(), ['hp', 'mp']);
 });
@@ -989,8 +990,8 @@ test('personaje de ejemplo: todo lo derivado coincide y no hay avisos', () => {
   assert.deepEqual(r.zeo.ramas.map((x) => [x.rama, x.sx, x.nivel]), [['heaven', 34, 4], ['void', 22, 3], ['earth', 15, 2]]);
   assert.equal(r.zeo.nivel, 2);
   assert.deepEqual(r.zeo.ramas.filter((x) => x.limita).map((x) => x.rama), ['earth']);
-  assert.deepEqual(r.zeo.lineas.map((l) => l.total), [4, 2, 2, 1, 1, 1, 1, 1, 0, 0]);
-  assert.deepEqual(r.zeo.lineas[0].niveles.map((n) => n.tomadas.length), [2, 2, 0, 0, 0]);
+  assert.deepEqual(r.zeo.lineas.map((l) => l.total), [3, 2, 2, 1, 1, 1, 1, 1, 0, 0]);
+  assert.deepEqual(r.zeo.lineas[0].niveles.map((n) => n.tomadas.length), [1, 2, 0, 0, 0]);
   assert.deepEqual(r.zeo.slots, { total: 10, ocupados: 8, libres: 2, primeraLibre: 'L09' });
   assert.equal(r.mana.total, 120);
   assert.equal(r.fate, 1);
@@ -1189,25 +1190,31 @@ test('personajes de muestra: Musashi Nanaya (monje) y Herb\'Azzio (mago)', () =>
   // Magia: el monje no lanza conjuros; el mago de nivel 7 llega al 3.º con la progresión retardada.
   assert.equal(mu.conjuros, null);
   assert.equal(he.conjuros.nivelMax, 3);
-  assert.deepEqual(he.conjuros.porDia.map((x) => x.cantidad), [4, 3, 2, 1]);
+  assert.deepEqual(he.conjuros.porDia.map((x) => x.cantidad), [4, 4, 3, 2]);
   assert.deepEqual(he.conjuros.proximo, { nivelConjuro: 4, enNivel: 9 });
   // El ejemplo (Fighter) no tiene archivo de clase: sigue funcionando sin detalle.
   assert.equal(Core.calcularPersonaje(c, ejemplo()).clase, null);
 });
 
-test('progresión de conjuros retardada: el mago llega al conjuro de nivel 4 en el nivel 9', () => {
+test('progresión de conjuros del mago: normal hasta el nivel 3 de conjuro y el 4 en adelante retrasado, llega al 4 en el nivel 9', () => {
   const mago = leer('data/clases/wizard.json');
-  assert.equal(mago.conjuros.retraso, 2);
+  assert.deepEqual([mago.conjuros.retraso, mago.conjuros.retrasaDesde], [2, 4]);
   assert.equal(mago.conjuros.porDia.length, 20);
   const en = (n) => Core.progresionConjuros(mago, n);
-  // Solo trucos al inicio; el 1.º en el nivel 3, el 2.º en el 5, el 3.º en el 7, el 4.º en el 9.
-  assert.deepEqual([1, 2, 3, 5, 7, 8, 9].map((n) => en(n).nivelMax), [0, 0, 1, 2, 3, 3, 4]);
-  assert.deepEqual(en(1).llegadas.map((x) => x.enNivel), [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]);
-  // Cantidades: la fila N-2 de la tabla del Wizard de PF1.
-  assert.deepEqual(en(9).porDia.map((x) => x.cantidad), [4, 4, 3, 2, 1]);
+  // En el nivel 1 es igual a la normal: 3 trucos y un conjuro de nivel 1.
+  assert.deepEqual(en(1).porDia.map((x) => x.cantidad), [3, 1]);
+  assert.deepEqual(mago.conjuros.porDia[0], [3, 1]);
+  // Hasta el nivel de conjuro 3 sigue la tabla de Pathfinder: el 1.º en el nivel 1, el 2.º en el 3 y el 3.º en el 5.
+  assert.deepEqual([1, 2, 3, 4, 5, 6].map((n) => en(n).nivelMax), [1, 1, 2, 2, 3, 3]);
+  // El 4.º se retrasa 2 niveles (7 → 9), el 5.º (9 → 11) y los demás igual, hasta el 9.º en el 19.
+  assert.deepEqual(en(1).llegadas.map((x) => x.enNivel), [1, 1, 3, 5, 9, 11, 13, 15, 17, 19]);
+  assert.deepEqual([7, 8, 9].map((n) => en(n).nivelMax), [3, 3, 4]);
+  assert.deepEqual(en(9).porDia.map((x) => x.cantidad), [4, 4, 4, 3, 1]);
   assert.deepEqual(en(20).porDia.map((x) => x.cantidad), [4, 4, 4, 4, 4, 4, 4, 3, 3, 2]);
   assert.deepEqual(en(8).proximo, { nivelConjuro: 4, enNivel: 9 });
   assert.equal(en(19).proximo, null);
+  // Gana al menos un conjuro por nivel (el total de conjuros por día sube en cada nivel de personaje).
+  for (let n = 2; n <= 20; n++) assert.ok(en(n).total >= en(n - 1).total + 1, 'nivel ' + n);
   // Sin tabla (monje, sin archivo) no hay progresión.
   assert.equal(Core.progresionConjuros(leer('data/clases/monk.json'), 7), null);
   assert.equal(Core.progresionConjuros(null, 7), null);

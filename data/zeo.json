@@ -1,5 +1,5 @@
 {
-  "version": "0.6",
+  "version": "0.6.1",
   "unidad": "sx",
   "ramas": [
     "heaven",
@@ -35,7 +35,7 @@
     "total": 10,
     "niveles": 5,
     "opcionesPorNivel": [
-      3,
+      1,
       3,
       5,
       5,
@@ -46,7 +46,7 @@
   },
   "notas": {
     "lectura": "umbral-acumulado: cada número es el sx donde termina el nivel (como la XP principal). Alternativa: costo-por-nivel (acumulado 10, 30, 60, 110, 190). Por confirmar.",
-    "lineas": "Cada línea es un slot con 5 niveles y varias técnicas por nivel. Opciones por nivel: 3, 3, 5, 5 y 3. El nivel 1 muestra todas sus opciones desde el inicio. Al tomar la primera técnica de un nivel aparecen 3 opciones en el siguiente; cada técnica extra del mismo nivel suma 1 opción más, hasta el tope de ese nivel (5 en los niveles 3 y 4, 3 en el 5). Reemplaza a los pisos por niveles acumulados de la v0.5.",
+    "lineas": "Cada línea es un slot con 5 niveles. Opciones por nivel: 1, 3, 5, 5 y 3. El nivel 1 es la técnica inicial de la línea (una sola). Al tomar la primera técnica de un nivel aparecen 3 opciones en el siguiente; cada técnica extra del mismo nivel suma 1 opción más, hasta el tope de ese nivel (5 en los niveles 3 y 4, 3 en el 2 y en el 5). Reemplaza a los pisos por niveles acumulados de la v0.5.",
     "tecnicas": "El catálogo de técnicas aún no existe: una técnica se registra por línea y nivel, con un nombre opcional."
   }
 }

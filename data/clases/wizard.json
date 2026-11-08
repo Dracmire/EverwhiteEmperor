@@ -1,5 +1,5 @@
 {
-  "version": "0.9.1",
+  "version": "0.9.2",
   "id": "wizard",
   "nombre": "Wizard",
   "fuente": "pf1",
@@ -10,7 +10,7 @@
     "atributo": "INT",
     "retraso": 2,
     "fuente": "Tabla de conjuros por día del Wizard (PF1 CRB). Cada fila es un nivel de clase y cada número, los conjuros por día desde el nivel 0 en adelante.",
-    "nota": "Progresión retardada [SUPUESTO]: el personaje de nivel N usa la fila N-2 de la tabla, así que el conjuro de nivel 4 llega en el nivel 9 (en PF1 llega en el 7). Los trucos (nivel 0) están desde el nivel 1. No incluye conjuros extra por INT ni por escuela.",
+    "nota": "Progresión del mago [SUPUESTO]: es la tabla de conjuros por día del Wizard de PF1 sin cambios hasta los conjuros de nivel 3 (en el nivel 1 son 3 trucos y un conjuro de nivel 1), así que gana conjuros en cada nivel. Los conjuros de nivel 4 en adelante se retrasan 2 niveles: usan la fila N-2 de la tabla, de modo que el nivel 4 llega en el nivel 9 (en PF1, en el 7), el 5 en el 11 y el 9 en el 19. No incluye conjuros extra por INT ni por escuela.",
     "porDia": [
       [
         3,
@@ -180,7 +180,8 @@
         4,
         4
       ]
-    ]
+    ],
+    "retrasaDesde": 4
   },
   "habilidades": [
     {

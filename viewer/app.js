@@ -334,13 +334,13 @@
     return 'R = C + V / ' + f.divisorV + (tasa.multiplicador !== 1 ? '  (×' + tasa.multiplicador + ' en ' + nombre + ')' : '') + '\n' +
       'V = (H − ' + f.constante + ' − ' + f.porBono + '·C) / (' + f.sumaFija + ' + C)\n' +
       'H = ' + max + ' (' + nombre + ' máximo)\n' +
-      'C = bono de ' + atr + ' ' + (recortado ? signo(bonoReal) + ' (cuenta como ' + f.minimoBono + ')' : signo(tasa.bono)) + ' + ' + f.desplazamiento + ' = ' + tasa.c + '\n' +
+      'C = bono de ' + atr + ' ' + (recortado ? signo(bonoReal) + ' (cuenta como ' + f.minimoBono + ')' : signo(tasa.bono)) + (f.desplazamiento ? ' + ' + f.desplazamiento : '') + ' = ' + tasa.c + '\n' +
       'V = ' + dec(tasa.v, 2) + '  →  R = ' + dec(tasa.porHora, 2) + ' ' + nombre + ' por hora';
   }
 
   /**
    * Recuperación (vista Jugar). Una sola fórmula del diseñador da puntos por hora para HP (bono de CON) y para MP (bono de
-   * SPR, ×10). Hay solo dos descansos, el corto (2 h) y el largo (8 h, con 50 % extra), y cada uno recupera HP y MP a la vez.
+   * SPR, ×5). Hay solo dos descansos, el corto (2 h) y el largo (8 h, con 50 % extra), y cada uno recupera HP y MP a la vez.
    */
   function bloqueRecuperacion(calcB, pj) {
     var cfg = estado.ctx.vitalidad;
@@ -501,7 +501,7 @@
       '<div class="zeo-nivel"><div style="display:flex;flex-direction:column"><span class="eyebrow">Nivel zeo</span><span class="mute num" style="font-size:13px">= mín(' + nivelesTxt + ')</span></div><b>' + z.nivel + '</b></div></div>' +
       '<div class="grid g300">' + ramas + '</div>' +
       '<div style="display:flex;flex-direction:column;gap:14px"><div style="display:flex;flex-direction:column;gap:4px"><h3 style="font-size:20px">Líneas de técnicas</h3>' +
-      '<p class="sub">' + z.slots.ocupados + ' de ' + z.slots.total + ' líneas ocupadas. Cada línea es un slot con ' + z.lineas[0].niveles.length + ' niveles y varias técnicas por nivel (hasta ' + rg.opcionesPorNivel.join(', ') + ' opciones). ' +
+      '<p class="sub">' + z.slots.ocupados + ' de ' + z.slots.total + ' líneas ocupadas. Cada línea es un slot con ' + z.lineas[0].niveles.length + ' niveles y varias técnicas por nivel; la inicial es una sola (opciones por nivel: ' + rg.opcionesPorNivel.join(', ') + '). ' +
       'La primera técnica de un nivel abre ' + rg.opcionesBase + ' opciones en el siguiente; cada técnica extra del mismo nivel suma ' + rg.extraPorTecnica + ' más, hasta el tope de ese nivel.</p></div>' +
       '<div class="grid g300">' + lineas + '</div>' +
       (z.slots.libres > 1 ? '<p class="mute" style="font-size:13px">Quedan ' + z.slots.libres + ' slots libres: se muestra uno.</p>' : '') + '</div>' +
@@ -669,7 +669,7 @@
       var cajas = cj.porDia.map(function (x) { return '<div class="caja"><small>' + nombreNivelConjuro(x.nivelConjuro) + '</small><b>' + x.cantidad + '</b></div>'; }).join('') +
         (cj.proximo ? '<div class="caja proximo"><small>' + nombreNivelConjuro(cj.proximo.nivelConjuro) + '</small><b>—</b><small>llega en el nivel ' + cj.proximo.enNivel + '</small></div>' : '');
       prog = '<div class="bloque-feats"><span class="eyebrow">Conjuros por día · ' + esc(cl.nombre) + (cj.atributo ? ' · ' + esc(cj.atributo) : '') + '</span><div class="cajas">' + cajas + '</div>' +
-        (con ? '<p class="mute" style="font-size:13px">' + esc(cj.nota) + '</p>' : '<p class="mute" style="font-size:13px">Progresión retardada ' + plural(cj.retraso, 'nivel', 'niveles') + ' respecto a Pathfinder.</p>') + '</div>';
+        (con ? '<p class="mute" style="font-size:13px">' + esc(cj.nota) + '</p>' : '<p class="mute" style="font-size:13px">' + (cj.retrasaDesde ? 'Los conjuros de nivel ' + cj.retrasaDesde + ' en adelante llegan ' + plural(cj.retraso, 'nivel', 'niveles') + ' más tarde que en Pathfinder.' : 'Progresión retardada ' + plural(cj.retraso, 'nivel', 'niveles') + ' respecto a Pathfinder.') + '</p>') + '</div>';
     } else if (cl) {
       prog = '<p class="mute">' + esc(cl.nombre) + ' no lanza conjuros: este espacio lo ocupan sus habilidades activas.</p>';
     }

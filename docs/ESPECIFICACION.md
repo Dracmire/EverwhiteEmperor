@@ -1,6 +1,6 @@
-# EverwhiteEmperor — Especificación del tracker de personajes (v0.9.1)
+# EverwhiteEmperor — Especificación del tracker de personajes (v0.9.2)
 
-Estado: borrador del 2026-11-08. La v0.9.0 implementa las **habilidades de clase por nivel y los arquetipos** (6.5) solo para **Monk y Wizard**, añade el **alineamiento** (1.3) y dos personajes de muestra: **Musashi Nanaya** (monje asesino ninja, L.N) y **Herb'Azzio** (mago sin escuela, N.B), con feats extra a cambio de la escuela (6.1). La v0.8.6 **desplaza C en 2** (C = bono + 2) para bajar el punto de recuperación cero, **define la recuperación de MP** con la misma fórmula (bono de SPR, ×10) y deja solo **dos descansos**: corto de 2 h y largo de 8 h con **+50 %** (1.2). La v0.8.5 reemplaza la recuperación de 5e por **la fórmula del diseñador en HP por hora** (1.2): C es el bono de CON, el descanso cura R × horas y desaparecen los Dados de Golpe. La v0.8.4 hace que **el SX sea una reserva común de Zeo y Mana** (4.1.3), agrega al visor los **formularios para Gates y Mana force**, y registra como propuesta la **fórmula de recuperación por hora** del diseñador (1.2, pendiente de aclarar qué es C). La v0.8.3 cambia la recuperación a la regla de D&D 5e (la más generosa: descanso largo con todo el HP y Dados de Golpe en el corto, 1.2), difiere la recuperación de MP, e **implementa Mana por Gates** (4.1.2): Mana force, Gates con tag y función, grafo de slots (Gates, nodos y círculos), tabla de compatibilidad entre tags e inscripción de habilidades; todas las cifras de Mana son **[SUPUESTO]** de ejemplo. La v0.8.2 añade la fatiga, los estados DOWN, K.O. y Deadly y los descansos a la vista Jugar (1.2), convierte Equipo y Méritos y defectos en listas de una línea con tooltip, deja las tiradas de HP y MP solo en Construir, y fija que los Gates conectan por defecto salvo incompatibilidad (4.1.2). La v0.8.1 ajusta la vista Jugar (feats como lista, derivados en mini tarjetas) y documenta el diseño nuevo de Mana por Gates, Magia con conjuros y habilidades de clase por nivel, que todavía **no está implementado**. La v0.8 cambió los atributos (STR, DEX, PER, INT, WIS y CHA; CON, SPR y MND se derivan), añade HP y MP con tiradas de dados, y rehace la ficha del visor: retrato, base y atributos arriba, todo lo demás plegado y el registro de sesiones abajo, con achievements asignables desde una lista con scroll (ver "Cambios respecto a versiones anteriores" al final).
+Estado: borrador del 2026-11-08. La v0.9.2 **revierte el desplazamiento C + 2 de la recuperación** (C vuelve a ser el bono) y deja el MP en **×5** (1.2), reduce la técnica inicial de cada línea de Zeo a **una sola** (4.1.1) y rehace la **progresión de conjuros del mago**: normal hasta el nivel 3 de conjuro y retrasada desde el 4 (4.2). La v0.9.1 pasó las líneas de Zeo a slots de 5 niveles con varias técnicas por nivel y puso las habilidades activas de clase en Magia. La v0.9.0 implementa las **habilidades de clase por nivel y los arquetipos** (6.5) solo para **Monk y Wizard**, añade el **alineamiento** (1.3) y dos personajes de muestra: **Musashi Nanaya** (monje asesino ninja, L.N) y **Herb'Azzio** (mago sin escuela, N.B), con feats extra a cambio de la escuela (6.1). La v0.8.6 **definió la recuperación de MP** con la misma fórmula (bono de SPR; ×10 entonces, ×5 desde la v0.9.2) y dejó solo **dos descansos**: corto de 2 h y largo de 8 h con **+50 %** (1.2). La v0.8.5 reemplaza la recuperación de 5e por **la fórmula del diseñador en HP por hora** (1.2): C es el bono de CON, el descanso cura R × horas y desaparecen los Dados de Golpe. La v0.8.4 hace que **el SX sea una reserva común de Zeo y Mana** (4.1.3), agrega al visor los **formularios para Gates y Mana force**, y registra como propuesta la **fórmula de recuperación por hora** del diseñador (1.2, pendiente de aclarar qué es C). La v0.8.3 cambia la recuperación a la regla de D&D 5e (la más generosa: descanso largo con todo el HP y Dados de Golpe en el corto, 1.2), difiere la recuperación de MP, e **implementa Mana por Gates** (4.1.2): Mana force, Gates con tag y función, grafo de slots (Gates, nodos y círculos), tabla de compatibilidad entre tags e inscripción de habilidades; todas las cifras de Mana son **[SUPUESTO]** de ejemplo. La v0.8.2 añade la fatiga, los estados DOWN, K.O. y Deadly y los descansos a la vista Jugar (1.2), convierte Equipo y Méritos y defectos en listas de una línea con tooltip, deja las tiradas de HP y MP solo en Construir, y fija que los Gates conectan por defecto salvo incompatibilidad (4.1.2). La v0.8.1 ajusta la vista Jugar (feats como lista, derivados en mini tarjetas) y documenta el diseño nuevo de Mana por Gates, Magia con conjuros y habilidades de clase por nivel, que todavía **no está implementado**. La v0.8 cambió los atributos (STR, DEX, PER, INT, WIS y CHA; CON, SPR y MND se derivan), añade HP y MP con tiradas de dados, y rehace la ficha del visor: retrato, base y atributos arriba, todo lo demás plegado y el registro de sesiones abajo, con achievements asignables desde una lista con scroll (ver "Cambios respecto a versiones anteriores" al final).
 
 Convención del documento:
 - **[PENDIENTE]**: falta un dato o una decisión del diseñador.
@@ -77,26 +77,26 @@ Todo esto vive en la vista **Jugar**. El HP actual sigue siendo un valor del nav
 - **[PENDIENTE]** A qué se aplica el penalizador de fatiga (¿todas las tiradas, solo ataque y habilidades?). El visor solo lo muestra, en un chip junto al estado; el tooltip del chip lista los umbrales convertidos a HP, y la barra marca el 50 %, el 25 % y el 10 %.
 - **[PENDIENTE]** Qué significa cada estado en la mesa (si DOWN impide actuar, si K.O. y Deadly piden tiradas de estabilización o muerte). Hoy solo se marcan.
 
-**Recuperación por hora (v0.8.6) [DECIDIDO la fórmula, el desplazamiento, el ×10 y los dos descansos; el redondeo y los recortes son SUPUESTO].** Una sola fórmula del diseñador da una **tasa en puntos por hora** para el HP y para el MP:
+**Recuperación por hora (v0.9.2) [DECIDIDO la fórmula, el ×5 y los dos descansos; el redondeo y los recortes son SUPUESTO].** Una sola fórmula del diseñador da una **tasa en puntos por hora** para el HP y para el MP:
 
 ```
-H = (5 + C') · V + 5 + 5 · C'          H = máximo del recurso (HP o MP)
-R = C' + V / 10                         R = recuperación, en puntos por hora
-C' = bono + 2                           bono = bono de CON (HP) o de SPR (MP)
+H = (5 + C) · V + 5 + 5 · C            H = máximo del recurso (HP o MP)
+R = C + V / 10                          R = recuperación, en puntos por hora
+C = bono                                bono = bono de CON (HP) o de SPR (MP)
 ```
 
-V no tiene nombre: es la incógnita que se **despeja** de la primera ecuación, `V = (H − 5 − 5·C') / (5 + C')`, y se mete en la segunda. **El desplazamiento (v0.8.6):** el diseñador pidió partir de `C + 2` para que el punto en que la recuperación vale 0 quede más abajo; se aplica a **las dos ecuaciones** (`desplazamiento` en `data/vitalidad.json`). Con el desplazamiento no hay punto cero: con bono 0, cualquier H ≥ 1 da R > 0 (H 1 da 1,8 por hora). Reemplaza a la regla de D&D 5e de la v0.8.3 y a la fórmula sin desplazamiento de la v0.8.5.
+V no tiene nombre: es la incógnita que se **despeja** de la primera ecuación, `V = (H − 5 − 5·C) / (5 + C)`, y se mete en la segunda. **La prueba de C + 2 de la v0.8.6 se revirtió (v0.9.2):** «salió mal», así que C vuelve a ser el bono tal cual. El campo `desplazamiento` de `data/vitalidad.json` queda en **0** (el motor lo sigue leyendo, por si el diseñador quiere probar otro). Con C = bono, vuelve el **punto cero**: con bono 0, un máximo de 5 o menos no recupera nada y de ahí sube (H 6 da 0,02 por hora).
 
-- **MP: la misma fórmula, con SPR y ×10 [DECIDIDO].** H es el MP máximo, el bono es el de **SPR** y la R resultante se **multiplica por 10** (`recursos.mp.multiplicador`). **[SUPUESTO]** El ×10 se aplica a la tasa final, no a H ni a C. Con MP 20 y bono 0 sale 20,71 MP por hora, o sea que un descanso corto de 2 h ya llena esos 20 MP; con MP 500 y bono 0, 89,29 por hora.
+- **MP: la misma fórmula, con SPR y ×5 [DECIDIDO].** H es el MP máximo, el bono es el de **SPR** y la R resultante se **multiplica por 5** (`recursos.mp.multiplicador`; en la v0.8.6 era ×10). **[SUPUESTO]** El ×5 se aplica a la tasa final, no a H ni a C. Con MP 20 y bono 0 sale 1,5 MP por hora; con MP 500 y bono 0, 49,5 por hora.
 - **Solo dos descansos [DECIDIDO].** El **corto** dura 2 h y el **largo** 8 h con **+50 % de recuperación** (`extra` 0,5): cura `R × horas × 1,5`. Desaparecen las horas libres y el cálculo de horas hasta el máximo (`horasParaMaximo` ya no existe). **[SUPUESTO]** El +50 % aplica al HP y al MP, y cada descanso recupera **HP y MP a la vez**.
 - **[SUPUESTO] El resultado se redondea hacia abajo** y no pasa del máximo. Un valor sobre el máximo no se baja, y desde un HP negativo se cura igual.
-- **[SUPUESTO] El bono no baja de 0** (`minimoBono`), igual que el «bono de cuerpo» de la v0.8.2: un bono negativo cuenta como 0 antes de sumar 2. El desplazamiento ya evita la división por cero, pero sin el recorte un bono muy negativo dispararía la recuperación de HP altos.
-- **[SUPUESTO] R no baja de 0** (`minimoPorHora`). Con el desplazamiento casi nunca actúa (H ≥ 1 y bono ≥ 0 da R > 0); queda por si H es 0 o negativo.
-- **Casos de HP** (bono de CON): H 1 y bono 0 → 1,80; H 5 y bono 0 → 1,86; H 5 y bono +10 → 11,65; H 500 y bono 0 → 8,93; H 500 y bono +10 → 14,56. El personaje de ejemplo (H 56, bono +1) recupera 3,45 HP por hora: 6 HP en un descanso corto y 41 en uno largo (3,45 × 8 × 1,5).
-- **Rareza conocida de la fórmula:** con HP muy altos, subir el bono puede **enlentecer** la recuperación. Con el desplazamiento aparece recién desde H ≈ 540 (H 1000: bono 0 da 16,07 y bono +3 da 14,70); antes de ese punto subir el bono siempre acelera (H 500: 8,93, 9,00, 9,28, 9,70…). Queda como está hasta que el diseñador diga otra cosa.
+- **[SUPUESTO] El bono no baja de 0** (`minimoBono`), igual que el «bono de cuerpo» de la v0.8.2: un bono negativo cuenta como 0.
+- **[SUPUESTO] R no baja de 0** (`minimoPorHora`): con un máximo menor a 5 y bono 0, V sale negativa y la tasa se recorta a 0.
+- **Casos de HP** (bono de CON): H 5 y bono 0 → 0; H 500 y bono 0 → 9,90; H 500 y bono +10 → 12,97. El personaje de ejemplo (H 56, bono +1) recupera 1,77 HP por hora: 3 HP en un descanso corto y 21 en uno largo (1,77 × 8 × 1,5).
+- **Rareza conocida de la fórmula:** con HP altos, subir el bono puede **enlentecer** la recuperación (H 500: bono 0 da 9,90 y bono +2 da 8,93). Sin el desplazamiento aparece desde H ≈ 280 (con H 280 el bono 0 y el +1 empatan en 5,5); antes de ese punto subir el bono siempre acelera. Queda como está hasta que el diseñador diga otra cosa.
 - **[PENDIENTE]** Si el largo recarga también las cargas diarias del equipo (7); hoy esas cargas se derivan del registro, no del navegador.
 
-**Visor.** En Jugar, **Recuperación** muestra **dos chips** con la tasa (**HP por hora** y **MP por hora**, con la fórmula resuelta en el tooltip, incluido el recorte del bono negativo) y los botones **Descanso corto · 2 h** y **Descanso largo · 8 h · +50 %**, cada uno con lo que recuperaría («+6 HP · +20 MP»). Los botones se desactivan con HP y MP al máximo, sin tiradas de HP o si ambas tasas son 0.
+**Visor.** En Jugar, **Recuperación** muestra **dos chips** con la tasa (**HP por hora** y **MP por hora**, con la fórmula resuelta en el tooltip, incluido el recorte del bono negativo) y los botones **Descanso corto · 2 h** y **Descanso largo · 8 h · +50 %**, cada uno con lo que recuperaría («+3 HP · +3 MP»). Los botones se desactivan con HP y MP al máximo, sin tiradas de HP o si ambas tasas son 0.
 
 Las cifras viven en `data/vitalidad.json` (`descanso.formula`: `atributo`, `minimoBono`, `sumaFija`, `constante`, `porBono`, `divisorV`, `minimoPorHora`; `descanso.corto` y `descanso.largo` con sus horas), así que se cambian sin tocar el código.
 
@@ -327,14 +327,14 @@ No hay otro sistema conocido que tenga a la vez 1000 XP fijos por nivel y una ta
 
 **Líneas de técnica (v0.9.1) [DECIDIDO la estructura; el catálogo de técnicas es PENDIENTE]:**
 
-- Un personaje tiene **10 líneas de técnica, y cada línea es un slot**. Cada línea tiene **5 niveles** y cada nivel muestra **varias técnicas**: 3 en los niveles 1 y 2, **hasta 5 en los niveles 3 y 4** y 3 de nuevo en el 5 (`opcionesPorNivel: [3, 3, 5, 5, 3]`).
-- **Las opciones del nivel siguiente se abren al tomar técnicas.** El nivel 1 muestra todas sus opciones desde el inicio. La **primera** técnica tomada en un nivel abre **3 opciones** en el siguiente; cada técnica **extra del mismo nivel** suma **1 opción más** (la segunda abre 4, la tercera 5), con el tope de ese nivel. Ejemplo: con 3 técnicas de nivel 2, el nivel 3 muestra 5 opciones; el nivel 5 nunca pasa de 3 y los niveles 2 y 1 tampoco.
-- Una técnica de nivel N solo se puede tomar si la línea ya tiene una de nivel N−1, y no más de las opciones visibles de ese nivel. Una línea está **ocupada** cuando tiene al menos una técnica; las libres se pueden ocupar con una técnica de nivel 1.
+- Un personaje tiene **10 líneas de técnica, y cada línea es un slot**. Cada línea tiene **5 niveles**. **La técnica inicial de una línea es una sola** (nivel 1, `1` opción); los demás niveles muestran **varias técnicas**: 3 en el nivel 2, **hasta 5 en los niveles 3 y 4** y 3 de nuevo en el 5 (`opcionesPorNivel: [1, 3, 5, 5, 3]`).
+- **Las opciones del nivel siguiente se abren al tomar técnicas.** La técnica inicial del nivel 1 está disponible desde el inicio. La **primera** técnica tomada en un nivel abre **3 opciones** en el siguiente; cada técnica **extra del mismo nivel** suma **1 opción más** (la segunda abre 4, la tercera 5), con el tope de ese nivel. Ejemplo: con 3 técnicas de nivel 2, el nivel 3 muestra 5 opciones; el nivel 2 y el 5 nunca pasan de 3.
+- Una técnica de nivel N solo se puede tomar si la línea ya tiene una de nivel N−1, y no más de las opciones visibles de ese nivel. Una línea está **ocupada** cuando tiene al menos una técnica; las libres se ocupan con la técnica inicial (nivel 1).
 - **Vista:** se dibujan las líneas ocupadas y **una sola** libre (con un aviso de cuántas libres quedan). Un personaje sin ninguna línea ocupada ve un único slot vacío.
 - **[SUPUESTO]** Esta estructura **reemplaza a los pisos por niveles acumulados** de la v0.5 (piso 4 con 10 niveles y piso 5 con 20), que dependían de un texto cortado.
 - **[PENDIENTE]** El catálogo de técnicas (nombre, línea, nivel, rama y efecto): hoy una técnica se registra por línea y nivel con un **nombre opcional** (`zeo-tecnica`, sección 8). También falta decidir si el nivel de una técnica debe estar limitado por el nivel zeo (hoy no), a qué rama pertenece cada línea o técnica, cómo se ganan las técnicas, qué actividades dan sx y cuándo puede haber más de 10 líneas.
 
-Valores de `data/zeo.json` (versión 0.6):
+Valores de `data/zeo.json` (versión 0.6.1):
 
 ```json
 {
@@ -350,7 +350,7 @@ Valores de `data/zeo.json` (versión 0.6):
   "lineas": {
     "total": 10,
     "niveles": 5,
-    "opcionesPorNivel": [3, 3, 5, 5, 3],
+    "opcionesPorNivel": [1, 3, 5, 5, 3],
     "opcionesBase": 3,
     "extraPorTecnica": 1
   }
@@ -447,7 +447,7 @@ Entradas del registro (los nodos y los círculos **no** son entradas: el motor l
 - Los conjuros están **limitados por el tipo de lanzador** (mago, hechicero…). Cada clase lanzadora anota su **lista de conjuros** y sus **escuelas permitidas y prohibidas**; esa anotación vive en el archivo de la clase (6.5).
 - **[SUPUESTO]** Los slots donde se memorizan los conjuros salen de los Gates, nodos y círculos (4.1.2), con niveles 1 a 3. Desde la v0.8.3 el motor ya los calcula y permite inscribir en ellos las habilidades tipo conjuro; **Magia** muestra en qué slots está inscrita cada una.
 - Las habilidades tipo conjuro de los feats activos (6.2) conviven con los conjuros del catálogo.
-- **Progresión de conjuros por clase (v0.9.1) [SUPUESTO el retraso; la tabla es de Pathfinder 1e].** La tabla de conjuros por día vive en el archivo de la clase (`conjuros.porDia`, una fila por nivel de clase y un número por nivel de conjuro desde el 0; `retraso` es cuánto se atrasa). **El mago usa una progresión retardada de 2 niveles**: un personaje de nivel N usa la fila N−2, así que el conjuro de nivel 4 llega en el **nivel 9** (en Pathfinder, en el 7), el 1.º en el 3, el 2.º en el 5 y así hasta el 9.º en el 19; los trucos están desde el nivel 1. La tabla no incluye conjuros extra por INT ni por escuela. El motor devuelve `conjuros` (`nivelMax`, `porDia`, `llegadas`, `proximo`) y es `null` para una clase sin tabla.
+- **Progresión de conjuros por clase (v0.9.2) [SUPUESTO el retraso; la tabla es de Pathfinder 1e].** La tabla de conjuros por día vive en el archivo de la clase (`conjuros.porDia`: una fila por nivel de clase y un número por nivel de conjuro desde el 0; `retraso` es cuánto se atrasan los conjuros y `retrasaDesde`, desde qué nivel de conjuro). **El mago es igual a la tabla normal en el nivel 1** (3 trucos y un conjuro de nivel 1) **y gana conjuros en cada nivel**, pero **los conjuros de nivel 4 en adelante se retrasan 2 niveles**: usan la fila N−2 de la tabla. Resultado: el 1.º llega en el nivel 1, el 2.º en el 3 y el 3.º en el 5 (como en Pathfinder); el **4.º en el nivel 9** (en Pathfinder, en el 7), el 5.º en el 11, el 6.º en el 13, el 7.º en el 15, el 8.º en el 17 y el 9.º en el 19. Los trucos están desde el nivel 1. La tabla no incluye conjuros extra por INT ni por escuela. El motor devuelve `conjuros` (`nivelMax`, `porDia`, `llegadas`, `proximo`, `total`) y es `null` para una clase sin tabla. *(La v0.9.1 retrasaba todos los niveles de conjuro y dejaba al nivel 1 sin conjuro de nivel 1; no valía.)*
 - **Las habilidades activas ocupan el lugar de los conjuros (v0.9.1) [DECIDIDO].** La sección **Magia** muestra la progresión de conjuros (si la clase lanza) y, debajo, las **habilidades activas**: las de la clase (`ejecucion: activo`) y las que salen de un feat de ejecución activa (6.2). El monje no lanza conjuros, así que su espacio de Magia lo ocupan solo sus habilidades activas (Flurry of Blows, Ki Pool, High Jump, Vanish…). Las habilidades pasivas de la clase van con los feats (6.5, 10.5).
 - **[PENDIENTE]** Si las habilidades activas de clase también se inscriben en los slots de Mana (hoy solo se inscriben las que salen de feats). Qué sistema y qué edición (Pathfinder 1e, D&D 3.5 o D&D 5e) y de dónde se importa el catálogo; qué se copia (nombre, escuela y nivel, o también el texto: la OGL y los avisos de copyright siguen pendientes, `docs/FUENTES.md`); qué pasa con los niveles 4 a 9; cómo se resuelven las escuelas de especialista y las líneas de sangre.
 
@@ -927,9 +927,9 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 | 80 o más | 5 |
 
 - Nivel zeo: heaven 34 sx (nivel 4), void 22 sx (nivel 3), earth 15 sx (nivel 2) → nivel zeo 2, el menor de los tres.
-- Opciones visibles de una línea (v0.9.1): el nivel 1 muestra 3 desde el inicio; sin técnica en el nivel anterior, 0; con 1, 2 y 3 técnicas de nivel 2 el nivel 3 muestra 3, 4 y 5; el nivel 4 sube igual hasta 5; los niveles 2 y 5 se quedan en 3.
-- Una línea con técnicas 1×2, 2×3 y 3×1: opciones visibles por nivel `[3, 3, 5, 3, 0]`, libres `[1, 0, 4, 3, 0]`. Una línea vacía: `[3, 0, 0, 0, 0]`.
-- `zeo-tecnica`: línea L11, nivel 6, nivel sin abrir, nombre vacío y el uso de `zeo-linea` dan error; una cuarta técnica de nivel 2 con solo 3 opciones da error; un nombre repetido en la línea da error.
+- Opciones visibles de una línea (v0.9.2): el nivel 1 muestra **1** (la técnica inicial); sin técnica en el nivel anterior, 0; con 1, 2 y 3 técnicas de nivel 2 el nivel 3 muestra 3, 4 y 5; el nivel 4 sube igual hasta 5; los niveles 2 y 5 se quedan en 3.
+- Una línea con técnicas 1×1, 2×3 y 3×1: opciones visibles por nivel `[1, 3, 5, 3, 0]`, libres `[0, 0, 4, 3, 0]`. Una línea vacía: `[1, 0, 0, 0, 0]`.
+- `zeo-tecnica`: línea L11, nivel 6, nivel sin abrir, nombre vacío y el uso de `zeo-linea` dan error; una cuarta técnica de nivel 2 con solo 3 opciones da error, y una segunda técnica de nivel 1 también (solo hay una); un nombre repetido en la línea da error.
 - Slots de línea: sin técnicas, 0 de 10 ocupados y primera libre L01; con L01 y L03, 2 ocupados y primera libre L02.
 
 ### Atributos derivados, HP y MP
@@ -958,18 +958,18 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 - Alineamiento `L.N` → Legal neutral, `n.b` → Neutral bueno, `N.N` → Neutral puro, `C.M` → Caótico malo; `LN`, `L.G`, `X.N`, vacío y `null` no valen. Un valor mal escrito en el personaje es un error.
 - `data/clases/*.json`: ids únicos, niveles de 1 a 20, ejecución `pasivo` o `activo`, mejoras ordenadas y posteriores a la habilidad, `reemplaza` y `sustituye` apuntan a habilidades que existen, `featsExtra` ordenados. Niveles del Monk: Evasion 2, Ki Pool 4, Wholeness of Body 7, Abundant Step 12, Quivering Palm 15, Perfect Self 20.
 - Personajes de muestra: Musashi Nanaya (nivel 7, HP 53, MP 27, 4 de 4 slots, Dodge, Stealthy, Mobility y Spring Attack, **las 10 líneas de Zeo ocupadas con una técnica de nivel 1**) y Herb'Azzio (nivel 7, HP 28, MP 46, 6 de 6 slots, **ninguna línea de Zeo ocupada**); ninguno tiene errores ni avisos.
-- Progresión de conjuros del mago (v0.9.1): nivel máximo de conjuro 0 en los niveles 1 y 2, 1 en el 3, 2 en el 5, 3 en el 7 y 8, **4 en el 9**; los conjuros por día son la fila N−2 de la tabla (nivel 9: 4, 4, 3, 2, 1; nivel 20: 4, 4, 4, 4, 4, 4, 4, 3, 3, 2); las llegadas son los niveles 1, 3, 5, 7, 9, 11, 13, 15, 17 y 19. Herb'Azzio (nivel 7): trucos 4, nivel 1 3, nivel 2 2, nivel 3 1, y el nivel 4 llega en el 9. El monje y una clase sin archivo no tienen progresión (`null`).
+- Progresión de conjuros del mago (v0.9.2): nivel 1 → 3 trucos y 1 de nivel 1; nivel máximo de conjuro 1 en los niveles 1 y 2, 2 en el 3 y 4, 3 del 5 al 8 y **4 en el 9**; hasta el nivel de conjuro 3 sigue la tabla de Pathfinder y desde el 4 usa la fila N−2 (nivel 9: 4, 4, 4, 3, 1; nivel 20: 4, 4, 4, 4, 4, 4, 4, 3, 3, 2); las llegadas son los niveles 1, 1, 3, 5, 9, 11, 13, 15, 17 y 19. El total de conjuros por día sube en **cada** nivel de 2 a 20. Herb'Azzio (nivel 7): trucos 4, nivel 1 ×4, nivel 2 ×3, nivel 3 ×2, y el nivel 4 llega en el 9. El monje y una clase sin archivo no tienen progresión (`null`).
 
-### Recuperación por hora (v0.8.6)
+### Recuperación por hora (v0.9.2)
 
-- Con C' = bono + 2: `V = (H − 5 − 5·C') / (5 + C')` y `R = C' + V/10`; meter V en `H = (5 + C')·V + 5 + 5·C'` devuelve H.
-- HP (bono de CON): H 1 y bono 0 → 1,80; H 5 y bono 0 → 1,8571; H 500 y bono 0 → 8,9286; H 500 y bono +10 → 14,5588; H 56 y bono +1 → 3,45 por hora.
-- Sin punto cero: con bono 0, R > 0 para todo H de 1 a 500. Con H hasta 470, subir el bono nunca enlentece la recuperación (la rareza aparece desde H ≈ 540).
+- Con C = bono: `V = (H − 5 − 5·C) / (5 + C)` y `R = C + V/10`; meter V en `H = (5 + C)·V + 5 + 5·C` devuelve H.
+- HP (bono de CON): H 5 y bono 0 → 0; H 500 y bono 0 → 9,90; H 500 y bono +10 → 12,9667; H 56 y bono +1 → 1,7667 por hora.
+- Punto cero: con bono 0, H de 1 a 5 da 0 (la R bruta es negativa y se recorta) y H 6 da 0,02. Con H hasta 270, subir el bono nunca enlentece la recuperación; con H 500, el bono +2 da 8,93, menos que el bono 0 (9,90).
 - Un bono negativo cuenta como 0 (H 56 con bono −4 da lo mismo que con 0). Sin máximo (H 0), R = 0.
-- MP (bono de SPR, ×10): H 20 y bono 0 → 20,714 por hora; H 500 y bono 0 → 89,29.
-- Descansar con H 56 y bono +1 desde 10 HP: corto (2 h) → +6; largo (8 h, +50 %) → +41; con mucho margen no pasa de 56. Un HP de 60 (sobre el máximo) no se baja; desde −10, el corto da +6 (queda −4).
-- Descansar con MP 20 y bono 0: el corto y el largo llenan los 20 MP; con MP 500 y bono 0, el corto da 178 y el largo llena los 500.
-- `data/vitalidad.json` trae la fórmula (`desplazamiento` 2 y los demás números), los recursos (`hp` con CON ×1 y `mp` con SPR ×10) y solo dos descansos (2 h y 8 h con extra 0,5).
+- MP (bono de SPR, ×5): H 20 y bono 0 → 1,5 por hora; H 500 y bono 0 → 49,5.
+- Descansar con H 56 y bono +1 desde 10 HP: corto (2 h) → +3; largo (8 h, +50 %) → +21; desde 40 el largo llega al máximo de 56 (+16). Un HP de 60 (sobre el máximo) no se baja; desde −10, el corto da +3 (queda −7).
+- Descansar con MP 20 y bono 0: el corto da +3 y el largo +18; con MP 500 y bono 0, el corto da 99 y el largo llena los 500.
+- `data/vitalidad.json` trae la fórmula (`desplazamiento` 0 y los demás números), los recursos (`hp` con CON ×1 y `mp` con SPR ×5) y solo dos descansos (2 h y 8 h con extra 0,5).
 
 ### SX compartido: reserva y asignación (v0.8.4)
 
@@ -1054,11 +1054,11 @@ Otros casos de Mana (con los datos de ejemplo):
 21. HP y MP: dado de cada clase para HP y para MP, relación del MP con el mana ganado, si MND tiene efecto y si el HP y el MP actuales deben entrar al registro (1.1). La recuperación de MP ya está definida (1.2).
 22. Achievements: sustituir las 12 entradas de ejemplo por la lista real, con su fate y sus condiciones.
 23. Mana por Gates (4.1.2): sustituir los 13 tags de ejemplo por la tabla real (~200 tags y sus pares incompatibles), fijar el SX por Gate y si se gasta, el valor de cada fuente de MF, qué hace cada función, si el GM puede forzar o romper una conexión, si lo inscrito debe coincidir con el tag del slot, y qué hace falta para borrar o corregir un Gate ya construido. Ya está decidido que nodos y círculos son aditivos y que los Gates conectan por defecto salvo incompatibilidad.
-24. Magia: sistema y edición del catálogo de conjuros, origen de los datos y escuelas por clase (4.2). **Progresión del mago (v0.9.1):** confirmar el retraso de 2 niveles, los conjuros extra por INT y por escuela, y cómo se relacionan los conjuros por día con los slots de Mana; decidir si las habilidades activas de clase se inscriben en los slots.
+24. Magia: sistema y edición del catálogo de conjuros, origen de los datos y escuelas por clase (4.2). **Progresión del mago (v0.9.2):** confirmar el retraso de 2 niveles para los conjuros de nivel 4 en adelante, los conjuros extra por INT y por escuela, y cómo se relacionan los conjuros por día con los slots de Mana; decidir si las habilidades activas de clase se inscriben en los slots.
 25. Habilidades de clase (6.5): **ya están Monk y Wizard**; faltan las demás clases si se llegan a usar, y ajustar las cifras de los dos arquetipos homebrew. El detalle son resúmenes propios (el texto completo de Paizo sigue pendiente de la regla de la sección 15 de la OGL).
 26. Fatiga y recuperación (1.2): a qué se aplica el penalizador de fatiga, qué significan DOWN, K.O. y Deadly en la mesa, y si el largo recarga las cargas del equipo.
-27. Recuperación de MP (1.2): confirmar que «×10» se aplica a la tasa final y no a otro término (con MP 20 un descanso corto de 2 h ya lo llena), y la relación del MP con el mana de 4.1.2.
-28. Recuperación por hora (1.2): confirmar el desplazamiento en las dos ecuaciones, el redondeo hacia abajo, el recorte del bono y de R a 0, que el +50 % del largo aplique también al MP, y qué hacer con la rareza de que desde H ≈ 540 subir el bono enlentece la recuperación.
+27. Recuperación de MP (1.2): confirmar que «×5» se aplica a la tasa final y no a otro término, y la relación del MP con el mana de 4.1.2.
+28. Recuperación por hora (1.2): el redondeo hacia abajo, el recorte del bono y de R a 0, que el +50 % del largo aplique también al MP, y qué hacer con el punto cero (H ≤ 5 no recupera con bono 0) y con la rareza de que desde H ≈ 280 subir el bono enlentece la recuperación.
 29. SX compartido (4.1.3): si el SX se gasta de verdad al construir Gates o subir ramas, si se puede reasignar, y si la reserva tiene tope.
 30. Alineamiento (1.3): hoy es solo una etiqueta; falta decidir cómo entra el Alignment Spiral (Score, Rank, personas) al ledger.
 31. Personajes de muestra (Musashi Nanaya y Herb'Azzio): los atributos, tiradas de HP y MP, feats y equipo son un **borrador** a revisar; la raza «Humano» y los objetos nuevos son marcadores de ejemplo. Las técnicas de Zeo de Musashi no tienen nombre hasta que exista el catálogo.
@@ -1067,6 +1067,13 @@ Otros casos de Mana (con los datos de ejemplo):
 ---
 
 ## Cambios respecto a versiones anteriores
+
+### v0.9.2
+
+- **Recuperación: se revierte el C + 2 [DECIDIDO]:** C vuelve a ser el bono de CON (HP) o de SPR (MP), sin desplazamiento (`desplazamiento` 0). El MP usa la misma fórmula con **×5** en vez de ×10. Siguen los dos descansos (2 h y 8 h con +50 %). Vuelve el punto cero: con bono 0 y H ≤ 5 no se recupera. El ejemplo (H 56, bono +1) recupera 1,77 HP por hora (3 en el corto y 21 en el largo).
+- **Zeo: la técnica inicial es una sola:** `opcionesPorNivel` pasa de `[3, 3, 5, 5, 3]` a `[1, 3, 5, 5, 3]`. El ejemplo se ajustó (la línea L01 ya no tiene dos técnicas de nivel 1). `data/zeo.json` v0.6.1.
+- **Progresión del mago rehecha [SUPUESTO el retraso]:** igual a la de Pathfinder en el nivel 1 y hasta el conjuro de nivel 3, y ganando conjuros en cada nivel; **solo se retrasan 2 niveles los conjuros de nivel 4 en adelante** (el 4.º llega en el nivel 9). Nuevo campo `retrasaDesde` en `conjuros`. Herb'Azzio (nivel 7): trucos 4, nivel 1 ×4, nivel 2 ×3, nivel 3 ×2.
+- 80 pruebas.
 
 ### v0.9.1
 
