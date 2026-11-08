@@ -441,7 +441,38 @@
 
   // ---- subsistemas plegables: zeo, mana y magia
 
-  function seccionZeo(calc) {
+  /** Un nivel de una línea de técnicas: casillas tomadas (llenas), visibles sin tomar (huecas) y todavía ocultas (punteadas). */
+  function filaNivelZeo(n) {
+    var pips = '';
+    for (var i = 0; i < n.tope; i++) pips += '<i class="' + (i < n.tomadas.length ? '' : i < n.visibles ? 'visible' : 'oculto') + '"></i>';
+    var txt = !n.abierto ? 'Cerrado' : n.tomadas.length + ' de ' + n.visibles + (n.visibles < n.tope ? ' (hasta ' + n.tope + ')' : '');
+    var nombres = n.tomadas.filter(function (t) { return t.nombre; }).map(function (t) { return esc(t.nombre); }).join(' · ');
+    return '<div class="znivel' + (n.abierto ? '' : ' cerrado') + '"><span class="znv">Nv. ' + n.nivel + '</span><span class="zpips" aria-hidden="true">' + pips + '</span>' +
+      '<span class="zt num">' + txt + '</span>' + (nombres ? '<span class="znom">' + nombres + '</span>' : '') + '</div>';
+  }
+
+  /** Una línea de técnicas como slot. La libre se dibuja con borde punteado. */
+  function tarjetaLineaZeo(l) {
+    var pie = l.ocupada ? plural(l.total, 'técnica', 'técnicas') + ' · hasta el nivel ' + l.nivelMax : 'Slot libre';
+    return '<div class="zlinea' + (l.ocupada ? '' : ' libre') + '"><div class="row-between" style="align-items:baseline;gap:8px"><span class="id">' + esc(l.id) + '</span>' +
+      '<span class="mute" style="font-size:13px">' + pie + '</span></div>' + l.niveles.map(filaNivelZeo).join('') + '</div>';
+  }
+
+  /** Registrar una técnica: línea, nivel y nombre opcional. El motor rechaza un nivel cerrado o sin opciones libres. */
+  function formularioZeo(z) {
+    var lineas = z.lineas.filter(function (l) { return l.ocupada || l.id === z.slots.primeraLibre; });
+    var optL = lineas.map(function (l) { return '<option value="' + esc(l.id) + '">' + esc(l.id) + (l.ocupada ? ' · ' + plural(l.total, 'técnica', 'técnicas') : ' · libre') + '</option>'; }).join('');
+    var optN = '';
+    for (var i = 1; i <= z.lineas[0].niveles.length; i++) optN += '<option value="' + i + '">Nivel ' + i + '</option>';
+    return '<div class="picker-bloque"><h3 style="font-size:20px">Registrar una técnica</h3>' +
+      '<p class="sub">Elige la línea y el nivel. El nombre es opcional mientras no exista el catálogo de técnicas. Un nivel cerrado, o sin opciones libres, se rechaza.</p>' +
+      '<div class="acc-fila"><label class="campo-et">Línea<select class="btn" id="zt-l">' + optL + '</select></label>' +
+      '<label class="campo-et">Nivel<select class="btn" id="zt-n">' + optN + '</select></label>' +
+      '<label class="campo-et">Nombre (opcional)<input class="campo" type="text" id="zt-nombre" placeholder="Ej.: Garra de escarcha" autocomplete="off" style="width:240px"></label>' +
+      '<button class="btn prim" type="button" data-accion="zeo-tecnica">Agregar</button></div></div>';
+  }
+
+  function seccionZeo(calc, con) {
     var z = calc.zeo;
     var limitan = z.ramas.filter(function (r) { return r.limita; });
     var nivelesTxt = z.ramas.map(function (r) { return r.nivel; }).join(', ');
@@ -461,25 +492,22 @@
         (r.sx >= r.fin ? 'Rama completa' : 'Faltan ' + f(r.falta) + ' ' + esc(z.unidad) + ' para el nivel ' + (r.nivel + 1)) + '</span>' +
         (r.limita && limitan.length < z.ramas.length ? '<span class="chip acc">Limita el nivel zeo</span>' : '') + '</div></div>';
     }).join('');
-    var lineas = z.lineas.map(function (l) {
-      var pips = '';
-      for (var i = 1; i <= l.pisosMax; i++) pips += '<i class="' + (i <= l.pisosAbiertos ? '' : 'cerrado') + '"></i>';
-      var marcas = l.marcas.filter(function (m) { return m < 1; }).map(function (m) { return '<s style="left:' + (m * 100) + '%"></s>'; }).join('');
-      var texto = 'Pisos 1 a ' + l.pisosAbiertos + ' abiertos' + (l.siguiente ? ' · piso ' + l.siguiente.piso + ' en ' + plural(l.siguiente.falta, 'nivel', 'niveles') : ' · todos los pisos abiertos');
-      return '<div class="linea"><div class="row-between" style="align-items:baseline;gap:8px"><span class="id">' + esc(l.id) + '</span>' +
-        '<span class="mute num" style="font-size:13px"><strong>' + l.niveles + '</strong> niveles</span></div>' +
-        '<div class="pips" aria-hidden="true">' + pips + '</div>' +
-        '<div class="mini" aria-hidden="true"><i style="width:' + (l.llenado * 100).toFixed(1) + '%"></i>' + marcas + '</div>' +
-        '<span class="mute" style="font-size:13px">' + texto + '</span></div>';
-    }).join('');
+    // Solo se dibujan las líneas ocupadas y UNA libre: las demás libres se cuentan, no se repiten.
+    var visibles = z.lineas.filter(function (l) { return l.ocupada || l.id === z.slots.primeraLibre; });
+    var lineas = visibles.map(tarjetaLineaZeo).join('');
+    var rg = z.reglas;
     var cuerpo = notaReserva(calc.sx) + '<div class="zeo-head"><p class="sub" style="flex:1 1 360px;min-width:0">El nivel zeo es el menor de las tres ramas. ' + resumenTxt +
       ' Tabla de ' + esc(z.unidad) + ' por nivel: ' + z.niveles.join(' · ') + ' (lectura: ' + lectura + ', por confirmar).</p>' +
       '<div class="zeo-nivel"><div style="display:flex;flex-direction:column"><span class="eyebrow">Nivel zeo</span><span class="mute num" style="font-size:13px">= mín(' + nivelesTxt + ')</span></div><b>' + z.nivel + '</b></div></div>' +
       '<div class="grid g300">' + ramas + '</div>' +
-      '<div style="display:flex;flex-direction:column;gap:14px"><div style="display:flex;flex-direction:column;gap:4px"><h3 style="font-size:20px">Líneas de técnica</h3>' +
-      '<p class="sub">' + z.lineas.length + ' líneas base, cada una una cadena de técnicas con requisitos enlazados. Nacen con los pisos 1 a 3; el piso 4 se abre con 10 niveles acumulados en la línea y el piso 5 con 20.</p></div>' +
-      '<div class="grid g190">' + lineas + '</div></div>';
-    var resumen = chip('Nivel zeo ' + z.nivel, 'acc') + z.ramas.map(function (r) { return chip(Core.rotulo(r.rama) + ' ' + f(r.sx) + ' ' + z.unidad, 'soft'); }).join('');
+      '<div style="display:flex;flex-direction:column;gap:14px"><div style="display:flex;flex-direction:column;gap:4px"><h3 style="font-size:20px">Líneas de técnicas</h3>' +
+      '<p class="sub">' + z.slots.ocupados + ' de ' + z.slots.total + ' líneas ocupadas. Cada línea es un slot con ' + z.lineas[0].niveles.length + ' niveles y varias técnicas por nivel (hasta ' + rg.opcionesPorNivel.join(', ') + ' opciones). ' +
+      'La primera técnica de un nivel abre ' + rg.opcionesBase + ' opciones en el siguiente; cada técnica extra del mismo nivel suma ' + rg.extraPorTecnica + ' más, hasta el tope de ese nivel.</p></div>' +
+      '<div class="grid g300">' + lineas + '</div>' +
+      (z.slots.libres > 1 ? '<p class="mute" style="font-size:13px">Quedan ' + z.slots.libres + ' slots libres: se muestra uno.</p>' : '') + '</div>' +
+      (con ? formularioZeo(z) : '');
+    var resumen = chip('Nivel zeo ' + z.nivel, 'acc') + chip(z.slots.ocupados + ' de ' + z.slots.total + ' líneas', 'soft') +
+      z.ramas.map(function (r) { return chip(Core.rotulo(r.rama) + ' ' + f(r.sx) + ' ' + z.unidad, 'soft'); }).join('');
     return desplegable('zeo', 'Zeo', resumen, cuerpo);
   }
 
@@ -625,20 +653,61 @@
     return desplegable('mana', 'Mana', resumen, cuerpo);
   }
 
-  function seccionMagia(calcB) {
-    var m = calcB.mana;
-    var hab = calcB.feats.lista.filter(function (x) { return x.tipo === 'habilidad-tipo-conjuro'; });
-    var lista = hab.map(function (x) {
+  /** Nombre corto de un nivel de conjuro: 0 son los trucos. */
+  function nombreNivelConjuro(n) { return n === 0 ? 'Trucos' : 'Nivel ' + n; }
+
+  /**
+   * Cuerpo de Magia (4.2): la progresión de conjuros de la clase, si lanza, y las habilidades activas, que ocupan el lugar de los conjuros:
+   * las de la clase y las que salen de un feat de ejecución activa.
+   */
+  function cuerpoMagia(calcB, con) {
+    var m = calcB.mana, cl = calcB.clase, cj = calcB.conjuros;
+    var delFeat = calcB.feats.lista.filter(function (x) { return x.tipo === 'habilidad-tipo-conjuro'; });
+    var delaClase = cl ? cl.habilidades.filter(esActiva) : [];
+    var prog = '';
+    if (cj) {
+      var cajas = cj.porDia.map(function (x) { return '<div class="caja"><small>' + nombreNivelConjuro(x.nivelConjuro) + '</small><b>' + x.cantidad + '</b></div>'; }).join('') +
+        (cj.proximo ? '<div class="caja proximo"><small>' + nombreNivelConjuro(cj.proximo.nivelConjuro) + '</small><b>—</b><small>llega en el nivel ' + cj.proximo.enNivel + '</small></div>' : '');
+      prog = '<div class="bloque-feats"><span class="eyebrow">Conjuros por día · ' + esc(cl.nombre) + (cj.atributo ? ' · ' + esc(cj.atributo) : '') + '</span><div class="cajas">' + cajas + '</div>' +
+        (con ? '<p class="mute" style="font-size:13px">' + esc(cj.nota) + '</p>' : '<p class="mute" style="font-size:13px">Progresión retardada ' + plural(cj.retraso, 'nivel', 'niveles') + ' respecto a Pathfinder.</p>') + '</div>';
+    } else if (cl) {
+      prog = '<p class="mute">' + esc(cl.nombre) + ' no lanza conjuros: este espacio lo ocupan sus habilidades activas.</p>';
+    }
+    var tarjetas = delaClase.map(tarjetaActivaClase).join('') + delFeat.map(function (x) {
       var cat = estado.indiceFeats[x.convertidoDe];
       var slots = m.slots.filter(function (sl) { return sl.habilidad && sl.habilidad.id === x.id; }).map(function (sl) { return sl.id; });
-      return '<div class="item"><div class="t"><b>' + esc(x.nombre) + '</b><small>Convertido del feat ' + esc(cat ? cat.nombre : x.convertidoDe) + '</small>' +
-        (cat && cat.resumen ? '<small>' + esc(cat.resumen) + '</small>' : '') + '</div>' +
-        (slots.length ? chip('Inscrita en ' + slots.join(', '), 'acc') : chip('Sin inscribir', 'soft')) + enlaceFeat(cat) + '</div>';
+      return '<div class="tarjeta-activa"><div class="row-between" style="align-items:center"><b>' + esc(x.nombre) + '</b>' + chip('Activa', 'acc') + '</div>' +
+        '<small class="mute">Convertida del feat ' + esc(cat ? cat.nombre : x.convertidoDe) + '</small>' + (cat && cat.resumen ? '<small class="mute">' + esc(cat.resumen) + '</small>' : '') +
+        '<div class="acc-fila">' + chip('Costo en mana: pendiente', 'soft') + (slots.length ? chip('Inscrita en ' + slots.join(', '), 'acc') : chip('Sin inscribir', 'soft')) + enlaceFeat(cat) + '</div></div>';
     }).join('');
-    var cuerpo = '<p class="sub">Magia es lo que reemplaza el casteo: habilidades tipo conjuro que se inscriben en los slots de Mana (Gates, nodos y círculos). Hoy salen de los feats de ejecución activa de Pathfinder, que se reclasifican aquí. El catálogo de conjuros y el costo de usar cada habilidad están pendientes de diseño.</p>' +
-      '<div class="lista">' + (lista || '<p class="mute">Todavía no hay habilidades tipo conjuro. Un feat de ejecución activa aparece aquí al ganarlo.</p>') + '</div>' +
-      '<div class="cajas"><div class="caja"><small>Habilidades</small><b>' + hab.length + '</b></div><div class="caja"><small>Slots con habilidad</small><b>' + m.totales.ocupados + ' de ' + m.totales.slots + '</b></div></div>';
-    return desplegable('magia', 'Magia', chip(plural(hab.length, 'habilidad tipo conjuro', 'habilidades tipo conjuro'), 'acc') + chip(m.totales.libres + ' slots libres', 'soft'), cuerpo);
+    var prox = cl ? cl.proximas.filter(esActiva) : [];
+    var proximas = prox.length
+      ? '<p class="mute" style="font-size:13px">Próximas: ' + esc(prox.slice(0, 4).map(function (h) { return h.nombre + ' (nivel ' + h.nivel + ')'; }).join(', ')) + (prox.length > 4 ? ' y ' + (prox.length - 4) + ' más' : '') + '.</p>'
+      : '';
+    var intro = con
+      ? '<p class="sub">Magia es lo que reemplaza el casteo. Aquí van la progresión de conjuros de la clase (si lanza) y las habilidades activas, que ocupan el lugar de los conjuros: las de la clase y los feats de ejecución activa de Pathfinder, que se reclasifican como habilidad tipo conjuro y se inscriben en los slots de Mana (Gates, nodos y círculos). El catálogo de conjuros y el costo de usar cada habilidad están pendientes de diseño.</p>'
+      : '';
+    return intro + prog +
+      '<div class="bloque-feats"><span class="eyebrow">Habilidades activas</span>' +
+      (tarjetas ? '<div class="grid g300">' + tarjetas + '</div>' : '<p class="mute">Todavía no hay habilidades activas. Una habilidad activa de la clase o un feat de ejecución activa aparece aquí al ganarlo.</p>') + '</div>' + proximas +
+      '<div class="cajas"><div class="caja"><small>Habilidades activas</small><b>' + (delaClase.length + delFeat.length) + '</b></div><div class="caja"><small>Slots de Mana con habilidad</small><b>' + m.totales.ocupados + ' de ' + m.totales.slots + '</b></div></div>';
+  }
+
+  function chipsMagia(calcB) {
+    var cl = calcB.clase, cj = calcB.conjuros;
+    var total = (cl ? cl.habilidades.filter(esActiva).length : 0) + calcB.feats.lista.filter(function (x) { return x.tipo === 'habilidad-tipo-conjuro'; }).length;
+    return (cj ? chip(cj.nivelMax === 0 ? 'Solo trucos' : 'Conjuros hasta el nivel ' + cj.nivelMax, 'acc') + (cj.proximo ? chip('Nivel ' + cj.proximo.nivelConjuro + ' en el nivel ' + cj.proximo.enNivel, 'soft') : '') : '') +
+      chip(plural(total, 'habilidad activa', 'habilidades activas'), cj ? 'soft' : 'acc') + chip(calcB.mana.totales.libres + ' slots libres', 'soft');
+  }
+
+  /** Vista Jugar: tarjeta siempre visible, donde irían los conjuros. */
+  function seccionMagiaJuego(calcB) {
+    return '<section class="card bloque-juego"><div class="row-between" style="align-items:center"><h2>Magia</h2><span class="chips">' + chipsMagia(calcB) + '</span></div>' + cuerpoMagia(calcB, false) + '</section>';
+  }
+
+  /** Vista Construir: plegable. */
+  function seccionMagia(calcB) {
+    return desplegable('magia', 'Magia', chipsMagia(calcB), cuerpoMagia(calcB, true));
   }
 
   function etiquetaSesion(calc, id) {
@@ -772,27 +841,22 @@
       '<span class="chip ' + (activo ? 'acc' : '') + '">' + (activo ? 'Habilidad tipo conjuro' : 'Pasivo') + '</span>' + enlaceFeat(cat) + '</div>';
   }
 
-  /** Vista Jugar: los feats pasivos son una lista corta; solo las habilidades activas llevan tarjeta. */
+  /** Vista Jugar: los feats y las habilidades pasivas de la clase comparten tarjeta; las activas están en Magia. */
   function seccionFeatsJuego(calc, calcB) {
     var ft = calcB.feats;
+    var cl = calcB.clase;
     var confirmados = calc.feats.lista.length;
-    var pasivos = [], activos = [];
-    ft.lista.forEach(function (x, i) { (x.tipo === 'habilidad-tipo-conjuro' ? activos : pasivos).push({ x: x, borrador: i >= confirmados }); });
+    var pasivos = [];
+    ft.lista.forEach(function (x, i) { if (x.tipo !== 'habilidad-tipo-conjuro') pasivos.push({ x: x, borrador: i >= confirmados }); });
     var filas = pasivos.map(function (o) {
       var cat = estado.indiceFeats[o.x.id];
       return fila({ nombre: o.x.nombre, tip: cat && cat.resumen ? cat.resumen : '', medio: o.borrador ? chip('Borrador', 'gold') : '', der: enlaceFeat(cat) });
     }).join('');
-    var tarjetas = activos.map(function (o) {
-      var cat = estado.indiceFeats[o.x.convertidoDe];
-      return '<div class="tarjeta-activa"><div class="row-between" style="align-items:center"><b>' + esc(o.x.nombre) + '</b>' + (o.borrador ? chip('Borrador', 'gold') : chip('Activa', 'acc')) + '</div>' +
-        (cat && cat.resumen ? '<small class="mute">' + esc(cat.resumen) + '</small>' : '') +
-        '<div class="acc-fila">' + chip('Costo en mana: pendiente', 'soft') + enlaceFeat(cat) + '</div></div>';
-    }).join('');
-    return '<section class="card bloque-juego"><div class="row-between" style="align-items:center"><h2>Feats</h2>' +
-      '<span class="chips">' + chip(ft.slotsUsados + ' de ' + ft.slotsTotales + ' slots', ft.slotsLibres ? 'acc' : 'soft') + (ft.slotsLibres ? chip(plural(ft.slotsLibres, 'libre', 'libres'), 'gold') : '') + '</span></div>' +
-      '<div class="bloque-feats"><span class="eyebrow">Pasivos</span>' +
+    return '<section class="card bloque-juego"><div class="row-between" style="align-items:center"><h2>Feats y habilidades pasivas</h2>' +
+      '<span class="chips">' + chip(ft.slotsUsados + ' de ' + ft.slotsTotales + ' slots', ft.slotsLibres ? 'acc' : 'soft') + (ft.slotsLibres ? chip(plural(ft.slotsLibres, 'libre', 'libres'), 'gold') : '') + chipArquetipo(cl) + '</span></div>' +
+      '<div class="bloque-feats"><span class="eyebrow">Feats</span>' +
       (filas ? '<ul class="ren-lista">' + filas + '</ul>' : '<p class="mute">Sin feats pasivos.</p>') + '</div>' +
-      (tarjetas ? '<div class="bloque-feats"><span class="eyebrow">Activos</span><div class="grid g300">' + tarjetas + '</div></div>' : '') + '</section>';
+      bloqueClasePasiva(cl, false) + '</section>';
   }
 
   function seccionFeats(calc, calcB, pj, con) {
@@ -812,12 +876,14 @@
       (ft.nivelesExtra.length && calcB.personaje.arquetipo ? ', más los feats extra del arquetipo ' + esc(calcB.personaje.arquetipo.nombre) + ' (★, nivel ' + ft.nivelesExtra.join(', ') + ')' : '') +
       (ft.proximoSlot ? '; el próximo llega al nivel ' + ft.proximoSlot : '') + '.</p>' : '') +
       '<div class="slots">' + slots + '</div><div class="lista">' + (lista || '<p class="mute">Sin feats.</p>') + '</div>' +
+      bloqueClasePasiva(calcB.clase, con) +
       (activos.length ? '<p class="mute" style="font-size:13px">' + esc(activos.map(function (a) { return a.nombre; }).join(', ')) + (activos.length === 1 ? ' es un feat de ejecución activa: se reclasifica' : ' son feats de ejecución activa: se reclasifican') + ' como habilidad tipo conjuro.</p>' : '') +
       (con ? bloquePicker(calcB, pj) : '');
     var hayBorr = ft.lista.length > confirmados;
     var resumen = chip(ft.slotsUsados + ' de ' + ft.slotsTotales + ' slots', ft.slotsLibres ? 'acc' : 'soft') + (ft.slotsLibres ? chip(plural(ft.slotsLibres, 'libre', 'libres'), 'gold') : '') +
+      (calcB.clase ? chip(plural(calcB.clase.habilidades.filter(function (h) { return !esActiva(h); }).length, 'pasiva de clase', 'pasivas de clase'), 'soft') : '') + chipArquetipo(calcB.clase) +
       (hayBorr ? chip('Con borrador', 'gold') : '');
-    return desplegable('feats', 'Feats', resumen, cuerpo);
+    return desplegable('feats', 'Feats y habilidades pasivas', resumen, cuerpo);
   }
 
   // ---- habilidades de clase y arquetipo (6.5)
@@ -835,49 +901,43 @@
     return a.resumen + (a.reemplaza.length ? '\nSustituye: ' + a.reemplaza.map(function (r) { return r.nombre; }).join(', ') + '.' : '');
   }
 
-  /** Cuerpo de las habilidades de clase: pasivas en una lista corta, activas en tarjetas y las que vienen después. */
-  function cuerpoClase(cl, con) {
-    var pasivas = cl.habilidades.filter(function (h) { return h.ejecucion !== 'activo'; });
-    var activas = cl.habilidades.filter(function (h) { return h.ejecucion === 'activo'; });
-    var marca = function (h) { return chip('Nv. ' + h.nivel, 'soft') + (h.origen === 'arquetipo' ? chip('Arquetipo', 'gold') : ''); };
+  /** Marcas de una habilidad de clase: el nivel en que se gana y si viene del arquetipo. */
+  function marcaHabilidad(h) {
+    return chip('Nv. ' + h.nivel, 'soft') + (h.origen === 'arquetipo' ? chip('Arquetipo', 'gold') : '');
+  }
+
+  function esActiva(h) { return h.ejecucion === 'activo'; }
+
+  /** Chip del arquetipo con su resumen en el tooltip, o nada si el personaje no tiene. */
+  function chipArquetipo(cl) {
+    return cl && cl.arquetipo ? chipTip(cl.arquetipo.nombre, 'gold', tipArquetipo(cl.arquetipo)) : '';
+  }
+
+  /** Habilidades pasivas de la clase: van en la tarjeta de feats, en una lista corta con el nivel y el arquetipo. */
+  function bloqueClasePasiva(cl, con) {
+    if (!cl) return '';
+    var pasivas = cl.habilidades.filter(function (h) { return !esActiva(h); });
     var filas = pasivas.map(function (h) {
-      return fila({ nombre: h.nombre, tip: tipHabilidad(h), tipEnNombre: true, medio: marca(h), der: h.proximaMejora ? '<span class="mute">mejora en el nivel ' + h.proximaMejora + '</span>' : '' });
-    }).join('');
-    var tarjetas = activas.map(function (h) {
-      var logradas = h.mejoras.filter(function (m) { return m.alcanzada; }).map(function (m) { return '<small class="mute">Nivel ' + m.nivel + ': ' + esc(m.detalle) + '</small>'; }).join('');
-      return '<div class="tarjeta-activa"><div class="row-between" style="align-items:center"><b>' + esc(h.nombre) + '</b>' + chip('Activa', 'acc') + '</div>' +
-        '<small class="mute">' + esc(h.detalle) + '</small>' + logradas +
-        '<div class="acc-fila">' + chip('Nv. ' + h.nivel, '') + (h.origen === 'arquetipo' ? chip('Arquetipo', 'gold') : '') + (h.sustituye ? chip('Sustituye a ' + h.sustituye.nombre, '') : '') + (h.proximaMejora ? chip('Mejora en el nivel ' + h.proximaMejora, '') : '') + '</div></div>';
+      return fila({ nombre: h.nombre, tip: tipHabilidad(h), tipEnNombre: true, medio: marcaHabilidad(h), der: h.proximaMejora ? '<span class="mute">mejora en el nivel ' + h.proximaMejora + '</span>' : '' });
     }).join('');
     var arq = cl.arquetipo && con
       ? '<p class="sub"><b>Arquetipo: ' + esc(cl.arquetipo.nombre) + '</b> (' + esc(cl.arquetipo.fuente || 'homebrew') + '). ' + esc(cl.arquetipo.resumen) +
         (cl.arquetipo.reemplaza.length ? ' Sustituye: ' + esc(cl.arquetipo.reemplaza.map(function (r) { return r.nombre; }).join(', ')) + '.' : '') + '</p>'
       : '';
-    var proximas = cl.proximas.length
-      ? '<p class="mute" style="font-size:13px">Próximas: ' + esc(cl.proximas.slice(0, 4).map(function (h) { return h.nombre + ' (nivel ' + h.nivel + ')'; }).join(', ')) + (cl.proximas.length > 4 ? ' y ' + (cl.proximas.length - 4) + ' más' : '') + '.</p>'
+    var prox = cl.proximas.filter(function (h) { return !esActiva(h); });
+    var proximas = prox.length
+      ? '<p class="mute" style="font-size:13px">Próximas: ' + esc(prox.slice(0, 4).map(function (h) { return h.nombre + ' (nivel ' + h.nivel + ')'; }).join(', ')) + (prox.length > 4 ? ' y ' + (prox.length - 4) + ' más' : '') + '.</p>'
       : '';
-    return arq +
-      '<div class="bloque-feats"><span class="eyebrow">Pasivas</span>' + (filas ? '<ul class="ren-lista">' + filas + '</ul>' : '<p class="mute">Sin habilidades pasivas.</p>') + '</div>' +
-      (tarjetas ? '<div class="bloque-feats"><span class="eyebrow">Activas</span><div class="grid g300">' + tarjetas + '</div></div>' : '') + proximas;
+    return arq + '<div class="bloque-feats"><span class="eyebrow">Habilidades pasivas de ' + esc(cl.nombre) + '</span>' +
+      (filas ? '<ul class="ren-lista">' + filas + '</ul>' : '<p class="mute">Todavía sin habilidades pasivas de clase.</p>') + '</div>' + proximas;
   }
 
-  function chipsClase(cl) {
-    return chip(plural(cl.habilidades.length, 'habilidad', 'habilidades'), 'acc') +
-      (cl.arquetipo ? chipTip(cl.arquetipo.nombre, 'gold', tipArquetipo(cl.arquetipo)) : '');
-  }
-
-  /** Vista Jugar: tarjeta siempre visible. Sin archivo de la clase no se dibuja nada. */
-  function seccionClaseJuego(calcB) {
-    var cl = calcB.clase;
-    if (!cl) return '';
-    return '<section class="card bloque-juego"><div class="row-between" style="align-items:center"><h2>Habilidades de ' + esc(cl.nombre) + '</h2><span class="chips">' + chipsClase(cl) + '</span></div>' + cuerpoClase(cl, false) + '</section>';
-  }
-
-  /** Vista Construir: plegable, con el resumen del arquetipo. */
-  function seccionClase(calcB) {
-    var cl = calcB.clase;
-    if (!cl) return '';
-    return desplegable('clase', 'Habilidades de ' + cl.nombre, chipsClase(cl), cuerpoClase(cl, true));
+  /** Una habilidad activa de la clase, como tarjeta: es lo que ocupa el lugar de los conjuros en la tarjeta de Magia. */
+  function tarjetaActivaClase(h) {
+    var logradas = h.mejoras.filter(function (m) { return m.alcanzada; }).map(function (m) { return '<small class="mute">Nivel ' + m.nivel + ': ' + esc(m.detalle) + '</small>'; }).join('');
+    return '<div class="tarjeta-activa"><div class="row-between" style="align-items:center"><b>' + esc(h.nombre) + '</b>' + chip('Activa', 'acc') + '</div>' +
+      '<small class="mute">' + esc(h.detalle) + '</small>' + logradas +
+      '<div class="acc-fila">' + chip('Nv. ' + h.nivel, '') + (h.origen === 'arquetipo' ? chip('Arquetipo', 'gold') : '') + (h.sustituye ? chip('Sustituye a ' + h.sustituye.nombre, '') : '') + (h.proximaMejora ? chip('Mejora en el nivel ' + h.proximaMejora, '') : '') + '</div></div>';
   }
 
   // ---- selector de feats
@@ -971,7 +1031,9 @@
     if (e.tipo === 'sx') return 'SX +' + e.cantidad + ' a la reserva';
     if (e.tipo === 'sx-asignar') return 'SX ' + e.cantidad + ' de la reserva → ' + destinoSx(e.subsistema, e.rama);
     if (e.tipo === 'xp-subsistema') return 'SX +' + e.cantidad + ' → ' + destinoSx(e.subsistema, e.rama);
-    return e.recurso.toUpperCase() + ' · ' + e.dado + ' → ' + e.resultado;
+    if (e.tipo === 'zeo-tecnica') return 'Técnica Zeo · ' + e.linea + ' nivel ' + e.nivel + (e.tecnica ? ' · ' + e.tecnica : '');
+    if (e.tipo === 'tirada') return e.recurso.toUpperCase() + ' · ' + e.dado + ' → ' + e.resultado;
+    return e.tipo;
   }
 
   /** Todo lo que se elige o se tira en esta pantalla queda aquí, sin tocar el personaje, hasta copiarlo al registro. */
@@ -1116,8 +1178,15 @@
     var c = [];
     var zeo = Object.keys(s.zeo);
     if (zeo.length) c.push(['Zeo · ' + zeo.map(function (r) { return Core.rotulo(r) + ' +' + s.zeo[r]; }).join(' · '), '']);
-    var li = Object.keys(s.lineas);
-    if (li.length) c.push(['Líneas · ' + li.map(function (l) { return l + ' +' + s.lineas[l]; }).join(' · '), '']);
+    if (s.tecnicas.length) {
+      var porLinea = {};
+      s.tecnicas.forEach(function (t) { porLinea[t.linea] = (porLinea[t.linea] || 0) + 1; });
+      var lineasT = Object.keys(porLinea);
+      // Con pocas técnicas se detallan (línea, nivel y nombre); con muchas, un resumen por línea.
+      c.push(['Técnicas · ' + (s.tecnicas.length <= 4
+        ? s.tecnicas.map(function (t) { return t.linea + ' nv. ' + t.nivel + (t.nombre ? ' ' + t.nombre : ''); }).join(' · ')
+        : plural(s.tecnicas.length, 'técnica', 'técnicas') + ' en ' + plural(lineasT.length, 'línea', 'líneas') + ' (' + lineasT[0] + (lineasT.length > 1 ? ' a ' + lineasT[lineasT.length - 1] : '') + ')'), '']);
+    }
     if (s.mana) c.push(['Mana +' + s.mana, '']);
     if (s.sxGanado) c.push(['SX a la reserva +' + s.sxGanado, '']);
     if (s.sxAsignado.length) c.push(['SX asignado de la reserva · ' + s.sxAsignado.map(function (a) { return destinoSx(a.subsistema, a.rama) + ' ' + a.cantidad; }).join(' · '), '']);
@@ -1191,16 +1260,16 @@
     // Todo lo que no es la base, los atributos o el registro de sesiones va plegado.
     // En Jugar, feats, equipo y méritos/defectos son listas a la vista; en Construir se editan dentro de plegables.
     var plegables = '<section class="desp-grupo">' +
-      (con ? seccionBorrador(calcB, pj, borr) + seccionFeats(calc, calcB, pj, con) + seccionClase(calcB) : '') +
+      (con ? seccionBorrador(calcB, pj, borr) + seccionFeats(calc, calcB, pj, con) : '') +
       seccionLogros(calc, calcB, con) +
       (con ? seccionEquipo(calc, con) + seccionMeritos(calc, pj, con) + seccionTiradas(calcB, con) : '') +
-      seccionSx(calcB, con) + seccionZeo(calcB) + seccionMana(calc, calcB, pj, con) + seccionMagia(calcB) + '</section>';
+      seccionSx(calcB, con) + seccionZeo(calcB, con) + seccionMana(calc, calcB, pj, con) + (con ? seccionMagia(calcB) : '') + '</section>';
     return '<div class="page">' +
       '<header class="topbar"><div class="brand"><b>EverwhiteEmperor</b><span class="eyebrow">Visor de personajes</span></div>' +
       '<div class="tools">' + selectorModo() + (pj.datosDeEjemplo ? chip('Datos de ejemplo · personaje inventado', 'gold') : '') + sel +
       '<label class="btn file">Abrir otro personaje (.json)<input type="file" id="archivo" accept="application/json,.json"></label>' +
       '<button class="btn" id="tema" type="button" aria-pressed="' + tema + '">' + (tema ? 'Tema noche' : 'Tema hielo') + '</button></div></header>' +
-      '<div id="msg" role="status"></div>' + seccionAvisos(calcB) + seccionFicha(calc, calcB, pj, con) + avisoBorrador + (con ? '' : seccionFeatsJuego(calc, calcB) + seccionClaseJuego(calcB) + '<div class="bloques-juego">' + seccionEquipoJuego(calc) + seccionMeritosJuego(calc) + '</div>') + plegables + seccionSesiones(calc) +
+      '<div id="msg" role="status"></div>' + seccionAvisos(calcB) + seccionFicha(calc, calcB, pj, con) + avisoBorrador + (con ? '' : seccionFeatsJuego(calc, calcB) + seccionMagiaJuego(calcB) + '<div class="bloques-juego">' + seccionEquipoJuego(calc) + seccionMeritosJuego(calc) + '</div>') + plegables + seccionSesiones(calc) +
       '<footer><p class="pie">' + (pj.datosDeEjemplo ? 'Los nombres de raza, méritos, objetos y logros son inventados. ' : '') +
       'Las reglas de Pathfinder 1e se usan bajo la OGL 1.0a; el proyecto es gratuito y no tiene afiliación con Paizo. Los feats se importaron sin su texto: se leen en Archives of Nethys.</p></footer></div>';
   }
@@ -1446,6 +1515,13 @@
     } else if (a === 'desinscribir') {
       var slotD = boton.getAttribute('data-slot');
       agregar({ tipo: 'desinscribir', slot: slotD }, 'Se quitará la habilidad de ' + slotD + ' (borrador).');
+    } else if (a === 'zeo-tecnica') {
+      var ztL = document.getElementById('zt-l').value;
+      var ztN = Number(document.getElementById('zt-n').value);
+      var ztNom = (document.getElementById('zt-nombre').value || '').trim();
+      var ztE = { tipo: 'zeo-tecnica', linea: ztL, nivel: ztN };
+      if (ztNom) ztE.tecnica = ztNom;
+      agregar(ztE, 'Técnica de ' + ztL + ' (nivel ' + ztN + (ztNom ? ', ' + ztNom : '') + ') agregada al borrador.');
     } else if (a === 'mf-agregar') {
       var mfN = enteroDe('mf-n');
       if (!mfN) { toast('Escribe cuánta Mana force gana (+) o pierde (−): un entero distinto de 0.', true); return; }

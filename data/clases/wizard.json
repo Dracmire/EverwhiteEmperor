@@ -1,11 +1,187 @@
 {
-  "version": "0.9",
+  "version": "0.9.1",
   "id": "wizard",
   "nombre": "Wizard",
   "fuente": "pf1",
   "libro": "CRB",
   "dadoDeGolpe": "d6",
   "nota": "Habilidades del Wizard de Pathfinder 1e. Los nombres y los niveles son datos de reglas (SRD, OGL 1.0a); el texto de `detalle` son resúmenes propios, no el texto de Paizo. Aquí se documenta el casteo de la clase, pero en este sistema la magia pasa por Gates y Mana (4.2). Un feat extra de la clase NO suma slots (6.1); los del arquetipo sí (6.1). El arquetipo es homebrew.",
+  "conjuros": {
+    "atributo": "INT",
+    "retraso": 2,
+    "fuente": "Tabla de conjuros por día del Wizard (PF1 CRB). Cada fila es un nivel de clase y cada número, los conjuros por día desde el nivel 0 en adelante.",
+    "nota": "Progresión retardada [SUPUESTO]: el personaje de nivel N usa la fila N-2 de la tabla, así que el conjuro de nivel 4 llega en el nivel 9 (en PF1 llega en el 7). Los trucos (nivel 0) están desde el nivel 1. No incluye conjuros extra por INT ni por escuela.",
+    "porDia": [
+      [
+        3,
+        1
+      ],
+      [
+        4,
+        2
+      ],
+      [
+        4,
+        2,
+        1
+      ],
+      [
+        4,
+        3,
+        2
+      ],
+      [
+        4,
+        3,
+        2,
+        1
+      ],
+      [
+        4,
+        3,
+        3,
+        2
+      ],
+      [
+        4,
+        4,
+        3,
+        2,
+        1
+      ],
+      [
+        4,
+        4,
+        3,
+        3,
+        2
+      ],
+      [
+        4,
+        4,
+        4,
+        3,
+        2,
+        1
+      ],
+      [
+        4,
+        4,
+        4,
+        3,
+        3,
+        2
+      ],
+      [
+        4,
+        4,
+        4,
+        4,
+        3,
+        2,
+        1
+      ],
+      [
+        4,
+        4,
+        4,
+        4,
+        3,
+        3,
+        2
+      ],
+      [
+        4,
+        4,
+        4,
+        4,
+        4,
+        3,
+        2,
+        1
+      ],
+      [
+        4,
+        4,
+        4,
+        4,
+        4,
+        3,
+        3,
+        2
+      ],
+      [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        3,
+        2,
+        1
+      ],
+      [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        3,
+        3,
+        2
+      ],
+      [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        3,
+        2,
+        1
+      ],
+      [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        3,
+        3,
+        2
+      ],
+      [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        3,
+        3
+      ],
+      [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ]
+    ]
+  },
   "habilidades": [
     {
       "id": "weapon-and-armor-proficiency",
@@ -49,7 +225,10 @@
       "ejecucion": "pasivo",
       "detalle": "Elige una escuela de especialista o universalista, y la elección es permanente. El especialista tiene dos escuelas de oposición (preparar sus conjuros cuesta dos espacios), un espacio extra por nivel de conjuro y un poder de escuela desde el nivel 1. El universalista no tiene restricciones y recibe Hand of the Apprentice.",
       "mejoras": [
-        { "nivel": 8, "detalle": "Segundo poder de escuela; el universalista recibe Metamagic Mastery. (Según la escuela, otros poderes llegan en los niveles 6, 11, 12 o 20.)" }
+        {
+          "nivel": 8,
+          "detalle": "Segundo poder de escuela; el universalista recibe Metamagic Mastery. (Según la escuela, otros poderes llegan en los niveles 6, 11, 12 o 20.)"
+        }
       ]
     },
     {
@@ -66,9 +245,18 @@
       "ejecucion": "pasivo",
       "detalle": "Un feat de metamagia, de creación de objetos o Spell Mastery, cumpliendo sus requisitos. En este sistema se elige dentro de los slots normales.",
       "mejoras": [
-        { "nivel": 10, "detalle": "Otro feat de metamagia, de creación de objetos o Spell Mastery." },
-        { "nivel": 15, "detalle": "Otro feat de la misma lista." },
-        { "nivel": 20, "detalle": "Otro feat de la misma lista." }
+        {
+          "nivel": 10,
+          "detalle": "Otro feat de metamagia, de creación de objetos o Spell Mastery."
+        },
+        {
+          "nivel": 15,
+          "detalle": "Otro feat de la misma lista."
+        },
+        {
+          "nivel": 20,
+          "detalle": "Otro feat de la misma lista."
+        }
       ]
     }
   ],
@@ -78,8 +266,17 @@
       "nombre": "Polímata sin escuela",
       "fuente": "homebrew",
       "resumen": "El mago renuncia a Arcane School: sin poderes de escuela, sin espacio extra por nivel de conjuro y sin escuelas de oposición ni prohibidas. A cambio gana feats extra: uno en los niveles 1, 4, 8, 12, 16 y 20, que sí suman slots de feat. Los niveles son un supuesto de ejemplo hasta que el diseñador los ajuste.",
-      "reemplaza": ["arcane-school"],
-      "featsExtra": [1, 4, 8, 12, 16, 20],
+      "reemplaza": [
+        "arcane-school"
+      ],
+      "featsExtra": [
+        1,
+        4,
+        8,
+        12,
+        16,
+        20
+      ],
       "habilidades": [
         {
           "id": "polymath-training",
@@ -89,11 +286,26 @@
           "ejecucion": "pasivo",
           "detalle": "Sin escuela: puede preparar conjuros de cualquier escuela sin restricciones. Ganas un slot de feat extra en este nivel y en los niveles 4, 8, 12, 16 y 20.",
           "mejoras": [
-            { "nivel": 4, "detalle": "Segundo slot de feat extra." },
-            { "nivel": 8, "detalle": "Tercer slot de feat extra." },
-            { "nivel": 12, "detalle": "Cuarto slot de feat extra." },
-            { "nivel": 16, "detalle": "Quinto slot de feat extra." },
-            { "nivel": 20, "detalle": "Sexto slot de feat extra." }
+            {
+              "nivel": 4,
+              "detalle": "Segundo slot de feat extra."
+            },
+            {
+              "nivel": 8,
+              "detalle": "Tercer slot de feat extra."
+            },
+            {
+              "nivel": 12,
+              "detalle": "Cuarto slot de feat extra."
+            },
+            {
+              "nivel": 16,
+              "detalle": "Quinto slot de feat extra."
+            },
+            {
+              "nivel": 20,
+              "detalle": "Sexto slot de feat extra."
+            }
           ]
         }
       ]

@@ -161,24 +161,39 @@
     return { rama: nombre, sx: sx, nivel: nivel, fin: fin, falta: Math.max(0, fin - sx), segs: segs, limita: false };
   }
 
-  function detalleLinea(id, niveles, zeo) {
-    const p = zeo.pisos;
-    let abiertos = p.iniciales;
-    let siguiente = null;
-    p.desbloqueo.forEach(function (d) {
-      if (niveles >= d.nivelesAcumulados) abiertos = Math.max(abiertos, d.piso);
-      else if (!siguiente) siguiente = { piso: d.piso, nivelesAcumulados: d.nivelesAcumulados, falta: d.nivelesAcumulados - niveles };
-    });
-    const tope = p.desbloqueo.length ? p.desbloqueo[p.desbloqueo.length - 1].nivelesAcumulados : 1;
+  /**
+   * Opciones que muestra un nivel de una línea de técnicas (4.1.1). El nivel 1 muestra todas desde el inicio;
+   * en los demás, la primera técnica tomada en el nivel anterior abre `opcionesBase` y cada técnica extra del
+   * mismo nivel anterior suma `extraPorTecnica`, sin pasar del tope del nivel (`opcionesPorNivel`).
+   */
+  function opcionesVisibles(zeo, nivel, tomadasAnterior) {
+    const cfg = zeo.lineas;
+    const tope = cfg.opcionesPorNivel[nivel - 1];
+    if (nivel === 1) return tope;
+    if (!tomadasAnterior) return 0;
+    return Math.min(tope, cfg.opcionesBase + (tomadasAnterior - 1) * cfg.extraPorTecnica);
+  }
+
+  /** Una línea de técnicas: sus 5 niveles con lo tomado, las opciones visibles y las que aún se pueden tomar. */
+  function detalleLinea(id, tecnicas, zeo) {
+    const cfg = zeo.lineas;
+    const niveles = [];
+    for (let n = 1; n <= cfg.niveles; n++) {
+      const tomadas = tecnicas.filter(function (t) { return t.nivel === n; });
+      const anterior = n === 1 ? 0 : niveles[n - 2].tomadas.length;
+      const visibles = opcionesVisibles(zeo, n, anterior);
+      niveles.push({
+        nivel: n, tope: cfg.opcionesPorNivel[n - 1], visibles: visibles, tomadas: tomadas,
+        libres: Math.max(0, visibles - tomadas.length), abierto: visibles > 0,
+      });
+    }
+    const tomados = niveles.filter(function (x) { return x.tomadas.length; });
     return {
       id: id,
+      ocupada: tecnicas.length > 0,
+      total: tecnicas.length,
+      nivelMax: tomados.length ? tomados[tomados.length - 1].nivel : 0,
       niveles: niveles,
-      pisosAbiertos: Math.min(abiertos, p.max),
-      pisosMax: p.max,
-      siguiente: siguiente,
-      llenado: Math.min(1, niveles / tope),
-      tope: tope,
-      marcas: p.desbloqueo.map(function (d) { return d.nivelesAcumulados / tope; }),
     };
   }
 
@@ -287,6 +302,40 @@
       } : null,
       habilidades: todas.filter(function (h) { return h.nivel <= nivel; }),
       proximas: todas.filter(function (h) { return h.nivel > nivel; }),
+    };
+  }
+
+  /**
+   * Progresión de conjuros de una clase a un nivel (4.2). `detalle.conjuros.porDia` es la tabla de la clase y `retraso`
+   * los niveles que se atrasa: el personaje de nivel N usa la fila N - retraso. Los trucos (nivel 0) están desde el nivel 1.
+   * Devuelve null si la clase no lanza conjuros (su espacio en Magia lo ocupan las habilidades activas).
+   */
+  function progresionConjuros(detalle, nivel) {
+    const c = detalle && detalle.conjuros;
+    if (!c || !Array.isArray(c.porDia) || !c.porDia.length) return null;
+    const retraso = c.retraso || 0;
+    const tabla = c.porDia;
+    const maxNivelConjuro = Math.max.apply(null, tabla.map(function (f) { return f.length; })) - 1;
+    // Nivel de personaje en el que llega cada nivel de conjuro: la primera fila que lo trae, más el retraso.
+    const llegadas = [];
+    for (let l = 0; l <= maxNivelConjuro; l++) {
+      const fila = tabla.findIndex(function (f) { return f.length > l; });
+      if (fila >= 0) llegadas.push({ nivelConjuro: l, enNivel: l === 0 ? 1 : fila + 1 + retraso });
+    }
+    const idx = Math.min(tabla.length, Math.max(1, nivel - retraso)) - 1;
+    const fila = tabla[idx];
+    const porDia = [];
+    llegadas.forEach(function (ll) {
+      if (ll.enNivel > nivel) return;
+      // Antes de la primera fila (retraso) solo hay trucos, con la cantidad de la primera fila.
+      porDia.push({ nivelConjuro: ll.nivelConjuro, cantidad: fila[ll.nivelConjuro] === undefined ? 0 : fila[ll.nivelConjuro], enNivel: ll.enNivel });
+    });
+    const maxActual = porDia.length ? porDia[porDia.length - 1].nivelConjuro : -1;
+    const sig = llegadas.find(function (ll) { return ll.enNivel > nivel; }) || null;
+    return {
+      atributo: c.atributo || null, retraso: retraso, nota: c.nota || '',
+      nivelMax: maxActual, porDia: porDia, llegadas: llegadas,
+      proximo: sig ? { nivelConjuro: sig.nivelConjuro, enNivel: sig.enNivel } : null,
     };
   }
 
@@ -483,7 +532,7 @@
         nivelAntes: nivelAntes,
         filasXp: [],
         zeo: {},
-        lineas: {},
+        tecnicas: [],
         mana: 0,
         sxGanado: 0,
         sxAsignado: [],
@@ -572,12 +621,26 @@
             s.sxAsignado.push({ subsistema: e.subsistema, rama: e.subsistema === 'zeo' ? e.rama : null, cantidad: e.cantidad });
             return;
           }
-          case 'zeo-linea': {
+          case 'zeo-linea':
+            throw new Error('zeo-linea ya no existe: ahora se registra cada técnica con zeo-tecnica (línea, nivel y nombre opcional)');
+          case 'zeo-tecnica': {
+            const total = zeo.lineas.total;
             const m = /^L(\d{2})$/.exec(e.linea || '');
-            if (!m || Number(m[1]) < 1 || Number(m[1]) > zeo.lineasBase) throw new Error('la línea "' + e.linea + '" no existe (L01 a L' + String(zeo.lineasBase).padStart(2, '0') + ')');
-            if (!esEntero(e.niveles) || e.niveles < 1) throw new Error('niveles debe ser un entero positivo');
-            estado.lineas[e.linea] = (estado.lineas[e.linea] || 0) + e.niveles;
-            s.lineas[e.linea] = (s.lineas[e.linea] || 0) + e.niveles;
+            if (!m || Number(m[1]) < 1 || Number(m[1]) > total) throw new Error('la línea "' + e.linea + '" no existe (L01 a L' + String(total).padStart(2, '0') + ')');
+            if (!esEntero(e.nivel) || e.nivel < 1 || e.nivel > zeo.lineas.niveles) throw new Error('nivel de técnica: un entero de 1 a ' + zeo.lineas.niveles);
+            if (e.tecnica !== undefined && (typeof e.tecnica !== 'string' || !e.tecnica.trim())) throw new Error('tecnica debe ser un texto no vacío (o no ponerse)');
+            const nombre = e.tecnica ? e.tecnica.trim() : null;
+            const previas = estado.lineas[e.linea] || [];
+            if (nombre && previas.some(function (t) { return t.nombre && t.nombre.toLowerCase() === nombre.toLowerCase(); })) {
+              throw new Error('la técnica "' + nombre + '" ya está tomada en ' + e.linea);
+            }
+            const delNivel = previas.filter(function (t) { return t.nivel === e.nivel; }).length;
+            const delAnterior = previas.filter(function (t) { return t.nivel === e.nivel - 1; }).length;
+            const visibles = opcionesVisibles(zeo, e.nivel, delAnterior);
+            if (!visibles) throw new Error(e.linea + ': el nivel ' + e.nivel + ' aún no está abierto (falta una técnica de nivel ' + (e.nivel - 1) + ')');
+            if (delNivel + 1 > visibles) throw new Error(e.linea + ': el nivel ' + e.nivel + ' solo muestra ' + visibles + ' opciones y ya están tomadas');
+            estado.lineas[e.linea] = previas.concat([{ linea: e.linea, nivel: e.nivel, nombre: nombre, sesion: s.id }]);
+            s.tecnicas.push({ linea: e.linea, nivel: e.nivel, nombre: nombre });
             return;
           }
           case 'feat': {
@@ -892,10 +955,12 @@
     const minimo = Math.min.apply(null, ramas.map(function (r) { return r.nivel; }));
     ramas.forEach(function (r) { r.limita = r.nivel === minimo; });
     const lineas = [];
-    for (let n = 1; n <= zeo.lineasBase; n++) {
+    for (let n = 1; n <= zeo.lineas.total; n++) {
       const id = 'L' + String(n).padStart(2, '0');
-      lineas.push(detalleLinea(id, estado.lineas[id] || 0, zeo));
+      lineas.push(detalleLinea(id, estado.lineas[id] || [], zeo));
     }
+    const lineasOcupadas = lineas.filter(function (l) { return l.ocupada; }).length;
+    const primeraLibre = lineas.find(function (l) { return !l.ocupada; });
 
     const equipados = Object.keys(estado.equipado).map(function (k) { return estado.equipado[k]; });
     function vista(eq) {
@@ -945,10 +1010,15 @@
         alineamiento: alineamiento, arquetipo: arquetipoDef ? { id: arquetipoDef.id, nombre: arquetipoDef.nombre } : null,
       },
       clase: habilidadesDeClase(detalleClase, arquetipoDef ? arquetipoDef.id : null, nivelInfo.nivel),
+      conjuros: progresionConjuros(detalleClase, nivelInfo.nivel),
       xp: estado.xp,
       nivel: nivelInfo,
       sesiones: sesionesOut,
-      zeo: { unidad: zeo.unidad, lectura: zeo.lectura, nivel: minimo, ramas: ramas, lineas: lineas, niveles: umbralesZeo(zeo) },
+      zeo: {
+        unidad: zeo.unidad, lectura: zeo.lectura, nivel: minimo, ramas: ramas, lineas: lineas, niveles: umbralesZeo(zeo),
+        slots: { total: lineas.length, ocupados: lineasOcupadas, libres: lineas.length - lineasOcupadas, primeraLibre: primeraLibre ? primeraLibre.id : null },
+        reglas: { opcionesPorNivel: zeo.lineas.opcionesPorNivel.slice(), opcionesBase: zeo.lineas.opcionesBase, extraPorTecnica: zeo.lineas.extraPorTecnica },
+      },
       mana: resultadoMana(),
       sx: resultadoSx(),
       recursos: recursos,
@@ -1160,10 +1230,12 @@
     nivelDeSx: nivelDeSx,
     umbralesZeo: umbralesZeo,
     detalleLinea: detalleLinea,
+    opcionesVisibles: opcionesVisibles,
     slotsDeFeats: slotsDeFeats,
     slotsTotalesEn: slotsTotalesEn,
     proximoSlot: proximoSlot,
     habilidadesDeClase: habilidadesDeClase,
+    progresionConjuros: progresionConjuros,
     rutaClase: rutaClase,
     etiquetaAlineamiento: etiquetaAlineamiento,
     ATRIBUTOS_BASE: ATRIBUTOS_BASE,

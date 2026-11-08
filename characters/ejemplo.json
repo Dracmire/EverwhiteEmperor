@@ -201,44 +201,54 @@
           "cantidad": 10
         },
         {
-          "tipo": "zeo-linea",
+          "tipo": "zeo-tecnica",
           "linea": "L01",
-          "niveles": 8
+          "nivel": 1
         },
         {
-          "tipo": "zeo-linea",
+          "tipo": "zeo-tecnica",
+          "linea": "L01",
+          "nivel": 1
+        },
+        {
+          "tipo": "zeo-tecnica",
+          "linea": "L01",
+          "nivel": 2
+        },
+        {
+          "tipo": "zeo-tecnica",
           "linea": "L02",
-          "niveles": 5
+          "nivel": 1
         },
         {
-          "tipo": "zeo-linea",
+          "tipo": "zeo-tecnica",
           "linea": "L03",
-          "niveles": 4
+          "nivel": 1
         },
         {
-          "tipo": "zeo-linea",
+          "tipo": "zeo-tecnica",
           "linea": "L04",
-          "niveles": 3
+          "nivel": 1
         },
         {
-          "tipo": "zeo-linea",
+          "tipo": "zeo-tecnica",
           "linea": "L05",
-          "niveles": 2
+          "nivel": 1
         },
         {
-          "tipo": "zeo-linea",
+          "tipo": "zeo-tecnica",
           "linea": "L06",
-          "niveles": 2
+          "nivel": 1
         },
         {
-          "tipo": "zeo-linea",
+          "tipo": "zeo-tecnica",
           "linea": "L07",
-          "niveles": 1
+          "nivel": 1
         },
         {
-          "tipo": "zeo-linea",
+          "tipo": "zeo-tecnica",
           "linea": "L08",
-          "niveles": 1
+          "nivel": 1
         },
         {
           "tipo": "xp-subsistema",
@@ -284,9 +294,9 @@
           "cantidad": 4
         },
         {
-          "tipo": "zeo-linea",
+          "tipo": "zeo-tecnica",
           "linea": "L01",
-          "niveles": 2
+          "nivel": 2
         },
         {
           "tipo": "xp-subsistema",
@@ -345,14 +355,9 @@
           "cantidad": 4
         },
         {
-          "tipo": "zeo-linea",
-          "linea": "L01",
-          "niveles": 1
-        },
-        {
-          "tipo": "zeo-linea",
+          "tipo": "zeo-tecnica",
           "linea": "L02",
-          "niveles": 1
+          "nivel": 2
         },
         {
           "tipo": "achievement",
@@ -489,14 +494,9 @@
           "cantidad": 3
         },
         {
-          "tipo": "zeo-linea",
+          "tipo": "zeo-tecnica",
           "linea": "L03",
-          "niveles": 2
-        },
-        {
-          "tipo": "zeo-linea",
-          "linea": "L01",
-          "niveles": 1
+          "nivel": 2
         },
         {
           "tipo": "xp-subsistema",

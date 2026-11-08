@@ -226,6 +226,20 @@ button[data-tip] { cursor: pointer; }
 .pips { display: flex; gap: 4px; }
 .pips i { flex: 1 1 0; height: 10px; border-radius: 3px; border: 1px solid var(--acc); background: var(--acc); }
 .pips i.cerrado { background: transparent; border: 1px dashed var(--mute); }
+/* Líneas de técnicas de Zeo (4.1.1): un slot con 5 niveles; cada nivel muestra sus opciones */
+.zlinea { background: var(--surf2); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.zlinea.libre { background: transparent; border: 1px dashed var(--mute); }
+.zlinea .id { font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 700; }
+.znivel { display: grid; grid-template-columns: 42px auto 1fr; align-items: center; gap: 4px 10px; font-size: 13px; }
+.znivel.cerrado { color: var(--mute); }
+.znv { font-weight: 700; }
+.zpips { display: flex; gap: 4px; }
+.zpips i { width: 14px; height: 14px; border-radius: 4px; border: 1px solid var(--acc); background: var(--acc); }
+.zpips i.visible { background: transparent; }
+.zpips i.oculto { border: 1px dashed var(--mute); background: transparent; }
+.znom { grid-column: 2 / -1; font-size: 12px; color: var(--mute); }
+.caja.proximo { background: transparent; border: 1px dashed var(--mute); }
+.caja.proximo b { color: var(--mute); }
 .mini { position: relative; height: 6px; border-radius: 999px; background: var(--track); }
 .mini > i { display: block; height: 100%; border-radius: 999px; background: var(--acc); }
 .mini > s { position: absolute; top: -2px; width: 2px; height: 10px; background: var(--mute); text-decoration: none; }

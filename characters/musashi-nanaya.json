@@ -134,6 +134,56 @@
           "id": "spring-attack"
         },
         {
+          "tipo": "zeo-tecnica",
+          "linea": "L01",
+          "nivel": 1
+        },
+        {
+          "tipo": "zeo-tecnica",
+          "linea": "L02",
+          "nivel": 1
+        },
+        {
+          "tipo": "zeo-tecnica",
+          "linea": "L03",
+          "nivel": 1
+        },
+        {
+          "tipo": "zeo-tecnica",
+          "linea": "L04",
+          "nivel": 1
+        },
+        {
+          "tipo": "zeo-tecnica",
+          "linea": "L05",
+          "nivel": 1
+        },
+        {
+          "tipo": "zeo-tecnica",
+          "linea": "L06",
+          "nivel": 1
+        },
+        {
+          "tipo": "zeo-tecnica",
+          "linea": "L07",
+          "nivel": 1
+        },
+        {
+          "tipo": "zeo-tecnica",
+          "linea": "L08",
+          "nivel": 1
+        },
+        {
+          "tipo": "zeo-tecnica",
+          "linea": "L09",
+          "nivel": 1
+        },
+        {
+          "tipo": "zeo-tecnica",
+          "linea": "L10",
+          "nivel": 1
+        },
+        {
           "tipo": "objeto",
           "id": "bracales-de-armadura-1",
           "accion": "equipar"

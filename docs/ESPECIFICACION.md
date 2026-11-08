@@ -1,4 +1,4 @@
-# EverwhiteEmperor — Especificación del tracker de personajes (v0.9.0)
+# EverwhiteEmperor — Especificación del tracker de personajes (v0.9.1)
 
 Estado: borrador del 2026-11-08. La v0.9.0 implementa las **habilidades de clase por nivel y los arquetipos** (6.5) solo para **Monk y Wizard**, añade el **alineamiento** (1.3) y dos personajes de muestra: **Musashi Nanaya** (monje asesino ninja, L.N) y **Herb'Azzio** (mago sin escuela, N.B), con feats extra a cambio de la escuela (6.1). La v0.8.6 **desplaza C en 2** (C = bono + 2) para bajar el punto de recuperación cero, **define la recuperación de MP** con la misma fórmula (bono de SPR, ×10) y deja solo **dos descansos**: corto de 2 h y largo de 8 h con **+50 %** (1.2). La v0.8.5 reemplaza la recuperación de 5e por **la fórmula del diseñador en HP por hora** (1.2): C es el bono de CON, el descanso cura R × horas y desaparecen los Dados de Golpe. La v0.8.4 hace que **el SX sea una reserva común de Zeo y Mana** (4.1.3), agrega al visor los **formularios para Gates y Mana force**, y registra como propuesta la **fórmula de recuperación por hora** del diseñador (1.2, pendiente de aclarar qué es C). La v0.8.3 cambia la recuperación a la regla de D&D 5e (la más generosa: descanso largo con todo el HP y Dados de Golpe en el corto, 1.2), difiere la recuperación de MP, e **implementa Mana por Gates** (4.1.2): Mana force, Gates con tag y función, grafo de slots (Gates, nodos y círculos), tabla de compatibilidad entre tags e inscripción de habilidades; todas las cifras de Mana son **[SUPUESTO]** de ejemplo. La v0.8.2 añade la fatiga, los estados DOWN, K.O. y Deadly y los descansos a la vista Jugar (1.2), convierte Equipo y Méritos y defectos en listas de una línea con tooltip, deja las tiradas de HP y MP solo en Construir, y fija que los Gates conectan por defecto salvo incompatibilidad (4.1.2). La v0.8.1 ajusta la vista Jugar (feats como lista, derivados en mini tarjetas) y documenta el diseño nuevo de Mana por Gates, Magia con conjuros y habilidades de clase por nivel, que todavía **no está implementado**. La v0.8 cambió los atributos (STR, DEX, PER, INT, WIS y CHA; CON, SPR y MND se derivan), añade HP y MP con tiradas de dados, y rehace la ficha del visor: retrato, base y atributos arriba, todo lo demás plegado y el registro de sesiones abajo, con achievements asignables desde una lista con scroll (ver "Cambios respecto a versiones anteriores" al final).
 
@@ -325,17 +325,16 @@ No hay otro sistema conocido que tenga a la vez 1000 XP fijos por nivel y una ta
 - **[SUPUESTO]** La tabla se lee igual que la XP principal: cada número es el sx acumulado donde *termina* el nivel (nivel 1: 0 a 10; nivel 2: 10 a 20; nivel 3: 20 a 30; nivel 4: 30 a 50; nivel 5: 50 en adelante, con 80 como cierre). La alternativa es leerla como el costo de cada nivel (acumulado 10, 30, 60, 110, 190). El archivo `data/zeo.json` tiene el campo `lectura` para cambiar de una a otra. **[PENDIENTE confirmar]**
 - **[SUPUESTO]** El nivel máximo de cada rama es 5.
 
-**Líneas de técnica:**
+**Líneas de técnica (v0.9.1) [DECIDIDO la estructura; el catálogo de técnicas es PENDIENTE]:**
 
-- Un personaje parte con **10 líneas de técnica base**.
-- Cada línea es una **cadena de técnicas** con requisitos enlazados. Cada **piso** de la cadena tiene varias técnicas.
-- Los pisos 1 a 3 suelen estar disponibles desde el inicio (los requisitos suelen estar restringidos hasta el nivel 3).
-- Al acumular **10 niveles** en una misma línea se desbloquea el piso 4; con **20 niveles**, el piso 5.
-- **[SUPUESTO]** El texto original quedó cortado ("lv 5 a"); se interpreta como que el piso 5 también se desbloquea con 20 niveles acumulados.
-- **[SUPUESTO]** Los "niveles acumulados" de una línea son los niveles ganados en las técnicas de esa línea. En el registro se anotan con la entrada `zeo-linea` (sección 8).
-- **[PENDIENTE]** A qué rama pertenece cada línea o técnica, cómo se ganan los niveles de técnica, qué actividades dan sx, y la lista de las 10 líneas base.
+- Un personaje tiene **10 líneas de técnica, y cada línea es un slot**. Cada línea tiene **5 niveles** y cada nivel muestra **varias técnicas**: 3 en los niveles 1 y 2, **hasta 5 en los niveles 3 y 4** y 3 de nuevo en el 5 (`opcionesPorNivel: [3, 3, 5, 5, 3]`).
+- **Las opciones del nivel siguiente se abren al tomar técnicas.** El nivel 1 muestra todas sus opciones desde el inicio. La **primera** técnica tomada en un nivel abre **3 opciones** en el siguiente; cada técnica **extra del mismo nivel** suma **1 opción más** (la segunda abre 4, la tercera 5), con el tope de ese nivel. Ejemplo: con 3 técnicas de nivel 2, el nivel 3 muestra 5 opciones; el nivel 5 nunca pasa de 3 y los niveles 2 y 1 tampoco.
+- Una técnica de nivel N solo se puede tomar si la línea ya tiene una de nivel N−1, y no más de las opciones visibles de ese nivel. Una línea está **ocupada** cuando tiene al menos una técnica; las libres se pueden ocupar con una técnica de nivel 1.
+- **Vista:** se dibujan las líneas ocupadas y **una sola** libre (con un aviso de cuántas libres quedan). Un personaje sin ninguna línea ocupada ve un único slot vacío.
+- **[SUPUESTO]** Esta estructura **reemplaza a los pisos por niveles acumulados** de la v0.5 (piso 4 con 10 niveles y piso 5 con 20), que dependían de un texto cortado.
+- **[PENDIENTE]** El catálogo de técnicas (nombre, línea, nivel, rama y efecto): hoy una técnica se registra por línea y nivel con un **nombre opcional** (`zeo-tecnica`, sección 8). También falta decidir si el nivel de una técnica debe estar limitado por el nivel zeo (hoy no), a qué rama pertenece cada línea o técnica, cómo se ganan las técnicas, qué actividades dan sx y cuándo puede haber más de 10 líneas.
 
-Valores de `data/zeo.json`:
+Valores de `data/zeo.json` (versión 0.6):
 
 ```json
 {
@@ -348,14 +347,12 @@ Valores de `data/zeo.json`:
     { "nivel": 1, "sx": 10 }, { "nivel": 2, "sx": 20 }, { "nivel": 3, "sx": 30 },
     { "nivel": 4, "sx": 50 }, { "nivel": 5, "sx": 80 }
   ],
-  "lineasBase": 10,
-  "pisos": {
-    "iniciales": 3,
-    "max": 5,
-    "desbloqueo": [
-      { "piso": 4, "nivelesAcumulados": 10 },
-      { "piso": 5, "nivelesAcumulados": 20 }
-    ]
+  "lineas": {
+    "total": 10,
+    "niveles": 5,
+    "opcionesPorNivel": [3, 3, 5, 5, 3],
+    "opcionesBase": 3,
+    "extraPorTecnica": 1
   }
 }
 ```
@@ -450,7 +447,9 @@ Entradas del registro (los nodos y los círculos **no** son entradas: el motor l
 - Los conjuros están **limitados por el tipo de lanzador** (mago, hechicero…). Cada clase lanzadora anota su **lista de conjuros** y sus **escuelas permitidas y prohibidas**; esa anotación vive en el archivo de la clase (6.5).
 - **[SUPUESTO]** Los slots donde se memorizan los conjuros salen de los Gates, nodos y círculos (4.1.2), con niveles 1 a 3. Desde la v0.8.3 el motor ya los calcula y permite inscribir en ellos las habilidades tipo conjuro; **Magia** muestra en qué slots está inscrita cada una.
 - Las habilidades tipo conjuro de los feats activos (6.2) conviven con los conjuros del catálogo.
-- **[PENDIENTE]** Qué sistema y qué edición (Pathfinder 1e, D&D 3.5 o D&D 5e) y de dónde se importa el catálogo; qué se copia (nombre, escuela y nivel, o también el texto: la OGL y los avisos de copyright siguen pendientes, `docs/FUENTES.md`); qué pasa con los niveles 4 a 9; cómo se resuelven las escuelas de especialista y las líneas de sangre.
+- **Progresión de conjuros por clase (v0.9.1) [SUPUESTO el retraso; la tabla es de Pathfinder 1e].** La tabla de conjuros por día vive en el archivo de la clase (`conjuros.porDia`, una fila por nivel de clase y un número por nivel de conjuro desde el 0; `retraso` es cuánto se atrasa). **El mago usa una progresión retardada de 2 niveles**: un personaje de nivel N usa la fila N−2, así que el conjuro de nivel 4 llega en el **nivel 9** (en Pathfinder, en el 7), el 1.º en el 3, el 2.º en el 5 y así hasta el 9.º en el 19; los trucos están desde el nivel 1. La tabla no incluye conjuros extra por INT ni por escuela. El motor devuelve `conjuros` (`nivelMax`, `porDia`, `llegadas`, `proximo`) y es `null` para una clase sin tabla.
+- **Las habilidades activas ocupan el lugar de los conjuros (v0.9.1) [DECIDIDO].** La sección **Magia** muestra la progresión de conjuros (si la clase lanza) y, debajo, las **habilidades activas**: las de la clase (`ejecucion: activo`) y las que salen de un feat de ejecución activa (6.2). El monje no lanza conjuros, así que su espacio de Magia lo ocupan solo sus habilidades activas (Flurry of Blows, Ki Pool, High Jump, Vanish…). Las habilidades pasivas de la clase van con los feats (6.5, 10.5).
+- **[PENDIENTE]** Si las habilidades activas de clase también se inscriben en los slots de Mana (hoy solo se inscriben las que salen de feats). Qué sistema y qué edición (Pathfinder 1e, D&D 3.5 o D&D 5e) y de dónde se importa el catálogo; qué se copia (nombre, escuela y nivel, o también el texto: la OGL y los avisos de copyright siguen pendientes, `docs/FUENTES.md`); qué pasa con los niveles 4 a 9; cómo se resuelven las escuelas de especialista y las líneas de sangre.
 
 ### 4.3 Racial
 
@@ -605,11 +604,11 @@ La mayoría de los feats de Pathfinder que representan una **ejecución activa**
 Como el sistema es Pathfinder, cada clase da **habilidades por nivel**. El visor las muestra con un **tooltip** que trae el detalle de cada una. **[DECIDIDO]** No hacen falta las 37 clases: **solo Monk y Wizard** tienen archivo; las demás (el Fighter del ejemplo, por ejemplo) funcionan igual, sin sección de habilidades.
 
 - **Un archivo por clase, cargado solo si se usa.** Cada clase vive en `data/clases/<id>.json`. El visor pide únicamente el de las clases de los personajes cargados (y el de un personaje abierto desde un archivo); el archivo único incluye solo las de los personajes que empaqueta. `data/classes.json` sigue siendo el índice de las 37 clases con su ataque base. El motor recibe los archivos en `ctx.clasesDetalle` (`{ id: archivo }`).
-- **Formato.** `{ id, nombre, fuente, libro, dadoDeGolpe, nota, habilidades: [...], arquetipos: [...] }`. Una habilidad: `id`, `nombre`, `nivel`, `ejecucion` (`pasivo` o `activo`), `detalle` (el texto del tooltip) y `mejoras` opcional (`[{ nivel, detalle }]`: lo que cambia en niveles posteriores; Flurry of Blows, Fast Movement, etc.). El motor devuelve en `resultado.clase` las habilidades alcanzadas, las próximas y, de cada una, qué mejoras ya llegaron y cuál es la siguiente.
+- **Formato.** `{ id, nombre, fuente, libro, dadoDeGolpe, nota, conjuros?, habilidades: [...], arquetipos: [...] }`. `conjuros` es opcional y solo lo tienen las clases que lanzan (`{ atributo, retraso, nota, porDia }`, 4.2). Una habilidad: `id`, `nombre`, `nivel`, `ejecucion` (`pasivo` o `activo`), `detalle` (el texto del tooltip) y `mejoras` opcional (`[{ nivel, detalle }]`: lo que cambia en niveles posteriores; Flurry of Blows, Fast Movement, etc.). El motor devuelve en `resultado.clase` las habilidades alcanzadas, las próximas y, de cada una, qué mejoras ya llegaron y cuál es la siguiente.
 - **Arquetipos.** `{ id, nombre, fuente, resumen, reemplaza: [ids de la clase], habilidades: [...], featsExtra: [niveles] }`. El arquetipo **quita** las habilidades de `reemplaza` y **suma** las suyas; cada habilidad propia puede decir a cuál `sustituye`. Se elige en el personaje (`arquetipo`, 1.3). Los de Monk y Wizard son **homebrew**: Pathfinder 1e no trae un arquetipo de monje asesino ni un mago que cambie su escuela por feats, así que se armaron con las piezas de la clase.
-- **Lista y tooltip.** Se ve igual que los feats: las habilidades **pasivas** en una lista corta (nombre, nivel, marca «Arquetipo», próxima mejora) y las **activas** en tarjetas. El tooltip suma lo que sustituye, las mejoras logradas y la próxima. En Jugar es una tarjeta; en Construir, un plegable con el resumen del arquetipo. Los slots de feat extra del arquetipo se marcan con ★ en Construir.
+- **Lista y tooltip (v0.9.1).** Las habilidades **pasivas** van **junto con los feats**, en la misma tarjeta (Jugar) o plegable (Construir): una lista corta con nombre, nivel, marca «Arquetipo» y próxima mejora, y su tooltip (lo que sustituye, las mejoras logradas y la próxima). Las **activas van en Magia**, donde irían los conjuros (4.2), como tarjetas. El chip del arquetipo y su resumen están en la tarjeta de feats. Los slots de feat extra del arquetipo se marcan con ★ en Construir. Ya no existe la tarjeta aparte «Habilidades de <clase>».
 - **[DECIDIDO] Texto propio.** El nombre y el nivel de cada habilidad son datos de reglas (SRD, OGL 1.0a, verificados en Archives of Nethys); el `detalle` son **resúmenes propios en español**, no el texto de Paizo. Quien quiera el texto completo lo lee en Archives of Nethys.
-- **[SUPUESTO]** Las habilidades de clase que dan feats (Bonus Feat del monje y del mago) **no suman slots**: se eligen en los slots normales. Las que son un feat concreto (Stunning Fist, Scribe Scroll) son **habilidades de clase y no ocupan slot**. En este sistema el casteo del Wizard (Spells, Spellbook, Cantrips) se documenta pero la magia pasa por Gates y Mana (4.2).
+- **[SUPUESTO]** Las habilidades de clase que dan feats (Bonus Feat del monje y del mago) **no suman slots**: se eligen en los slots normales. Las que son un feat concreto (Stunning Fist, Scribe Scroll) son **habilidades de clase y no ocupan slot**. En este sistema el casteo del Wizard (Spells, Spellbook, Cantrips) se documenta, pero la magia pasa por Gates y Mana (4.2); el Wizard tiene además su progresión de conjuros retardada (4.2). Cantrips y Arcane Bond son activas y van en Magia.
 - **Sombra asesina (Monk) [homebrew, cifras SUPUESTO].** Monje asesino al estilo ninja, **sin engaño ni disfraz**: toda su ventaja sale del sigilo, el flanqueo y los venenos. Sustituye cinco habilidades: Stunning Fist → **Sneak Attack** (+1d6 de precisión, +1d6 más en los niveles 5, 9, 13 y 17), Maneuver Training → **Silent Step** (3), Purity of Body → **Poison Mastery** (5), Wholeness of Body → **Vanish** (7, 2 ki: invisibilidad corta) y Quivering Palm → **Death Attack** (15). Su lista de bonus feats no incluye Improved Feint (usa Engañar).
 - **Polímata sin escuela (Wizard) [homebrew, cifras SUPUESTO].** Sustituye **Arcane School** (poderes de escuela, espacio extra por nivel de conjuro y escuelas de oposición) por **Polymath Training**: sin restricciones de escuela y **un slot de feat extra en los niveles 1, 4, 8, 12, 16 y 20** (6.1). Un mago de nivel 7 tiene 6 slots en vez de 4.
 - **[PENDIENTE]** Ajustar las cifras de los dos arquetipos (cuántos feats vale una escuela, el daño de Sneak Attack, el costo de Vanish) y si un arquetipo puede sustituirse al subir de nivel o es fijo.
@@ -664,7 +663,7 @@ Es el núcleo del tracker. Es la **fuente de verdad**: el estado del personaje (
         { "tipo": "xp", "tags": [ { "id": "close-quarter-combat", "grado": "heroico" }, { "id": "stealth", "grado": "cumple", "pct": 0.30 } ], "nivelContenido": 9, "cantidad": 1, "nota": "" },
         { "tipo": "xp-subsistema", "subsistema": "zeo", "rama": "heaven", "cantidad": 10 },
         { "tipo": "xp-subsistema", "subsistema": "mana", "cantidad": 250 },
-        { "tipo": "zeo-linea", "linea": "L01", "niveles": 2 },
+        { "tipo": "zeo-tecnica", "linea": "L01", "nivel": 2, "tecnica": "Nombre opcional" },
         { "tipo": "feat", "id": "power-attack" },
         { "tipo": "feat", "id": "weapon-focus", "eleccion": "espada larga" },
         { "tipo": "achievement", "id": "slug", "fate": 1 },
@@ -690,7 +689,7 @@ Reglas:
    - `xp-subsistema` solo para zeo y mana; para zeo exige `rama` (`heaven`, `void` o `earth`);
    - los seis atributos base existen y no se escriben CON, SPR ni MND (1.1);
    - `tirada`: `recurso` hp o mp, `dado` con la forma `dN`, `resultado` entre 1 y N, un nivel ya alcanzado y sin tirada previa del mismo recurso;
-   - `zeo-linea` solo con líneas existentes; los pisos 4 y 5 de una línea solo se usan con 10 y 20 niveles acumulados en ella;
+   - `zeo-tecnica` solo con una línea existente (L01 a L10) y un nivel de 1 a 5; un nivel de más de 1 exige una técnica del nivel anterior en esa línea, no se pueden tomar más técnicas que las opciones visibles de ese nivel (4.1.1) y un nombre no se repite dentro de la línea. `zeo-linea` (v0.5) ya no existe y da un error que remite a `zeo-tecnica`;
    - `pct` de un grado `cumple` entre 0.25 y 0.30;
    - un racial solo lo puede tener un personaje de la raza a la que pertenece;
    - los feats cumplen sus requisitos estructurados en el momento de ganarlos (atributos, ataque base, nivel y feats previos) y no superan los slots del nivel (1 en el nivel 1, uno más cada 2 niveles);
@@ -724,7 +723,7 @@ data/
   traits.json               # traits (feats mayores): colecciones de ventajas o feats
   items.json
   achievements.json
-  zeo.json                  # tabla de sx, ramas, pisos y desbloqueos (ya creado)
+  zeo.json                  # tabla de sx, ramas y reglas de las líneas de técnicas (ya creado)
   vitalidad.json            # fatiga, estados DOWN/K.O./Deadly y descansos (v0.8.2, ya creado)
   mana.json                 # Mana force inicial, SX por Gate, fuentes de MF y funciones (v0.8.3, cifras de ejemplo)
   mana-tags.json            # tags de Gates y sus pares incompatibles (v0.8.3, 13 tags de ejemplo; a futuro ~200)
@@ -779,7 +778,7 @@ Se buscó un visor existente. Ninguno cumple a la vez: estático, licencia compa
 Hay una maqueta visual con datos de ejemplo, construida sobre `characters/ejemplo.json` (un personaje de nivel 7 con 6 sesiones). Todos los números de la maqueta salen de la fórmula de la sección 3 y de `data/zeo.json`; los nombres de razas, méritos, objetos y logros son inventados. Muestra:
 
 - nivel, progreso al siguiente nivel y XP;
-- zeo con sus tres ramas, el nivel zeo como el menor de las tres y las 10 líneas de técnica con sus pisos;
+- zeo con sus tres ramas, el nivel zeo como el menor de las tres y las 10 líneas de técnica, cada una con 5 niveles de varias técnicas;
 - mana (su tabla está pendiente) y fate;
 - méritos y defectos con el saldo de puntos, y el racial con el descuento de perfil de ejemplo;
 - equipo por extremidad, con cargas, y la armadura aparte;
@@ -807,7 +806,7 @@ El visor de solo lectura ya existe en `viewer/` y se construye dentro del repo (
 2. **Los atributos**: los seis base en una fila (tres por fila en pantallas angostas) y, debajo, los tres derivados como **mini tarjetas en una sola línea** (valor, modificador y «→ HP» o «→ MP»; la fórmula, en el tooltip). HP y MP citan su atributo: «dado + CON 13 (+1)».
 3. **El registro de sesiones** (los «logs»), al final.
 
-Entre la ficha y el registro hay secciones plegables, todas cerradas la primera vez (el estado se recuerda en el navegador). **En Construir**: Borrador, **Feats**, **Achievements y fate**, **Equipo**, **Méritos y defectos** (un solo desplegable desde la v0.8.2), **Tiradas de HP y MP**, **SX**, **Zeo**, **Mana** y **Magia**. **En Jugar**: Feats, Equipo y Méritos y defectos son tarjetas siempre visibles (abajo), y quedan plegadas solo **Achievements y fate**, **SX**, **Zeo**, **Mana** y **Magia**. Cada cabecera muestra la cifra que importa (slots, fate, saldo de puntos, HP y MP máximos, nivel zeo, mana…).
+Entre la ficha y el registro hay secciones plegables, todas cerradas la primera vez (el estado se recuerda en el navegador). **En Construir**: Borrador, **Feats y habilidades pasivas**, **Achievements y fate**, **Equipo**, **Méritos y defectos** (un solo desplegable desde la v0.8.2), **Tiradas de HP y MP**, **SX**, **Zeo**, **Mana** y **Magia**. **En Jugar**: **Feats y habilidades pasivas**, **Magia**, Equipo y Méritos y defectos son tarjetas siempre visibles (abajo), y quedan plegadas solo **Achievements y fate**, **SX**, **Zeo** y **Mana**. Cada cabecera muestra la cifra que importa (slots, fate, saldo de puntos, HP y MP máximos, nivel zeo, mana…).
 
 **Listas de una línea con tooltip (v0.8.2) [DECIDIDO].** Los feats pasivos, el equipo y los méritos y defectos comparten el mismo formato en Jugar: una fila de aproximadamente una línea por elemento, con el nombre subrayado con puntos y **el detalle en un tooltip**. El tooltip sale con el cursor, con el foco del teclado (Tab) y con un toque, se cierra con Esc o al tocar fuera, y se recoloca para no salirse de la pantalla. Equipo muestra la armadura y cada extremidad con el tipo de objeto y las cargas (`9/10`); Méritos y defectos muestra primero los méritos y después los defectos en una misma lista, con su valor a la derecha (`−3` un mérito que cuesta, `+2` un defecto que aporta), y debajo los traits. El saldo (`Iniciales 4 + defectos 3 − méritos 5 = 2`) es un chip con el desglose en el tooltip. Las dos tarjetas van una junto a la otra en pantalla ancha.
 
@@ -815,7 +814,7 @@ Entre la ficha y el registro hay secciones plegables, todas cerradas la primera 
 
 **Vistas.** Un botón en la cabecera (la última elegida se recuerda):
 
-- **Jugar**: la versión reducida para la mesa. Misma ficha, y HP suma **fatiga, estados y marcas de umbral**, y la ficha suma **Recuperación** (v0.8.6): las tasas de HP y de MP por hora y los descansos corto (2 h) y largo (8 h, +50 %), que recuperan HP y MP a la vez (1.2). **Habilidades de clase (v0.9)** es otra tarjeta siempre visible, con las pasivas en lista y las activas en tarjetas (6.5). **Feats no es un desplegable**: es una tarjeta siempre visible con los feats **pasivos como una lista de una línea con tooltip** (nombre y enlace) y **una tarjeta solo para cada habilidad activa** (los feats activos reclasificados, 6.2); debajo van Equipo y Méritos y defectos con el mismo formato. Sin selectores, sin borrador y **sin las tiradas de HP y MP**.
+- **Jugar**: la versión reducida para la mesa. Misma ficha, y HP suma **fatiga, estados y marcas de umbral**, y la ficha suma **Recuperación** (v0.8.6): las tasas de HP y de MP por hora y los descansos corto (2 h) y largo (8 h, +50 %), que recuperan HP y MP a la vez (1.2). **Feats y habilidades pasivas (v0.9.1)** no es un desplegable: es una tarjeta siempre visible con los feats **pasivos como una lista de una línea con tooltip** (nombre y enlace) y, en la misma tarjeta, las **habilidades pasivas de la clase** con su nivel y su arquetipo (6.5). **Magia** es la tarjeta siguiente, siempre visible: la progresión de conjuros de la clase (si lanza) y **una tarjeta por cada habilidad activa**, de la clase o de un feat activo reclasificado (4.2, 6.2); debajo van Equipo y Méritos y defectos con el mismo formato. Sin selectores, sin borrador y **sin las tiradas de HP y MP**.
 - **Construir**: agrega los selectores, el borrador, las explicaciones de las reglas y la construcción de HP y MP (**Tiradas de HP y MP**, que ya no aparece en Jugar). No muestra fatiga ni recuperación: son de la mesa.
 
 **Selector de feats** (dentro de Feats, vista Construir):
@@ -830,6 +829,8 @@ Entre la ficha y el registro hay secciones plegables, todas cerradas la primera 
 **Borrador.** Todo lo que se elige, asigna o tira va a un borrador: una sesión provisional que el motor calcula como si ya estuviera en el personaje (slots, requisitos, máximo por nivel, fate). Cada acción muestra un aviso flotante con un acceso directo a «Ver borrador». Se puede quitar cualquier entrada; si una entrada deja de ser válida se marca con su error. El borrador se copia como JSON y se pega en la lista `entradas` de una sesión de `characters/<id>.json`. **El visor no escribe en los personajes**: el borrador solo vive en el navegador (`localStorage`), por personaje.
 
 **Añadir y quitar en Construir [PROPUESTA].** El registro es de solo añadir, así que *añadir* es crear una entrada en el borrador (hoy: feats, achievements y tiradas; a futuro: objetos, méritos, Gates y MF con el mismo patrón de tarjeta) y *quitar* es sacarla del borrador, o añadir la entrada compensatoria (`perder`, `desequipar`). **El JSON sigue siendo la fuente de verdad** y es el camino para corregir el historial; las tarjetas son una comodidad para armar entradas válidas sin escribir JSON a mano. Mientras no se elija cómo guardar (10.6), el paso del borrador al archivo sigue siendo copiar y pegar.
+
+**Zeo (v0.9.1).** Las líneas de técnicas se dibujan como slots: cada línea muestra sus 5 niveles con casillas llenas (técnicas tomadas), huecas (opciones visibles sin tomar) y punteadas (todavía ocultas), y el nombre de las técnicas que lo tienen. Se dibujan las ocupadas y **una sola libre**. En Construir hay un formulario para registrar una técnica (línea, nivel y nombre opcional).
 
 **SX, Zeo, Mana y Magia** se pliegan igual que el resto. **SX** (v0.8.4) es la reserva común de Zeo y Mana, con sus formularios para registrar y asignar SX en Construir (4.1.3). **Mana** (v0.8.3) tiene el grafo circular de Gates, la lista de slots, el requisito del siguiente Gate y la contabilidad de MF (4.1.2); en Construir, cada slot permite elegir una habilidad e **Inscribir** o **Quitar**, y además los formularios de **Mana force** y de **Construir un Gate** (v0.8.4). Todo esto va al borrador como entradas `sx`, `sx-asignar`, `xp-subsistema`, `mana-fuerza`, `gate`, `inscribir` y `desinscribir`; las sesiones del registro muestran como chips los Gates, la Mana force, el SX de la reserva y las inscripciones. **Magia** lista las habilidades tipo conjuro (los feats activos convertidos, 6.2) con los slots donde están inscritas y con el costo en mana marcado como pendiente.
 
@@ -926,7 +927,10 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 | 80 o más | 5 |
 
 - Nivel zeo: heaven 34 sx (nivel 4), void 22 sx (nivel 3), earth 15 sx (nivel 2) → nivel zeo 2, el menor de los tres.
-- Pisos de una línea: con 9 niveles acumulados el piso 4 sigue cerrado; con 10 se abre; con 19 el piso 5 sigue cerrado; con 20 se abre.
+- Opciones visibles de una línea (v0.9.1): el nivel 1 muestra 3 desde el inicio; sin técnica en el nivel anterior, 0; con 1, 2 y 3 técnicas de nivel 2 el nivel 3 muestra 3, 4 y 5; el nivel 4 sube igual hasta 5; los niveles 2 y 5 se quedan en 3.
+- Una línea con técnicas 1×2, 2×3 y 3×1: opciones visibles por nivel `[3, 3, 5, 3, 0]`, libres `[1, 0, 4, 3, 0]`. Una línea vacía: `[3, 0, 0, 0, 0]`.
+- `zeo-tecnica`: línea L11, nivel 6, nivel sin abrir, nombre vacío y el uso de `zeo-linea` dan error; una cuarta técnica de nivel 2 con solo 3 opciones da error; un nombre repetido en la línea da error.
+- Slots de línea: sin técnicas, 0 de 10 ocupados y primera libre L01; con L01 y L03, 2 ocupados y primera libre L02.
 
 ### Atributos derivados, HP y MP
 
@@ -953,7 +957,8 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 - Arquetipo que no existe: error con los que hay (`sombra-asesina`). Arquetipo de una clase sin archivo: error. Clase sin archivo (Fighter): sin `clase` y sin errores.
 - Alineamiento `L.N` → Legal neutral, `n.b` → Neutral bueno, `N.N` → Neutral puro, `C.M` → Caótico malo; `LN`, `L.G`, `X.N`, vacío y `null` no valen. Un valor mal escrito en el personaje es un error.
 - `data/clases/*.json`: ids únicos, niveles de 1 a 20, ejecución `pasivo` o `activo`, mejoras ordenadas y posteriores a la habilidad, `reemplaza` y `sustituye` apuntan a habilidades que existen, `featsExtra` ordenados. Niveles del Monk: Evasion 2, Ki Pool 4, Wholeness of Body 7, Abundant Step 12, Quivering Palm 15, Perfect Self 20.
-- Personajes de muestra: Musashi Nanaya (nivel 7, HP 53, MP 27, 4 de 4 slots, Dodge, Stealthy, Mobility y Spring Attack) y Herb'Azzio (nivel 7, HP 28, MP 46, 6 de 6 slots); ninguno tiene errores ni avisos.
+- Personajes de muestra: Musashi Nanaya (nivel 7, HP 53, MP 27, 4 de 4 slots, Dodge, Stealthy, Mobility y Spring Attack, **las 10 líneas de Zeo ocupadas con una técnica de nivel 1**) y Herb'Azzio (nivel 7, HP 28, MP 46, 6 de 6 slots, **ninguna línea de Zeo ocupada**); ninguno tiene errores ni avisos.
+- Progresión de conjuros del mago (v0.9.1): nivel máximo de conjuro 0 en los niveles 1 y 2, 1 en el 3, 2 en el 5, 3 en el 7 y 8, **4 en el 9**; los conjuros por día son la fila N−2 de la tabla (nivel 9: 4, 4, 3, 2, 1; nivel 20: 4, 4, 4, 4, 4, 4, 4, 3, 3, 2); las llegadas son los niveles 1, 3, 5, 7, 9, 11, 13, 15, 17 y 19. Herb'Azzio (nivel 7): trucos 4, nivel 1 3, nivel 2 2, nivel 3 1, y el nivel 4 llega en el 9. El monje y una clase sin archivo no tienen progresión (`null`).
 
 ### Recuperación por hora (v0.8.6)
 
@@ -1028,7 +1033,7 @@ Otros casos de Mana (con los datos de ejemplo):
 
 1. Valor de un dungeon o una misión completos (tabla de criatura según su nivel, o escala por tamaño). La base 40 está decidida como valor inicial; calibrarla con las sesiones por nivel es **[DIFERIDO]**.
 2. **[DIFERIDO]** Tags de combate: la lista completa (hoy `close-quarter-combat` y `combat-healer`), qué valor entre 25% y 30% usar por defecto en `cumple`, y el multiplicador propio de cada tag.
-3. Zeo: confirmar la lectura de la tabla de sx, a qué rama pertenece cada línea o técnica, cómo se ganan los niveles de técnica y los sx, y la lista de las 10 líneas base. Mana: su tabla de XP.
+3. Zeo: confirmar la lectura de la tabla de sx, **el catálogo de técnicas (v0.9.1: hoy solo se registra la línea, el nivel y un nombre opcional)**, a qué rama pertenece cada línea o técnica, cómo se ganan las técnicas y los sx, si el nivel de una técnica depende del nivel zeo y si puede haber más de 10 líneas. Mana: su tabla de XP.
 4. Mana: ya no es un atributo que se gasta sino la serie de Gates (4.1.2), implementada en v0.8.3 con cifras de ejemplo. Quedan los valores reales (ver 23).
 5. Fate y achievement: cuánto fate da cada achievement, tope y en qué se gasta.
 6. Méritos y defectos: significado exacto de los puntos iniciales, costo de los méritos comunes, valor de cada defecto, tope de defectos y si la rareza cambia el costo.
@@ -1049,18 +1054,27 @@ Otros casos de Mana (con los datos de ejemplo):
 21. HP y MP: dado de cada clase para HP y para MP, relación del MP con el mana ganado, si MND tiene efecto y si el HP y el MP actuales deben entrar al registro (1.1). La recuperación de MP ya está definida (1.2).
 22. Achievements: sustituir las 12 entradas de ejemplo por la lista real, con su fate y sus condiciones.
 23. Mana por Gates (4.1.2): sustituir los 13 tags de ejemplo por la tabla real (~200 tags y sus pares incompatibles), fijar el SX por Gate y si se gasta, el valor de cada fuente de MF, qué hace cada función, si el GM puede forzar o romper una conexión, si lo inscrito debe coincidir con el tag del slot, y qué hace falta para borrar o corregir un Gate ya construido. Ya está decidido que nodos y círculos son aditivos y que los Gates conectan por defecto salvo incompatibilidad.
-24. Magia: sistema y edición del catálogo de conjuros, origen de los datos y escuelas por clase (4.2).
+24. Magia: sistema y edición del catálogo de conjuros, origen de los datos y escuelas por clase (4.2). **Progresión del mago (v0.9.1):** confirmar el retraso de 2 niveles, los conjuros extra por INT y por escuela, y cómo se relacionan los conjuros por día con los slots de Mana; decidir si las habilidades activas de clase se inscriben en los slots.
 25. Habilidades de clase (6.5): **ya están Monk y Wizard**; faltan las demás clases si se llegan a usar, y ajustar las cifras de los dos arquetipos homebrew. El detalle son resúmenes propios (el texto completo de Paizo sigue pendiente de la regla de la sección 15 de la OGL).
 26. Fatiga y recuperación (1.2): a qué se aplica el penalizador de fatiga, qué significan DOWN, K.O. y Deadly en la mesa, y si el largo recarga las cargas del equipo.
 27. Recuperación de MP (1.2): confirmar que «×10» se aplica a la tasa final y no a otro término (con MP 20 un descanso corto de 2 h ya lo llena), y la relación del MP con el mana de 4.1.2.
 28. Recuperación por hora (1.2): confirmar el desplazamiento en las dos ecuaciones, el redondeo hacia abajo, el recorte del bono y de R a 0, que el +50 % del largo aplique también al MP, y qué hacer con la rareza de que desde H ≈ 540 subir el bono enlentece la recuperación.
 29. SX compartido (4.1.3): si el SX se gasta de verdad al construir Gates o subir ramas, si se puede reasignar, y si la reserva tiene tope.
 30. Alineamiento (1.3): hoy es solo una etiqueta; falta decidir cómo entra el Alignment Spiral (Score, Rank, personas) al ledger.
-31. Personajes de muestra (Musashi Nanaya y Herb'Azzio): los atributos, tiradas de HP y MP, feats y equipo son un **borrador** a revisar; la raza «Humano» y los objetos nuevos son marcadores de ejemplo.
+31. Personajes de muestra (Musashi Nanaya y Herb'Azzio): los atributos, tiradas de HP y MP, feats y equipo son un **borrador** a revisar; la raza «Humano» y los objetos nuevos son marcadores de ejemplo. Las técnicas de Zeo de Musashi no tienen nombre hasta que exista el catálogo.
+32. **El diseñador entregará las técnicas de Zeo y el equipo**; con eso se corrigen conjuros, clases y Zeo (v0.9.1 deja la estructura lista).
 
 ---
 
 ## Cambios respecto a versiones anteriores
+
+### v0.9.1
+
+- **Zeo: 10 líneas de técnicas como slots [DECIDIDO la estructura]:** cada línea tiene 5 niveles y varias técnicas por nivel (3, 3, 5, 5 y 3 opciones como máximo). La primera técnica de un nivel abre 3 opciones en el siguiente y cada técnica extra del mismo nivel suma 1, hasta el tope. Reemplaza a los pisos por niveles acumulados. `data/zeo.json` pasa a la versión 0.6 (`lineas`); la entrada `zeo-linea` se sustituye por `zeo-tecnica` (línea, nivel y nombre opcional). El resultado trae `zeo.slots` y `zeo.reglas`.
+- **Zeo en el visor:** las líneas ocupadas y una sola libre; formulario para registrar una técnica en Construir. Musashi tiene las 10 líneas ocupadas y Herb'Azzio ninguna (se ve un solo slot vacío). El personaje de ejemplo se migró a técnicas.
+- **Progresión de conjuros [SUPUESTO el retraso]:** `data/clases/wizard.json` trae la tabla de conjuros por día del Wizard de Pathfinder 1e y un retraso de 2 niveles, así que el conjuro de nivel 4 llega en el nivel 9. El resultado trae `conjuros`; el monje no tiene.
+- **Magia y habilidades de clase:** las **habilidades activas** de la clase pasan a la sección Magia, donde irían los conjuros, junto con la progresión de conjuros y los feats activos reclasificados. Las **pasivas** de la clase van **junto con los feats** en una sola tarjeta. En Jugar, Magia es ahora una tarjeta siempre visible. Desaparece la tarjeta aparte «Habilidades de <clase>».
+- 80 pruebas del motor (antes 76).
 
 ### v0.9.0
 

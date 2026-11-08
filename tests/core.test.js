@@ -132,29 +132,92 @@ test('nivel de una rama de zeo (costo por nivel)', () => {
   casos.forEach(([sx, nivel]) => assert.equal(Core.nivelDeSx(sx, zeo), nivel, sx + ' sx'));
 });
 
-test('pisos de una línea se abren con 10 y 20 niveles acumulados', () => {
+test('opciones visibles: 3 al abrir un nivel, +1 por técnica extra del nivel anterior y tope por nivel', () => {
   const zeo = contexto().zeo;
-  const pisos = (n) => Core.detalleLinea('L01', n, zeo).pisosAbiertos;
-  assert.equal(pisos(0), 3);
-  assert.equal(pisos(9), 3);
-  assert.equal(pisos(10), 4);
-  assert.equal(pisos(19), 4);
-  assert.equal(pisos(20), 5);
+  assert.deepEqual(zeo.lineas.opcionesPorNivel, [3, 3, 5, 5, 3]);
+  const ver = (nivel, previas) => Core.opcionesVisibles(zeo, nivel, previas);
+  // El nivel 1 muestra todo desde el inicio.
+  assert.equal(ver(1, 0), 3);
+  // Sin técnica en el nivel anterior no hay nada abierto.
+  assert.deepEqual([2, 3, 4, 5].map((n) => ver(n, 0)), [0, 0, 0, 0]);
+  // Una técnica abre 3; la segunda suma 1 y la tercera 1 más (tope del nivel).
+  assert.deepEqual([1, 2, 3].map((k) => ver(3, k)), [3, 4, 5]);
+  assert.deepEqual([1, 2, 3, 4, 5].map((k) => ver(4, k)), [3, 4, 5, 5, 5]);
+  // Los niveles 2 y 5 se quedan en 3 aunque se tomen más.
+  assert.deepEqual([1, 2, 3].map((k) => ver(2, k)), [3, 3, 3]);
+  assert.deepEqual([1, 2, 3].map((k) => ver(5, k)), [3, 3, 3]);
 });
 
-test('zeo exige rama; zeo-linea exige una línea existente; solo zeo y mana', () => {
+test('una línea de técnicas: 5 niveles, lo tomado y lo que queda por tomar', () => {
+  const zeo = contexto().zeo;
+  const t = (nivel, nombre) => ({ nivel, nombre: nombre || null });
+  const vacia = Core.detalleLinea('L01', [], zeo);
+  assert.equal(vacia.ocupada, false);
+  assert.equal(vacia.nivelMax, 0);
+  assert.deepEqual(vacia.niveles.map((n) => n.visibles), [3, 0, 0, 0, 0]);
+  const l = Core.detalleLinea('L02', [t(1), t(1), t(2), t(2), t(2), t(3)], zeo);
+  assert.equal(l.ocupada, true);
+  assert.equal(l.total, 6);
+  assert.equal(l.nivelMax, 3);
+  assert.deepEqual(l.niveles.map((n) => n.tomadas.length), [2, 3, 1, 0, 0]);
+  // L1: 3 visibles y 2 tomadas; L2: 3 por el tope aunque se tomaron 2 en L1; L3: 3 + 2 extras = 5; L4: 3 con 1 técnica en L3.
+  assert.deepEqual(l.niveles.map((n) => n.visibles), [3, 3, 5, 3, 0]);
+  assert.deepEqual(l.niveles.map((n) => n.libres), [1, 0, 4, 3, 0]);
+  assert.deepEqual(l.niveles.map((n) => n.abierto), [true, true, true, true, false]);
+});
+
+test('zeo exige rama; zeo-tecnica exige línea, nivel y cadena; zeo-linea ya no existe', () => {
   const ctx = contexto();
   const r = Core.calcularPersonaje(ctx, pj([[
     { tipo: 'xp-subsistema', subsistema: 'zeo', cantidad: 5 },
     { tipo: 'xp-subsistema', subsistema: 'zeo', rama: 'sombra', cantidad: 5 },
     { tipo: 'xp-subsistema', subsistema: 'racial', cantidad: 5 },
-    { tipo: 'zeo-linea', linea: 'L11', niveles: 1 },
+    { tipo: 'zeo-tecnica', linea: 'L11', nivel: 1 },
+    { tipo: 'zeo-tecnica', linea: 'L10', nivel: 6 },
     { tipo: 'zeo-linea', linea: 'L10', niveles: 1 },
+    { tipo: 'zeo-tecnica', linea: 'L10', nivel: 2 },
+    { tipo: 'zeo-tecnica', linea: 'L10', nivel: 1, tecnica: '  ' },
+    { tipo: 'zeo-tecnica', linea: 'L10', nivel: 1, tecnica: 'Garra de escarcha' },
     { tipo: 'xp-subsistema', subsistema: 'zeo', rama: 'void', cantidad: 5 },
   ]]));
-  assert.equal(errores(r).length, 4);
+  assert.equal(errores(r).length, 8);
   assert.equal(r.zeo.ramas.find((x) => x.rama === 'void').sx, 5);
-  assert.equal(r.zeo.lineas[9].niveles, 1);
+  assert.equal(r.zeo.lineas[9].total, 1);
+  assert.equal(r.zeo.lineas[9].niveles[0].tomadas[0].nombre, 'Garra de escarcha');
+});
+
+test('zeo-tecnica: cadena de niveles, tope de opciones y nombres repetidos', () => {
+  const ctx = contexto();
+  const tec = (nivel, tecnica) => (tecnica ? { tipo: 'zeo-tecnica', linea: 'L03', nivel, tecnica } : { tipo: 'zeo-tecnica', linea: 'L03', nivel });
+  // L1 ×1 abre 3 opciones en L2; tomar 4 en L2 no cabe; una segunda L1 no agranda L2 (tope 3).
+  const r = Core.calcularPersonaje(ctx, pj([[
+    tec(1, 'A'), tec(1, 'B'),
+    tec(2), tec(2), tec(2), tec(2),
+    tec(1, 'a'),
+  ]]));
+  const msgs = errores(r);
+  assert.equal(msgs.length, 2);
+  assert.match(msgs[0], /L03: el nivel 2 solo muestra 3 opciones y ya están tomadas/);
+  assert.match(msgs[1], /la técnica "a" ya está tomada en L03/);
+  const l = r.zeo.lineas[2];
+  assert.deepEqual(l.niveles.map((n) => n.tomadas.length), [2, 3, 0, 0, 0]);
+  // Cada técnica extra del nivel 2 suma una opción al 3, hasta 5.
+  const r2 = Core.calcularPersonaje(ctx, pj([[tec(1), tec(2), tec(2), tec(2), tec(3), tec(3), tec(3), tec(3), tec(3), tec(3)]]));
+  assert.equal(errores(r2).length, 1);
+  assert.deepEqual(r2.zeo.lineas[2].niveles.map((n) => n.tomadas.length), [1, 3, 5, 0, 0]);
+  assert.equal(r2.zeo.lineas[2].niveles[2].visibles, 5);
+});
+
+test('zeo: los slots de línea (ocupados y libres) y la primera libre', () => {
+  const ctx = contexto();
+  const vacio = Core.calcularPersonaje(ctx, pj([[xp(0)]]));
+  assert.deepEqual(vacio.zeo.slots, { total: 10, ocupados: 0, libres: 10, primeraLibre: 'L01' });
+  const algo = Core.calcularPersonaje(ctx, pj([[
+    { tipo: 'zeo-tecnica', linea: 'L01', nivel: 1 },
+    { tipo: 'zeo-tecnica', linea: 'L03', nivel: 1 },
+  ]]));
+  assert.deepEqual(algo.zeo.slots, { total: 10, ocupados: 2, libres: 8, primeraLibre: 'L02' });
+  assert.deepEqual(algo.zeo.reglas, { opcionesPorNivel: [3, 3, 5, 5, 3], opcionesBase: 3, extraPorTecnica: 1 });
 });
 
 // ------------------------------------------------------- feats y achievements
@@ -926,8 +989,9 @@ test('personaje de ejemplo: todo lo derivado coincide y no hay avisos', () => {
   assert.deepEqual(r.zeo.ramas.map((x) => [x.rama, x.sx, x.nivel]), [['heaven', 34, 4], ['void', 22, 3], ['earth', 15, 2]]);
   assert.equal(r.zeo.nivel, 2);
   assert.deepEqual(r.zeo.ramas.filter((x) => x.limita).map((x) => x.rama), ['earth']);
-  assert.deepEqual(r.zeo.lineas.map((l) => l.niveles), [12, 6, 6, 3, 2, 2, 1, 1, 0, 0]);
-  assert.equal(r.zeo.lineas[0].pisosAbiertos, 4);
+  assert.deepEqual(r.zeo.lineas.map((l) => l.total), [4, 2, 2, 1, 1, 1, 1, 1, 0, 0]);
+  assert.deepEqual(r.zeo.lineas[0].niveles.map((n) => n.tomadas.length), [2, 2, 0, 0, 0]);
+  assert.deepEqual(r.zeo.slots, { total: 10, ocupados: 8, libres: 2, primeraLibre: 'L09' });
   assert.equal(r.mana.total, 120);
   assert.equal(r.fate, 1);
   assert.deepEqual([r.feats.slotsUsados, r.feats.slotsTotales, r.feats.proximoSlot], [4, 4, 9]);
@@ -1118,6 +1182,33 @@ test('personajes de muestra: Musashi Nanaya (monje) y Herb\'Azzio (mago)', () =>
   assert.equal(he.feats.slotsTotales, 6);
   assert.equal(he.feats.slotsUsados, 6);
   assert.ok(!he.clase.habilidades.some((h) => h.id === 'arcane-school'));
+  // Zeo: Musashi tiene ocupadas las 10 líneas iniciales; Herb'Azzio ninguna.
+  assert.deepEqual(mu.zeo.slots, { total: 10, ocupados: 10, libres: 0, primeraLibre: null });
+  assert.ok(mu.zeo.lineas.every((l) => l.ocupada && l.niveles[0].tomadas.length === 1));
+  assert.deepEqual(he.zeo.slots, { total: 10, ocupados: 0, libres: 10, primeraLibre: 'L01' });
+  // Magia: el monje no lanza conjuros; el mago de nivel 7 llega al 3.º con la progresión retardada.
+  assert.equal(mu.conjuros, null);
+  assert.equal(he.conjuros.nivelMax, 3);
+  assert.deepEqual(he.conjuros.porDia.map((x) => x.cantidad), [4, 3, 2, 1]);
+  assert.deepEqual(he.conjuros.proximo, { nivelConjuro: 4, enNivel: 9 });
   // El ejemplo (Fighter) no tiene archivo de clase: sigue funcionando sin detalle.
   assert.equal(Core.calcularPersonaje(c, ejemplo()).clase, null);
+});
+
+test('progresión de conjuros retardada: el mago llega al conjuro de nivel 4 en el nivel 9', () => {
+  const mago = leer('data/clases/wizard.json');
+  assert.equal(mago.conjuros.retraso, 2);
+  assert.equal(mago.conjuros.porDia.length, 20);
+  const en = (n) => Core.progresionConjuros(mago, n);
+  // Solo trucos al inicio; el 1.º en el nivel 3, el 2.º en el 5, el 3.º en el 7, el 4.º en el 9.
+  assert.deepEqual([1, 2, 3, 5, 7, 8, 9].map((n) => en(n).nivelMax), [0, 0, 1, 2, 3, 3, 4]);
+  assert.deepEqual(en(1).llegadas.map((x) => x.enNivel), [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]);
+  // Cantidades: la fila N-2 de la tabla del Wizard de PF1.
+  assert.deepEqual(en(9).porDia.map((x) => x.cantidad), [4, 4, 3, 2, 1]);
+  assert.deepEqual(en(20).porDia.map((x) => x.cantidad), [4, 4, 4, 4, 4, 4, 4, 3, 3, 2]);
+  assert.deepEqual(en(8).proximo, { nivelConjuro: 4, enNivel: 9 });
+  assert.equal(en(19).proximo, null);
+  // Sin tabla (monje, sin archivo) no hay progresión.
+  assert.equal(Core.progresionConjuros(leer('data/clases/monk.json'), 7), null);
+  assert.equal(Core.progresionConjuros(null, 7), null);
 });
