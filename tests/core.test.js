@@ -609,77 +609,108 @@ test('sin máximo de HP no hay fatiga ni estado', () => {
   assert.deepEqual([e.fatiga, e.estado], [0, null]);
 });
 
-test('recuperación por hora: V se despeja de H y C, y R = C + V/10 (casos del diseñador)', () => {
+test('recuperación por hora: V se despeja de H y C (bono + 2) y R = C + V/10, con la comprobación de H', () => {
   const cfg = contexto().vitalidad;
-  const casos = [[5, 0], [5, 10], [500, 0], [500, 10], [56, 1], [56, 3], [1, 0]]; // [H, C]
-  // Fórmula directa: V = (H − 5 − 5C) / (C + 5).
-  casos.forEach(([h, c]) => {
-    const r = Core.recuperacionPorHora(h, c, cfg);
-    const v = (h - 5 - 5 * c) / (c + 5);
-    assert.ok(Math.abs(r.v - v) < 1e-9, 'V para H ' + h + ' y C ' + c);
-    assert.ok(Math.abs(r.bruta - (c + v / 10)) < 1e-9, 'R para H ' + h + ' y C ' + c);
-    // Volver a meter V en la ecuación original devuelve H.
+  const casos = [[5, 0], [5, 10], [500, 0], [500, 10], [56, 1], [56, 3], [1, 0], [20, 0]]; // [H, bono]
+  casos.forEach(([h, bono]) => {
+    const r = Core.recuperacionPorHora(h, bono, cfg, 'hp');
+    const c = bono + 2; // el desplazamiento: C = bono + 2
+    const v = (h - 5 - 5 * c) / (5 + c);
+    assert.equal(r.c, c);
+    assert.ok(Math.abs(r.v - v) < 1e-9, 'V para H ' + h + ' y bono ' + bono);
+    assert.ok(Math.abs(r.bruta - (c + v / 10)) < 1e-9, 'R para H ' + h + ' y bono ' + bono);
+    // Volver a meter V en H = (2 + C + 3)·V + 5 + 5·C devuelve H.
     assert.ok(Math.abs((2 + c + 3) * r.v + 5 + 5 * c - h) < 1e-9, 'comprobación de H ' + h);
   });
-  assert.deepEqual([5, 0].map((h) => Core.recuperacionPorHora(h, 0, cfg).porHora), [0, 0]);
-  assert.ok(Math.abs(Core.recuperacionPorHora(5, 10, cfg).porHora - 9.6667) < 1e-3);
-  assert.ok(Math.abs(Core.recuperacionPorHora(500, 0, cfg).porHora - 9.9) < 1e-9);
-  assert.ok(Math.abs(Core.recuperacionPorHora(500, 10, cfg).porHora - 12.9667) < 1e-3);
-  assert.ok(Math.abs(Core.recuperacionPorHora(56, 1, cfg).porHora - 1.7667) < 1e-3);
+  const hp = (h, b) => Core.recuperacionPorHora(h, b, cfg, 'hp').porHora;
+  assert.ok(Math.abs(hp(56, 1) - 3.45) < 1e-9);
+  assert.ok(Math.abs(hp(5, 0) - 1.8571428571) < 1e-6);
+  assert.ok(Math.abs(hp(500, 0) - 8.9285714286) < 1e-6);
+  assert.ok(Math.abs(hp(500, 10) - 14.5588235294) < 1e-6);
 });
 
-test('recuperación por hora: un bono negativo cuenta como 0 y R nunca baja de 0', () => {
+test('el desplazamiento quita el punto de 0: con bono 0 hay recuperación con cualquier HP', () => {
   const cfg = contexto().vitalidad;
-  const neg = Core.recuperacionPorHora(56, -4, cfg);
-  const cero = Core.recuperacionPorHora(56, 0, cfg);
-  assert.deepEqual([neg.c, neg.porHora], [0, cero.porHora]);
-  // HP bajo con C = 0: V sale negativo, R bruta también, y se recorta a 0.
-  const bajo = Core.recuperacionPorHora(3, 0, cfg);
-  assert.ok(bajo.bruta < 0);
-  assert.equal(bajo.porHora, 0);
-  // Sin máximo de HP todavía (sin tiradas): no hay recuperación.
-  assert.equal(Core.recuperacionPorHora(0, 3, cfg).porHora, 0);
+  for (let h = 1; h <= 500; h++) {
+    const r = Core.recuperacionPorHora(h, 0, cfg, 'hp');
+    assert.ok(r.bruta > 0 && r.porHora === r.bruta, 'H ' + h);
+  }
+  // Con bono 0, H 1 recupera casi 1,8 por hora; antes del desplazamiento daba 0.
+  assert.ok(Math.abs(Core.recuperacionPorHora(1, 0, cfg, 'hp').porHora - 1.8) < 1e-9);
 });
 
-test('descansar: cura R × horas hacia abajo, sin pasar del máximo ni bajar un HP sobre el máximo', () => {
+test('con bono 0 o más, subir el bono nunca enlentece la recuperación hasta H 470', () => {
   const cfg = contexto().vitalidad;
-  // Ejemplo: HP 56, C +1 → R ≈ 1,767 HP/h: 2 h = 3 HP, 8 h = 14 HP.
-  assert.equal(Core.descansar(20, 56, 2, 1, cfg).curado, 3);
-  assert.equal(Core.descansar(20, 56, 8, 1, cfg).curado, 14);
-  assert.equal(Core.descansar(20, 56, 8, 1, cfg).hp, 34);
-  // Con muchas horas llega al máximo y no pasa.
-  assert.deepEqual([Core.descansar(20, 56, 100, 1, cfg).hp, Core.descansar(20, 56, 100, 1, cfg).curado], [56, 36]);
-  // Un HP sobre el máximo no se baja; desde HP negativo se cura igual.
-  assert.equal(Core.descansar(60, 56, 8, 1, cfg).hp, 60);
-  assert.equal(Core.descansar(-10, 56, 8, 1, cfg).hp, 4);
-  // Horas 0, negativas o ausentes no curan; R = 0 no cura.
-  assert.equal(Core.descansar(20, 56, 0, 1, cfg).curado, 0);
-  assert.equal(Core.descansar(20, 56, -3, 1, cfg).curado, 0);
-  assert.equal(Core.descansar(1, 5, 8, 0, cfg).curado, 0);
-  assert.equal(Core.descansar(20, 56, 8, 1, cfg).horas, 8);
+  [10, 56, 100, 250, 470].forEach((h) => {
+    let anterior = 0;
+    for (let b = 0; b <= 12; b++) {
+      const r = Core.recuperacionPorHora(h, b, cfg, 'hp').porHora;
+      assert.ok(r >= anterior - 1e-12, 'H ' + h + ' bono ' + b);
+      anterior = r;
+    }
+  });
 });
 
-test('horas hasta el máximo: (máximo − HP) / R; 0 si ya está al máximo y null si R es 0', () => {
+test('recuperación: un bono negativo cuenta como 0 y sin máximo no hay recuperación', () => {
   const cfg = contexto().vitalidad;
-  const r = Core.recuperacionPorHora(56, 1, cfg).porHora;
-  assert.ok(Math.abs(Core.horasParaMaximo(0, 56, r) - 31.7) < 0.05);
-  assert.equal(Core.horasParaMaximo(56, 56, r), 0);
-  assert.equal(Core.horasParaMaximo(70, 56, r), 0);
-  assert.equal(Core.horasParaMaximo(1, 5, 0), null);
+  const neg = Core.recuperacionPorHora(56, -4, cfg, 'hp');
+  const cero = Core.recuperacionPorHora(56, 0, cfg, 'hp');
+  assert.deepEqual([neg.bono, neg.c, neg.porHora], [0, 2, cero.porHora]);
+  assert.equal(Core.recuperacionPorHora(0, 3, cfg, 'hp').porHora, 0);
+  assert.equal(Core.recuperacionPorHora(-5, 3, cfg, 'mp').porHora, 0);
 });
 
-test('data/vitalidad.json: umbrales ordenados de mayor a menor, descansos con horas válidas y fórmula completa', () => {
+test('MP: la misma fórmula con el multiplicador ×10 (los bonos los pone quien llama: SPR)', () => {
+  const cfg = contexto().vitalidad;
+  const hp = Core.recuperacionPorHora(20, 0, cfg, 'hp');
+  const mp = Core.recuperacionPorHora(20, 0, cfg, 'mp');
+  assert.equal(mp.multiplicador, 10);
+  assert.ok(Math.abs(mp.porHora - 10 * hp.porHora) < 1e-9);
+  assert.ok(Math.abs(mp.porHora - 20.7142857143) < 1e-6);
+  assert.equal(cfg.descanso.recursos.mp.atributo, 'SPR');
+  assert.equal(cfg.descanso.recursos.hp.atributo, 'CON');
+});
+
+test('descansar: el corto recupera R × 2 h y el largo R × 8 h con un 50 % extra, hacia abajo y sin pasar del máximo', () => {
+  const cfg = contexto().vitalidad;
+  const { corto, largo } = cfg.descanso;
+  // HP 56 y bono +1 → R = 3,45 HP/h: corto 6,9 → 6; largo 3,45 × 8 × 1,5 = 41,4 → 41.
+  assert.equal(Core.descansar(10, 56, corto, 1, cfg, 'hp').recuperado, 6);
+  assert.equal(Core.descansar(10, 56, largo, 1, cfg, 'hp').recuperado, 41);
+  assert.equal(Core.descansar(10, 56, largo, 1, cfg, 'hp').valor, 51);
+  assert.equal(largo.extra, 0.5);
+  assert.equal(corto.extra, 0);
+  // Llega al máximo y no pasa; un valor sobre el máximo no se baja; desde negativo se recupera igual.
+  assert.deepEqual([Core.descansar(30, 56, largo, 1, cfg, 'hp').valor, Core.descansar(30, 56, largo, 1, cfg, 'hp').recuperado], [56, 26]);
+  assert.equal(Core.descansar(60, 56, largo, 1, cfg, 'hp').valor, 60);
+  assert.equal(Core.descansar(-10, 56, corto, 1, cfg, 'hp').valor, -4);
+  // Sin máximo no recupera.
+  assert.equal(Core.descansar(0, 0, largo, 3, cfg, 'hp').recuperado, 0);
+});
+
+test('descansar el MP: con MP 20 y bono SPR 0 el corto lo llena (41 > 20)', () => {
+  const cfg = contexto().vitalidad;
+  const r = Core.descansar(0, 20, cfg.descanso.corto, 0, cfg, 'mp');
+  assert.deepEqual([r.valor, r.recuperado], [20, 20]);
+  // Con un MP máximo grande se ve el ×10: MP 500, bono 0 → 89,29 por hora → 178 en 2 h y, en 8 h con el 50 % extra, el tope de 500.
+  assert.equal(Core.descansar(0, 500, cfg.descanso.corto, 0, cfg, 'mp').recuperado, 178);
+  assert.equal(Core.descansar(0, 500, cfg.descanso.largo, 0, cfg, 'mp').recuperado, 500);
+});
+
+test('data/vitalidad.json: umbrales ordenados de mayor a menor, dos descansos y la fórmula completa', () => {
   const cfg = contexto().vitalidad;
   const pcts = cfg.fatiga.umbrales.map((u) => u.pct);
   assert.deepEqual(pcts.slice().sort((a, b) => b - a), pcts);
   assert.ok(cfg.fatiga.umbrales.every((u) => u.penalizador < 0));
   const est = cfg.estados.map((e) => e.pct);
   assert.deepEqual(est.slice().sort((a, b) => b - a), est);
+  assert.deepEqual([cfg.descanso.corto.horas, cfg.descanso.largo.horas], [2, 8]);
   assert.ok(cfg.descanso.corto.horas > 0 && cfg.descanso.corto.horas < cfg.descanso.largo.horas);
   const f = cfg.descanso.formula;
-  assert.equal(f.atributo, 'CON');
-  ['minimoBono', 'sumaFija', 'constante', 'porBono', 'divisorV', 'minimoPorHora'].forEach((k) => assert.equal(typeof f[k], 'number', k));
+  ['desplazamiento', 'minimoBono', 'sumaFija', 'constante', 'porBono', 'divisorV', 'minimoPorHora'].forEach((k) => assert.equal(typeof f[k], 'number', k));
+  assert.equal(f.desplazamiento, 2);
   assert.ok(f.sumaFija > 0 && f.divisorV > 0 && f.minimoBono >= 0 && f.minimoPorHora >= 0);
+  assert.deepEqual(Object.keys(cfg.descanso.recursos).sort(), ['hp', 'mp']);
 });
 
 // ------------------------------------------------------ Mana por Gates

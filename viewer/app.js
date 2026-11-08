@@ -312,38 +312,49 @@
   /** Un decimal con coma y los decimales pedidos: 1,77. */
   function dec(n, d) { return Number(n).toFixed(d).replace('.', ','); }
 
+  /** El detalle de la fórmula de un recurso, para el tooltip de su tasa. */
+  function ayudaTasa(rec, nombre, max, tasa, d, bonoReal) {
+    var f = d.formula;
+    var atr = d.recursos[rec].atributo;
+    var recortado = bonoReal < f.minimoBono;
+    return 'R = C + V / ' + f.divisorV + (tasa.multiplicador !== 1 ? '  (×' + tasa.multiplicador + ' en ' + nombre + ')' : '') + '\n' +
+      'V = (H − ' + f.constante + ' − ' + f.porBono + '·C) / (' + f.sumaFija + ' + C)\n' +
+      'H = ' + max + ' (' + nombre + ' máximo)\n' +
+      'C = bono de ' + atr + ' ' + (recortado ? signo(bonoReal) + ' (cuenta como ' + f.minimoBono + ')' : signo(tasa.bono)) + ' + ' + f.desplazamiento + ' = ' + tasa.c + '\n' +
+      'V = ' + dec(tasa.v, 2) + '  →  R = ' + dec(tasa.porHora, 2) + ' ' + nombre + ' por hora';
+  }
+
   /**
-   * Recuperación (vista Jugar). La fórmula del diseñador da HP por hora a partir del HP máximo y del bono de CON;
-   * el descanso corto (2 h), el largo (8 h) y un número libre de horas curan esa tasa por las horas. El MP no se toca.
+   * Recuperación (vista Jugar). Una sola fórmula del diseñador da puntos por hora para HP (bono de CON) y para MP (bono de
+   * SPR, ×10). Hay solo dos descansos, el corto (2 h) y el largo (8 h, con 50 % extra), y cada uno recupera HP y MP a la vez.
    */
   function bloqueRecuperacion(calcB, pj) {
     var cfg = estado.ctx.vitalidad;
     var d = cfg.descanso;
-    var hp = calcB.recursos.hp;
-    var act = valorActual(pj, 'hp', hp.maximo);
-    var bono = Core.modAtributo(valorAtributo(calcB, d.formula.atributo));
-    var r = Core.recuperacionPorHora(hp.maximo, bono, cfg);
-    var lleno = act >= hp.maximo;
-    var puede = hp.maximo > 0 && !lleno && r.porHora > 0;
-    var horasMax = Core.horasParaMaximo(act, hp.maximo, r.porHora);
-    var motivo = hp.maximo <= 0 ? 'Faltan las tiradas de HP: sin HP máximo no hay recuperación.'
-      : r.porHora <= 0 ? 'Con ' + hp.maximo + ' de HP máximo y bono ' + signo(r.c) + ' la fórmula da 0 HP por hora: no hay recuperación natural.'
-      : lleno ? 'HP ya está al máximo.' : '';
-    var ayuda = 'R = C + V / ' + d.formula.divisorV + '\nV = (H − ' + d.formula.constante + ' − ' + d.formula.porBono + '·C) / (C + ' + d.formula.sumaFija + ')\n' +
-      'H = ' + hp.maximo + ' (HP máximo), C = ' + signo(r.c) + ' (bono de ' + d.formula.atributo + (bono < r.c || bono < 0 ? ', los negativos cuentan como 0' : '') + ')\n' +
-      'V = ' + dec(r.v, 2) + '  →  R = ' + dec(r.porHora, 2) + ' HP por hora' + (r.bruta < r.porHora ? ' (la fórmula da ' + dec(r.bruta, 2) + ' y no baja de ' + d.formula.minimoPorHora + ')' : '');
+    var recs = ['hp', 'mp'].map(function (rec) {
+      var r = calcB.recursos[rec];
+      var bono = Core.modAtributo(valorAtributo(calcB, d.recursos[rec].atributo));
+      return { rec: rec, nombre: rec.toUpperCase(), max: r.maximo, act: valorActual(pj, rec, r.maximo), bono: bono, tasa: Core.recuperacionPorHora(r.maximo, bono, cfg, rec) };
+    });
+    var puede = recs.some(function (x) { return x.max > 0 && x.act < x.max && x.tasa.porHora > 0; });
+    var chips = recs.map(function (x) {
+      return chipTip(dec(x.tasa.porHora, 2) + ' ' + x.nombre + ' por hora', x.tasa.porHora > 0 ? 'acc' : 'soft', ayudaTasa(x.rec, x.nombre, x.max, x.tasa, d, x.bono));
+    }).join('');
     var btn = function (x) {
-      var res = Core.descansar(act, hp.maximo, x.horas, bono, cfg);
-      return '<button class="btn" type="button" data-accion="descansar" data-horas="' + x.horas + '" data-nombre="' + esc(x.nombre) + '"' + (puede ? '' : ' disabled') + '><span>' + esc(x.nombre) + ' · ' + x.horas + ' h</span>' +
-        '<b class="num">' + (res.curado > 0 ? '+' + res.curado + ' HP' : lleno ? 'HP al máximo' : '+0 HP') + '</b></button>';
+      var partes = recs.map(function (y) {
+        var res = Core.descansar(y.act, y.max, x, y.bono, cfg, y.rec);
+        return res.recuperado > 0 ? '+' + res.recuperado + ' ' + y.nombre : '';
+      }).filter(Boolean);
+      var extra = x.extra ? ' · +' + Math.round(x.extra * 100) + ' % de recuperación' : '';
+      return '<button class="btn" type="button" data-accion="descansar" data-id="' + esc(x.id) + '"' + (puede ? '' : ' disabled') + '><span>' + esc(x.nombre) + ' · ' + x.horas + ' h' + extra + '</span>' +
+        '<b class="num">' + (partes.length ? partes.join(' · ') : 'Al máximo') + '</b></button>';
     };
-    return '<div class="recup"><div class="row-between" style="align-items:center"><span class="eyebrow">Recuperación</span>' +
-      chipTip(dec(r.porHora, 2) + ' HP por hora', r.porHora > 0 ? 'acc' : 'soft', ayuda) + '</div>' +
+    var motivo = recs[0].max <= 0 ? 'Faltan las tiradas de HP: sin HP máximo no hay recuperación.'
+      : !puede ? 'HP y MP ya están al máximo.' : '';
+    return '<div class="recup"><div class="row-between" style="align-items:center"><span class="eyebrow">Recuperación</span><span class="chips">' + chips + '</span></div>' +
       '<div class="recup-btns">' + btn(d.corto) + btn(d.largo) + '</div>' +
-      '<div class="acc-fila"><label class="campo-et">Horas de descanso<input class="campo" type="number" inputmode="decimal" min="0.5" step="0.5" id="desc-h" value="1" style="width:130px;min-width:0"' + (puede ? '' : ' disabled') + '></label>' +
-      '<button class="btn" type="button" data-accion="descansar-horas"' + (puede ? '' : ' disabled') + '>Descansar</button></div>' +
-      '<span class="mute pie-vital">' + (motivo ? esc(motivo) + ' ' : '') + (horasMax ? 'Al ritmo de ' + dec(r.porHora, 2) + ' HP por hora llegas al máximo en ' + dec(horasMax, 1) + ' h. ' : '') +
-      'Cada descanso cura la tasa por las horas, redondeada hacia abajo. El descanso no recupera MP.</span></div>';
+      '<span class="mute pie-vital">' + (motivo ? esc(motivo) + ' ' : '') +
+      'Cada descanso recupera HP y MP a la vez: la tasa por las horas' + (d.largo.extra ? ', con ' + Math.round(d.largo.extra * 100) + ' % extra en el largo' : '') + ', redondeado hacia abajo y sin pasar del máximo.</span></div>';
   }
 
   function htmlVitales(calcB, pj, juego) {
@@ -1292,16 +1303,25 @@
     lector.readAsDataURL(file);
   }
 
-  /** Descansar un número de horas: cura la tasa de recuperación por hora, hasta el máximo. El MP no se toca. */
-  function descansarHoras(horas, nombre, foco) {
+  /** Un descanso (corto o largo): recupera HP y MP a la vez con la tasa de cada uno. */
+  function descansar(id) {
     var v = estado.vista, pj = pjActual(), cfg = estado.ctx.vitalidad;
-    var hp = v.calcB.recursos.hp;
-    var bono = Core.modAtributo(valorAtributo(v.calcB, cfg.descanso.formula.atributo));
-    var antes = valorActual(pj, 'hp', hp.maximo);
-    var res = Core.descansar(antes, hp.maximo, horas, bono, cfg);
-    fijarActual(pj, 'hp', res.hp, hp.maximo);
-    refrescarVitales(foco);
-    toast((nombre || 'Descanso') + ' (' + dec(horas, Number.isInteger(horas) ? 0 : 1) + ' h a ' + dec(res.porHora, 2) + ' HP por hora): +' + res.curado + ' HP, de ' + conSigno(antes) + ' a ' + conSigno(res.hp) + '.');
+    var d = cfg.descanso;
+    var x = d[id];
+    if (!x) return;
+    var partes = [];
+    ['hp', 'mp'].forEach(function (rec) {
+      var max = v.calcB.recursos[rec].maximo;
+      var bono = Core.modAtributo(valorAtributo(v.calcB, d.recursos[rec].atributo));
+      var antes = valorActual(pj, rec, max);
+      var res = Core.descansar(antes, max, x, bono, cfg, rec);
+      if (res.recuperado > 0) {
+        fijarActual(pj, rec, res.valor, max);
+        partes.push(rec.toUpperCase() + ' +' + res.recuperado + ' (de ' + conSigno(antes) + ' a ' + conSigno(res.valor) + ')');
+      }
+    });
+    refrescarVitales('[data-accion="descansar"][data-id="' + id + '"]');
+    toast(x.nombre + ' (' + x.horas + ' h' + (x.extra ? ', +' + Math.round(x.extra * 100) + ' %' : '') + '): ' + (partes.length ? partes.join(' · ') : 'ya estaba todo al máximo') + '.');
   }
 
   /** El valor entero de un campo numérico, o null si está vacío o no es entero. */
@@ -1334,12 +1354,7 @@
       fijarActual(pj, rec, delta === 'max' ? max : Math.max(minimoVital(rec, max), Math.min(max, actual + Number(delta))), max);
       refrescarVitales('[data-accion="rec"][data-recurso="' + rec + '"][data-delta="' + delta + '"]');
     } else if (a === 'descansar') {
-      var hrs = Number(boton.getAttribute('data-horas'));
-      descansarHoras(hrs, boton.getAttribute('data-nombre'), '[data-accion="descansar"][data-horas="' + hrs + '"]');
-    } else if (a === 'descansar-horas') {
-      var hl = Number((document.getElementById('desc-h') || {}).value);
-      if (!(hl > 0)) { toast('Escribe cuántas horas descansas: un número mayor que 0.', true); return; }
-      descansarHoras(hl, 'Descanso', '[data-accion="descansar-horas"]');
+      descansar(boton.getAttribute('data-id'));
     } else if (a === 'inscribir') {
       var slot = boton.getAttribute('data-slot');
       var sel = document.getElementById('insc-' + slot);
@@ -1536,7 +1551,6 @@
   });
   app.addEventListener('keydown', function (ev) {
     if (ev.key === 'Escape') ocultarTip();
-    if (ev.key === 'Enter' && ev.target.id === 'desc-h') { ev.preventDefault(); accion(document.querySelector('[data-accion="descansar-horas"]')); return; }
     var m = /^tr-(hp|mp)-res$/.exec(ev.target.id || '');
     if (m && ev.key === 'Enter') { ev.preventDefault(); tirar(m[1], 'manual'); }
   });

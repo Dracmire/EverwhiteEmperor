@@ -2,7 +2,7 @@
 
 Tracker de personajes de TTRPG basado en Pathfinder 1e, para un sistema propio: una clase por personaje, atributos STR, DEX, PER, INT, WIS y CHA (CON, SPR y MND se derivan), HP y MP con dados, XP por tags y grados, subsistemas (zeo y mana), méritos y defectos, traits, feats, achievements, fate y equipo por extremidad. Todo se deriva de un registro por sesión.
 
-Estado: borrador (v0.8.5). Las cifras de Mana (SX por Gate, Mana force y los 13 tags de ejemplo) son supuestos hasta que el diseñador las fije. La especificación está en [`docs/ESPECIFICACION.md`](docs/ESPECIFICACION.md).
+Estado: borrador (v0.8.6). Las cifras de Mana (SX por Gate, Mana force y los 13 tags de ejemplo) son supuestos hasta que el diseñador las fije. La especificación está en [`docs/ESPECIFICACION.md`](docs/ESPECIFICACION.md).
 
 ## Qué hay
 
@@ -38,7 +38,7 @@ node scripts/build-standalone.js
 # dist/visor.html
 ```
 
-El visor muestra arriba la ficha (retrato, nivel, HP y MP, atributos) y abajo el registro de sesiones; en medio, en **Jugar** van a la vista Feats, Equipo y Méritos y defectos (listas de una línea con tooltip) y plegados Achievements, SX, Zeo, Mana y Magia; en **Construir**, plegados Feats, Achievements, Equipo, Méritos y defectos, Tiradas de HP y MP, SX, Zeo, Mana y Magia. En la cabecera, **Jugar** es la versión reducida para la mesa (con fatiga, estados DOWN, K.O. y Deadly, y recuperación por hora con descansos corto, largo y de horas libres; aún no recupera MP) y **Construir** la amplia, con los selectores de feats y achievements, el borrador y las tiradas. «Abrir otro personaje» carga cualquier `.json` con el mismo formato que `characters/ejemplo.json`; las entradas del registro que rompen una regla se listan como avisos y no se aplican.
+El visor muestra arriba la ficha (retrato, nivel, HP y MP, atributos) y abajo el registro de sesiones; en medio, en **Jugar** van a la vista Feats, Equipo y Méritos y defectos (listas de una línea con tooltip) y plegados Achievements, SX, Zeo, Mana y Magia; en **Construir**, plegados Feats, Achievements, Equipo, Méritos y defectos, Tiradas de HP y MP, SX, Zeo, Mana y Magia. En la cabecera, **Jugar** es la versión reducida para la mesa (con fatiga, estados DOWN, K.O. y Deadly, y recuperación por hora de HP y MP con descansos corto de 2 h y largo de 8 h) y **Construir** la amplia, con los selectores de feats y achievements, el borrador y las tiradas. «Abrir otro personaje» carga cualquier `.json` con el mismo formato que `characters/ejemplo.json`; las entradas del registro que rompen una regla se listan como avisos y no se aplican.
 
 ## Licencia y avisos
 

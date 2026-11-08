@@ -997,37 +997,33 @@
   }
 
   /**
-   * Recuperación de HP por hora (fórmula del diseñador). Con C = bono del atributo (nunca menor a `minimoBono`),
+   * Recuperación por hora (fórmula del diseñador), igual para HP y para MP. Con C = bono del atributo
+   * (nunca menor a `minimoBono`) más `desplazamiento`:
    * H = (sumaFija + C)·V + constante + porBono·C  →  V = (H − constante − porBono·C) / (sumaFija + C)
-   * y R = C + V / divisorV, en HP por hora. R no baja de `minimoPorHora`: con HP muy bajos V sale negativo.
-   * Devuelve `c`, `v`, `bruta` (R sin recortar) y `porHora` (R ya recortada).
+   * y R = C + V / divisorV, multiplicada por el `multiplicador` del recurso (MP ×10). R no baja de `minimoPorHora`.
+   * `recurso` es 'hp' o 'mp'. Devuelve `bono` (ya recortado), `c` (con el desplazamiento), `v`, `bruta` y `porHora`.
    */
-  function recuperacionPorHora(hpMax, bono, cfg) {
+  function recuperacionPorHora(max, bono, cfg, recurso) {
     const f = cfg.descanso.formula;
-    const c = Math.max(f.minimoBono, bono);
+    const rec = cfg.descanso.recursos[recurso || 'hp'];
+    const b = Math.max(f.minimoBono, bono);
+    const c = b + f.desplazamiento;
     const divisor = f.sumaFija + c;
-    if (!(hpMax > 0) || !(divisor > 0)) return { c: c, v: 0, bruta: 0, porHora: 0 };
-    const v = (hpMax - f.constante - f.porBono * c) / divisor;
-    const bruta = c + v / f.divisorV;
-    return { c: c, v: v, bruta: bruta, porHora: Math.max(f.minimoPorHora, bruta) };
+    if (!(max > 0) || !(divisor > 0)) return { bono: b, c: c, v: 0, bruta: 0, porHora: 0, multiplicador: rec.multiplicador };
+    const v = (max - f.constante - f.porBono * c) / divisor;
+    const bruta = (c + v / f.divisorV) * rec.multiplicador;
+    return { bono: b, c: c, v: v, bruta: bruta, porHora: Math.max(f.minimoPorHora, bruta), multiplicador: rec.multiplicador };
   }
 
   /**
-   * Descansar `horas`: cura R × horas, redondeado hacia abajo, sin pasar del máximo. Un HP que ya está sobre el
-   * máximo no se baja; desde un HP negativo se cura igual.
+   * Un descanso (`cfg.descanso.corto` o `.largo`): recupera R × horas × (1 + extra), redondeado hacia abajo, sin pasar
+   * del máximo. Un valor sobre el máximo no se baja, y desde un valor negativo se recupera igual.
    */
-  function descansar(hp, max, horas, bono, cfg) {
-    const r = recuperacionPorHora(max, bono, cfg);
-    const h = Math.max(0, horas || 0);
-    const bruto = Math.max(0, Math.floor(r.porHora * h + 1e-9));
-    const nuevo = Math.max(hp, Math.min(max, hp + bruto));
-    return { hp: nuevo, curado: nuevo - hp, horas: h, porHora: r.porHora, c: r.c };
-  }
-
-  /** Horas que faltan para llegar al máximo a R HP por hora (0 si ya está al máximo; null si R es 0). */
-  function horasParaMaximo(hp, max, porHora) {
-    if (hp >= max) return 0;
-    return porHora > 0 ? (max - hp) / porHora : null;
+  function descansar(actual, max, descanso, bono, cfg, recurso) {
+    const r = recuperacionPorHora(max, bono, cfg, recurso);
+    const bruto = Math.max(0, Math.floor(r.porHora * descanso.horas * (1 + (descanso.extra || 0)) + 1e-9));
+    const nuevo = Math.max(actual, Math.min(max, actual + bruto));
+    return { valor: nuevo, recuperado: nuevo - actual, horas: descanso.horas, extra: descanso.extra || 0, porHora: r.porHora, bono: r.bono };
   }
 
   /** Archivos de data/ que lee el motor, por clave de contexto. */
@@ -1087,7 +1083,6 @@
     estadoVital: estadoVital,
     recuperacionPorHora: recuperacionPorHora,
     descansar: descansar,
-    horasParaMaximo: horasParaMaximo,
     babDeClase: babDeClase,
     evaluarRequisitos: evaluarRequisitos,
     contextoJugador: contextoJugador,

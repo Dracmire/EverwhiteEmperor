@@ -1,6 +1,6 @@
-# EverwhiteEmperor — Especificación del tracker de personajes (v0.8.5)
+# EverwhiteEmperor — Especificación del tracker de personajes (v0.8.6)
 
-Estado: borrador del 2026-11-08. La v0.8.5 reemplaza la recuperación de 5e por **la fórmula del diseñador en HP por hora** (1.2): C es el bono de CON, el descanso cura R × horas y desaparecen los Dados de Golpe. La v0.8.4 hace que **el SX sea una reserva común de Zeo y Mana** (4.1.3), agrega al visor los **formularios para Gates y Mana force**, y registra como propuesta la **fórmula de recuperación por hora** del diseñador (1.2, pendiente de aclarar qué es C). La v0.8.3 cambia la recuperación a la regla de D&D 5e (la más generosa: descanso largo con todo el HP y Dados de Golpe en el corto, 1.2), difiere la recuperación de MP, e **implementa Mana por Gates** (4.1.2): Mana force, Gates con tag y función, grafo de slots (Gates, nodos y círculos), tabla de compatibilidad entre tags e inscripción de habilidades; todas las cifras de Mana son **[SUPUESTO]** de ejemplo. La v0.8.2 añade la fatiga, los estados DOWN, K.O. y Deadly y los descansos a la vista Jugar (1.2), convierte Equipo y Méritos y defectos en listas de una línea con tooltip, deja las tiradas de HP y MP solo en Construir, y fija que los Gates conectan por defecto salvo incompatibilidad (4.1.2). La v0.8.1 ajusta la vista Jugar (feats como lista, derivados en mini tarjetas) y documenta el diseño nuevo de Mana por Gates, Magia con conjuros y habilidades de clase por nivel, que todavía **no está implementado**. La v0.8 cambió los atributos (STR, DEX, PER, INT, WIS y CHA; CON, SPR y MND se derivan), añade HP y MP con tiradas de dados, y rehace la ficha del visor: retrato, base y atributos arriba, todo lo demás plegado y el registro de sesiones abajo, con achievements asignables desde una lista con scroll (ver "Cambios respecto a versiones anteriores" al final).
+Estado: borrador del 2026-11-08. La v0.8.6 **desplaza C en 2** (C = bono + 2) para bajar el punto de recuperación cero, **define la recuperación de MP** con la misma fórmula (bono de SPR, ×10) y deja solo **dos descansos**: corto de 2 h y largo de 8 h con **+50 %** (1.2). La v0.8.5 reemplaza la recuperación de 5e por **la fórmula del diseñador en HP por hora** (1.2): C es el bono de CON, el descanso cura R × horas y desaparecen los Dados de Golpe. La v0.8.4 hace que **el SX sea una reserva común de Zeo y Mana** (4.1.3), agrega al visor los **formularios para Gates y Mana force**, y registra como propuesta la **fórmula de recuperación por hora** del diseñador (1.2, pendiente de aclarar qué es C). La v0.8.3 cambia la recuperación a la regla de D&D 5e (la más generosa: descanso largo con todo el HP y Dados de Golpe en el corto, 1.2), difiere la recuperación de MP, e **implementa Mana por Gates** (4.1.2): Mana force, Gates con tag y función, grafo de slots (Gates, nodos y círculos), tabla de compatibilidad entre tags e inscripción de habilidades; todas las cifras de Mana son **[SUPUESTO]** de ejemplo. La v0.8.2 añade la fatiga, los estados DOWN, K.O. y Deadly y los descansos a la vista Jugar (1.2), convierte Equipo y Méritos y defectos en listas de una línea con tooltip, deja las tiradas de HP y MP solo en Construir, y fija que los Gates conectan por defecto salvo incompatibilidad (4.1.2). La v0.8.1 ajusta la vista Jugar (feats como lista, derivados en mini tarjetas) y documenta el diseño nuevo de Mana por Gates, Magia con conjuros y habilidades de clase por nivel, que todavía **no está implementado**. La v0.8 cambió los atributos (STR, DEX, PER, INT, WIS y CHA; CON, SPR y MND se derivan), añade HP y MP con tiradas de dados, y rehace la ficha del visor: retrato, base y atributos arriba, todo lo demás plegado y el registro de sesiones abajo, con achievements asignables desde una lista con scroll (ver "Cambios respecto a versiones anteriores" al final).
 
 Convención del documento:
 - **[PENDIENTE]**: falta un dato o una decisión del diseñador.
@@ -77,24 +77,26 @@ Todo esto vive en la vista **Jugar**. El HP actual sigue siendo un valor del nav
 - **[PENDIENTE]** A qué se aplica el penalizador de fatiga (¿todas las tiradas, solo ataque y habilidades?). El visor solo lo muestra, en un chip junto al estado; el tooltip del chip lista los umbrales convertidos a HP, y la barra marca el 50 %, el 25 % y el 10 %.
 - **[PENDIENTE]** Qué significa cada estado en la mesa (si DOWN impide actuar, si K.O. y Deadly piden tiradas de estabilización o muerte). Hoy solo se marcan.
 
-**Recuperación por hora (v0.8.5) [DECIDIDO la fórmula; el redondeo y los recortes son SUPUESTO].** El HP se recupera con la fórmula del diseñador, que da una **tasa en HP por hora**:
+**Recuperación por hora (v0.8.6) [DECIDIDO la fórmula, el desplazamiento, el ×10 y los dos descansos; el redondeo y los recortes son SUPUESTO].** Una sola fórmula del diseñador da una **tasa en puntos por hora** para el HP y para el MP:
 
 ```
-H = (2 + C + 3) · V + 5 + 5 · C        H = HP máximo, C = bono de CON
-R = C + V / 10                          R = recuperación, en HP por hora
+H = (5 + C') · V + 5 + 5 · C'          H = máximo del recurso (HP o MP)
+R = C' + V / 10                         R = recuperación, en puntos por hora
+C' = bono + 2                           bono = bono de CON (HP) o de SPR (MP)
 ```
 
-V no tiene nombre: es la incógnita que se **despeja** de la primera ecuación, `V = (H − 5 − 5·C) / (C + 5)`, y se mete en la segunda. **C es el bono (modificador) de CON**, no su valor (el diseñador lo aclaró en la v0.8.5). Reemplaza a la regla de D&D 5e de la v0.8.3 (descanso largo con todo el HP y Dados de Golpe), que el diseñador descartó porque recuperar todo el HP en una noche no tiene sentido.
+V no tiene nombre: es la incógnita que se **despeja** de la primera ecuación, `V = (H − 5 − 5·C') / (5 + C')`, y se mete en la segunda. **El desplazamiento (v0.8.6):** el diseñador pidió partir de `C + 2` para que el punto en que la recuperación vale 0 quede más abajo; se aplica a **las dos ecuaciones** (`desplazamiento` en `data/vitalidad.json`). Con el desplazamiento no hay punto cero: con bono 0, cualquier H ≥ 1 da R > 0 (H 1 da 1,8 por hora). Reemplaza a la regla de D&D 5e de la v0.8.3 y a la fórmula sin desplazamiento de la v0.8.5.
 
-- **El descanso cura R × horas.** El corto dura 2 h y el largo 8 h; además el visor admite un número libre de horas. **[SUPUESTO]** El resultado se **redondea hacia abajo** y no pasa del HP máximo. Un HP sobre el máximo no se baja, y desde un HP negativo se cura igual.
-- **[SUPUESTO] C no baja de 0** (`minimoBono`), igual que el «bono de cuerpo» de la v0.8.2: un bono negativo no existe. Sin este recorte la fórmula se rompe: con C = −5 divide por cero y con C entre −4 y −1 el HP alto da una recuperación enorme (H 500 y C = −4 darían 47,5 HP/h).
-- **[SUPUESTO] R no baja de 0** (`minimoPorHora`): con HP muy bajo V sale negativo. Con C = 0, H = 5 da exactamente 0 y H < 5 saldría negativo; en ambos casos no hay recuperación natural.
-- **Casos** (C = bono de CON): H 5 y C 0 → R 0; H 5 y C +10 → 9,67; H 500 y C 0 → 9,90; H 500 y C +10 → 12,97 HP/h. El personaje de ejemplo (H 56, C +1) recupera 1,77 HP/h: 3 HP en un descanso corto, 14 HP en uno largo y unas 32 h hasta el máximo.
-- **Rareza conocida de la fórmula:** con HP muy altos, subir C puede **enlentecer** la recuperación (H 500: C 0 da 9,9 HP/h y C +2 da 8,9), porque V se achica al subir C. Se nota solo con HP altos; queda como está hasta que el diseñador diga otra cosa.
-- **[DIFERIDO] Recuperación de MP.** Los descansos **no recuperan MP todavía**. El diseñador indicó que el MP también se recuperaría con el bono de CON pero con **otra fórmula**; se define más adelante, junto con la relación entre el MP y el mana de 4.1.2.
+- **MP: la misma fórmula, con SPR y ×10 [DECIDIDO].** H es el MP máximo, el bono es el de **SPR** y la R resultante se **multiplica por 10** (`recursos.mp.multiplicador`). **[SUPUESTO]** El ×10 se aplica a la tasa final, no a H ni a C. Con MP 20 y bono 0 sale 20,71 MP por hora, o sea que un descanso corto de 2 h ya llena esos 20 MP; con MP 500 y bono 0, 89,29 por hora.
+- **Solo dos descansos [DECIDIDO].** El **corto** dura 2 h y el **largo** 8 h con **+50 % de recuperación** (`extra` 0,5): cura `R × horas × 1,5`. Desaparecen las horas libres y el cálculo de horas hasta el máximo (`horasParaMaximo` ya no existe). **[SUPUESTO]** El +50 % aplica al HP y al MP, y cada descanso recupera **HP y MP a la vez**.
+- **[SUPUESTO] El resultado se redondea hacia abajo** y no pasa del máximo. Un valor sobre el máximo no se baja, y desde un HP negativo se cura igual.
+- **[SUPUESTO] El bono no baja de 0** (`minimoBono`), igual que el «bono de cuerpo» de la v0.8.2: un bono negativo cuenta como 0 antes de sumar 2. El desplazamiento ya evita la división por cero, pero sin el recorte un bono muy negativo dispararía la recuperación de HP altos.
+- **[SUPUESTO] R no baja de 0** (`minimoPorHora`). Con el desplazamiento casi nunca actúa (H ≥ 1 y bono ≥ 0 da R > 0); queda por si H es 0 o negativo.
+- **Casos de HP** (bono de CON): H 1 y bono 0 → 1,80; H 5 y bono 0 → 1,86; H 5 y bono +10 → 11,65; H 500 y bono 0 → 8,93; H 500 y bono +10 → 14,56. El personaje de ejemplo (H 56, bono +1) recupera 3,45 HP por hora: 6 HP en un descanso corto y 41 en uno largo (3,45 × 8 × 1,5).
+- **Rareza conocida de la fórmula:** con HP muy altos, subir el bono puede **enlentecer** la recuperación. Con el desplazamiento aparece recién desde H ≈ 540 (H 1000: bono 0 da 16,07 y bono +3 da 14,70); antes de ese punto subir el bono siempre acelera (H 500: 8,93, 9,00, 9,28, 9,70…). Queda como está hasta que el diseñador diga otra cosa.
 - **[PENDIENTE]** Si el largo recarga también las cargas diarias del equipo (7); hoy esas cargas se derivan del registro, no del navegador.
 
-**Visor.** En Jugar, **Recuperación** muestra la tasa en un chip (**HP por hora**, con la fórmula resuelta en el tooltip), los botones **Descanso corto · 2 h** y **Descanso largo · 8 h** con lo que curarían, un campo de **horas libres** y cuánto falta para el máximo. Los botones se desactivan con el HP al máximo, sin tiradas de HP o si la tasa es 0.
+**Visor.** En Jugar, **Recuperación** muestra **dos chips** con la tasa (**HP por hora** y **MP por hora**, con la fórmula resuelta en el tooltip, incluido el recorte del bono negativo) y los botones **Descanso corto · 2 h** y **Descanso largo · 8 h · +50 %**, cada uno con lo que recuperaría («+6 HP · +20 MP»). Los botones se desactivan con HP y MP al máximo, sin tiradas de HP o si ambas tasas son 0.
 
 Las cifras viven en `data/vitalidad.json` (`descanso.formula`: `atributo`, `minimoBono`, `sumaFija`, `constante`, `porBono`, `divisorV`, `minimoPorHora`; `descanso.corto` y `descanso.largo` con sus horas), así que se cambian sin tocar el código.
 
@@ -795,7 +797,7 @@ Entre la ficha y el registro hay secciones plegables, todas cerradas la primera 
 
 **Vistas.** Un botón en la cabecera (la última elegida se recuerda):
 
-- **Jugar**: la versión reducida para la mesa. Misma ficha, y HP suma **fatiga, estados y marcas de umbral**, y la ficha suma **Recuperación** (v0.8.5): la tasa en HP por hora, el descanso corto (2 h), el largo (8 h) y un campo de horas libres (1.2). **Feats no es un desplegable**: es una tarjeta siempre visible con los feats **pasivos como una lista de una línea con tooltip** (nombre y enlace) y **una tarjeta solo para cada habilidad activa** (los feats activos reclasificados, 6.2); debajo van Equipo y Méritos y defectos con el mismo formato. Sin selectores, sin borrador y **sin las tiradas de HP y MP**.
+- **Jugar**: la versión reducida para la mesa. Misma ficha, y HP suma **fatiga, estados y marcas de umbral**, y la ficha suma **Recuperación** (v0.8.6): las tasas de HP y de MP por hora y los descansos corto (2 h) y largo (8 h, +50 %), que recuperan HP y MP a la vez (1.2). **Feats no es un desplegable**: es una tarjeta siempre visible con los feats **pasivos como una lista de una línea con tooltip** (nombre y enlace) y **una tarjeta solo para cada habilidad activa** (los feats activos reclasificados, 6.2); debajo van Equipo y Méritos y defectos con el mismo formato. Sin selectores, sin borrador y **sin las tiradas de HP y MP**.
 - **Construir**: agrega los selectores, el borrador, las explicaciones de las reglas y la construcción de HP y MP (**Tiradas de HP y MP**, que ya no aparece en Jugar). No muestra fatiga ni recuperación: son de la mesa.
 
 **Selector de feats** (dentro de Feats, vista Construir):
@@ -847,7 +849,7 @@ Entre la ficha y el registro hay secciones plegables, todas cerradas la primera 
 
 ## 11. Hitos
 
-Estado en v0.8.5: el motor (M1) y el visor (M2) están implementados y probados localmente (66 pruebas), incluido el mana por Gates; M3 está avanzado (catálogo de 665 feats con requisitos estructurados, achievement feats y conversión de activos; faltan revisar los candidatos a activo y los efectos). Falta activar GitHub Pages. M0 (importar pixelkeep) sigue pendiente.
+Estado en v0.8.6: el motor (M1) y el visor (M2) están implementados y probados localmente (69 pruebas), incluido el mana por Gates; M3 está avanzado (catálogo de 665 feats con requisitos estructurados, achievement feats y conversión de activos; faltan revisar los candidatos a activo y los efectos). Falta activar GitHub Pages. M0 (importar pixelkeep) sigue pendiente.
 
 | Hito | Contenido | Criterio de aceptación |
 |---|---|---|
@@ -925,14 +927,16 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 - Sin máximo de HP (aún sin tiradas): ni fatiga ni estado.
 - Un descanso que no existe en `data/vitalidad.json`: error.
 
-### Recuperación por hora (v0.8.5)
+### Recuperación por hora (v0.8.6)
 
-- `V = (H − 5 − 5·C) / (C + 5)` y `R = C + V/10`; meter V en `H = (C + 5)·V + 5 + 5·C` devuelve H.
-- R con C = bono de CON: H 5 y C 0 → 0; H 5 y C +10 → 9,67; H 500 y C 0 → 9,90; H 500 y C +10 → 12,97; H 56 y C +1 → 1,77 HP/h.
-- Un bono negativo cuenta como 0 (H 56 con C −4 da lo mismo que con C 0). H bajo con C 0 da R bruta negativa y R = 0. Sin HP máximo, R = 0.
-- Descansar con H 56 y C +1 desde 20 HP: 2 h → +3 HP; 8 h → +14 HP (34); 100 h → 56 y no pasa. Un HP de 60 (sobre el máximo) no se baja; desde −10, 8 h dan 4. Horas 0 o negativas, o R = 0, no curan.
-- Horas hasta el máximo: (56 − 0) a 1,77 HP/h son 31,7 h; con HP al máximo, 0; con R = 0, ninguna (nunca).
-- `data/vitalidad.json` trae la fórmula completa (`atributo` CON y los seis números).
+- Con C' = bono + 2: `V = (H − 5 − 5·C') / (5 + C')` y `R = C' + V/10`; meter V en `H = (5 + C')·V + 5 + 5·C'` devuelve H.
+- HP (bono de CON): H 1 y bono 0 → 1,80; H 5 y bono 0 → 1,8571; H 500 y bono 0 → 8,9286; H 500 y bono +10 → 14,5588; H 56 y bono +1 → 3,45 por hora.
+- Sin punto cero: con bono 0, R > 0 para todo H de 1 a 500. Con H hasta 470, subir el bono nunca enlentece la recuperación (la rareza aparece desde H ≈ 540).
+- Un bono negativo cuenta como 0 (H 56 con bono −4 da lo mismo que con 0). Sin máximo (H 0), R = 0.
+- MP (bono de SPR, ×10): H 20 y bono 0 → 20,714 por hora; H 500 y bono 0 → 89,29.
+- Descansar con H 56 y bono +1 desde 10 HP: corto (2 h) → +6; largo (8 h, +50 %) → +41; con mucho margen no pasa de 56. Un HP de 60 (sobre el máximo) no se baja; desde −10, el corto da +6 (queda −4).
+- Descansar con MP 20 y bono 0: el corto y el largo llenan los 20 MP; con MP 500 y bono 0, el corto da 178 y el largo llena los 500.
+- `data/vitalidad.json` trae la fórmula (`desplazamiento` 2 y los demás números), los recursos (`hp` con CON ×1 y `mp` con SPR ×10) y solo dos descansos (2 h y 8 h con extra 0,5).
 
 ### SX compartido: reserva y asignación (v0.8.4)
 
@@ -1014,19 +1018,28 @@ Otros casos de Mana (con los datos de ejemplo):
 18. Otros libros de feats (fuera de Core, APG, Ultimate Magic y Ultimate Combat), y qué hacer con los feats raciales de Pathfinder.
 19. Notas de jugadores y del GM: elegir cómo se guardan y comparten (10.6, opciones A, B o C).
 20. Clases: el catálogo trae las 37 clases de Pathfinder 1e con su progresión de ataque base; decidir cuáles se permiten en el sistema y si hay clases propias.
-21. HP y MP: dado de cada clase para HP y para MP, relación del MP con el mana ganado, si MND tiene efecto y si el HP y el MP actuales deben entrar al registro (1.1).
+21. HP y MP: dado de cada clase para HP y para MP, relación del MP con el mana ganado, si MND tiene efecto y si el HP y el MP actuales deben entrar al registro (1.1). La recuperación de MP ya está definida (1.2).
 22. Achievements: sustituir las 12 entradas de ejemplo por la lista real, con su fate y sus condiciones.
 23. Mana por Gates (4.1.2): sustituir los 13 tags de ejemplo por la tabla real (~200 tags y sus pares incompatibles), fijar el SX por Gate y si se gasta, el valor de cada fuente de MF, qué hace cada función, si el GM puede forzar o romper una conexión, si lo inscrito debe coincidir con el tag del slot, y qué hace falta para borrar o corregir un Gate ya construido. Ya está decidido que nodos y círculos son aditivos y que los Gates conectan por defecto salvo incompatibilidad.
 24. Magia: sistema y edición del catálogo de conjuros, origen de los datos y escuelas por clase (4.2).
 25. Habilidades de clase: origen del dato y del texto de cada habilidad de las 37 clases; qué clases se permiten (6.5).
 26. Fatiga y recuperación (1.2): a qué se aplica el penalizador de fatiga, qué significan DOWN, K.O. y Deadly en la mesa, y si el largo recarga las cargas del equipo.
-27. **[DIFERIDO]** Recuperación de MP: la fórmula propia (usa el bono de CON, pero con otra fórmula que el HP) y su relación con el mana de 4.1.2.
-28. Recuperación por hora (1.2): confirmar el redondeo hacia abajo, el recorte de C y de R a 0, y qué hacer con la rareza de que a HP muy altos subir C enlentece la recuperación.
+27. Recuperación de MP (1.2): confirmar que «×10» se aplica a la tasa final y no a otro término (con MP 20 un descanso corto de 2 h ya lo llena), y la relación del MP con el mana de 4.1.2.
+28. Recuperación por hora (1.2): confirmar el desplazamiento en las dos ecuaciones, el redondeo hacia abajo, el recorte del bono y de R a 0, que el +50 % del largo aplique también al MP, y qué hacer con la rareza de que desde H ≈ 540 subir el bono enlentece la recuperación.
 29. SX compartido (4.1.3): si el SX se gasta de verdad al construir Gates o subir ramas, si se puede reasignar, y si la reserva tiene tope.
 
 ---
 
 ## Cambios respecto a versiones anteriores
+
+### v0.8.6
+
+- **Recuperación por hora, ajustada [DECIDIDO]:** `C' = bono + 2` reemplaza a C en **las dos ecuaciones** (`H = (5 + C')·V + 5 + 5·C'`, `R = C' + V/10`), para bajar el punto de recuperación cero; ahora no hay punto cero (con bono 0, H ≥ 1 recupera). HP 56 con bono +1 pasa de 1,77 a **3,45 HP por hora**.
+- **Recuperación de MP [DECIDIDO; antes DIFERIDO]:** la misma fórmula con H = MP máximo, **bono de SPR** y R **×10**. MP 20 con bono 0 da 20,71 por hora.
+- **Dos descansos [DECIDIDO]:** corto de 2 h y largo de 8 h con **+50 %**; desaparecen los descansos intermedios, las horas libres y `horasParaMaximo`. Cada descanso recupera HP y MP a la vez. El motor expone `recuperacionPorHora(max, bono, cfg, recurso)` y `descansar(actual, max, descanso, bono, cfg, recurso)`.
+- **Supuestos:** el ×10 va sobre la tasa final, el +50 % aplica al HP y al MP, el bono no baja de 0, el redondeo es hacia abajo. La rareza «subir el bono enlentece» ahora solo aparece desde H ≈ 540.
+- **Visor:** dos chips (HP y MP por hora, con la fórmula en el tooltip) y dos botones de descanso que muestran lo que recuperan.
+- 69 pruebas del motor (antes 66).
 
 ### v0.8.5
 
