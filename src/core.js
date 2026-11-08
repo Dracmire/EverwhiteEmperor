@@ -366,6 +366,9 @@
       sx: {},
       lineas: {},
       mana: 0,
+      sxGanado: 0, // SX ganado sin destino (la reserva común de Zeo y Mana)
+      sxAsignado: 0, // lo que ya salió de la reserva hacia un subsistema
+      sxDirecto: 0, // SX que nació ya con destino (`xp-subsistema`)
       fate: 0,
       feats: [],
       logros: [],
@@ -402,6 +405,8 @@
         zeo: {},
         lineas: {},
         mana: 0,
+        sxGanado: 0,
+        sxAsignado: [],
         fate: 0,
         feats: [],
         logros: [],
@@ -417,6 +422,18 @@
 
       function error(i, msg) {
         avisos.push({ nivel: 'error', sesion: ses.id, indice: i, mensaje: msg });
+      }
+
+      /** Suma SX a un subsistema (zeo exige rama) y lo anota en la sesión; lo usan `xp-subsistema` y `sx-asignar`. */
+      function sumarSx(subsistema, rama, cantidad, sesion) {
+        if (subsistema === 'zeo') {
+          if (zeo.ramas.indexOf(rama) < 0) throw new Error('zeo exige rama: ' + zeo.ramas.join(', '));
+          estado.sx[rama] += cantidad;
+          sesion.zeo[rama] = (sesion.zeo[rama] || 0) + cantidad;
+        } else {
+          estado.mana += cantidad;
+          sesion.mana += cantidad;
+        }
       }
 
       (ses.entradas || []).forEach(function (e, i) {
@@ -452,16 +469,27 @@
             return;
           }
           case 'xp-subsistema': {
+            // Atajo: el SX nace ya con destino. Para ganar SX sin decidir dónde va existe la reserva (`sx` y `sx-asignar`).
             if (e.subsistema !== 'zeo' && e.subsistema !== 'mana') throw new Error('xp-subsistema solo admite zeo y mana');
             if (!esEntero(e.cantidad) || e.cantidad < 1) throw new Error('cantidad debe ser un entero positivo');
-            if (e.subsistema === 'zeo') {
-              if (zeo.ramas.indexOf(e.rama) < 0) throw new Error('zeo exige rama: ' + zeo.ramas.join(', '));
-              estado.sx[e.rama] += e.cantidad;
-              s.zeo[e.rama] = (s.zeo[e.rama] || 0) + e.cantidad;
-            } else {
-              estado.mana += e.cantidad;
-              s.mana += e.cantidad;
-            }
+            sumarSx(e.subsistema, e.rama, e.cantidad, s);
+            estado.sxDirecto += e.cantidad;
+            return;
+          }
+          case 'sx': {
+            if (!esEntero(e.cantidad) || e.cantidad < 1) throw new Error('sx: cantidad debe ser un entero positivo');
+            estado.sxGanado += e.cantidad;
+            s.sxGanado += e.cantidad;
+            return;
+          }
+          case 'sx-asignar': {
+            if (e.subsistema !== 'zeo' && e.subsistema !== 'mana') throw new Error('sx-asignar: el destino debe ser zeo o mana');
+            if (!esEntero(e.cantidad) || e.cantidad < 1) throw new Error('sx-asignar: cantidad debe ser un entero positivo');
+            const reserva = estado.sxGanado - estado.sxAsignado;
+            if (e.cantidad > reserva) throw new Error('la reserva de SX tiene ' + reserva + ' y se quieren asignar ' + e.cantidad);
+            sumarSx(e.subsistema, e.rama, e.cantidad, s);
+            estado.sxAsignado += e.cantidad;
+            s.sxAsignado.push({ subsistema: e.subsistema, rama: e.subsistema === 'zeo' ? e.rama : null, cantidad: e.cantidad });
             return;
           }
           case 'zeo-linea': {
@@ -612,7 +640,11 @@
             const mfNecesaria = mfDeGate(k, manaCfg);
             if (mfActual() < mfNecesaria) throw new Error('el Gate ' + k + ' exige Mana force ' + mfNecesaria + ' y el personaje tiene ' + mfActual());
             const sxNecesario = sxDeGate(k, manaCfg);
-            if (estado.mana < sxNecesario) throw new Error('el Gate ' + k + ' exige ' + sxNecesario + ' SX de mana y el personaje tiene ' + estado.mana);
+            if (estado.mana < sxNecesario) {
+              const reservaSx = estado.sxGanado - estado.sxAsignado;
+              throw new Error('el Gate ' + k + ' exige ' + sxNecesario + ' SX de mana y el personaje tiene ' + estado.mana +
+                (reservaSx > 0 ? ' (hay ' + reservaSx + ' SX sin asignar en la reserva: asígnalos a Mana)' : ''));
+            }
             const reg = { id: e.id, orden: k, funcion: e.funcion, tag: e.tag, tagNombre: manaTags[e.tag].nombre, oportunidad: e.oportunidad.trim(), sesion: ses.id, mfRequerida: mfNecesaria, sxRequerido: sxNecesario };
             estado.gates.push(reg);
             s.gates.push(reg);
@@ -757,6 +789,25 @@
       };
     }
 
+    /**
+     * SX compartido por Zeo y Mana: lo que se gana sin destino va a una reserva común y se asigna después
+     * (`sx-asignar`); lo que nace con destino (`xp-subsistema`) cuenta como ganado y asignado a la vez.
+     */
+    function resultadoSx() {
+      const zeoTotal = zeo.ramas.reduce(function (a, r) { return a + estado.sx[r]; }, 0);
+      const porRama = {};
+      zeo.ramas.forEach(function (r) { porRama[r] = estado.sx[r]; });
+      return {
+        reserva: estado.sxGanado - estado.sxAsignado,
+        ganadoEnReserva: estado.sxGanado,
+        asignado: estado.sxAsignado,
+        directo: estado.sxDirecto,
+        total: estado.sxGanado + estado.sxDirecto,
+        zeo: { total: zeoTotal, ramas: porRama },
+        mana: estado.mana,
+      };
+    }
+
     const ramas = zeo.ramas.map(function (r) { return detalleRama(r, estado.sx[r], zeo); });
     const minimo = Math.min.apply(null, ramas.map(function (r) { return r.nivel; }));
     ramas.forEach(function (r) { r.limita = r.nivel === minimo; });
@@ -817,6 +868,7 @@
       sesiones: sesionesOut,
       zeo: { unidad: zeo.unidad, lectura: zeo.lectura, nivel: minimo, ramas: ramas, lineas: lineas, niveles: umbralesZeo(zeo) },
       mana: resultadoMana(),
+      sx: resultadoSx(),
       recursos: recursos,
       fate: estado.fate,
       feats: {

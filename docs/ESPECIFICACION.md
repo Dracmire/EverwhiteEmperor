@@ -1,6 +1,6 @@
-# EverwhiteEmperor — Especificación del tracker de personajes (v0.8.3)
+# EverwhiteEmperor — Especificación del tracker de personajes (v0.8.4)
 
-Estado: borrador del 2026-11-08. La v0.8.3 cambia la recuperación a la regla de D&D 5e (la más generosa: descanso largo con todo el HP y Dados de Golpe en el corto, 1.2), difiere la recuperación de MP, e **implementa Mana por Gates** (4.1.2): Mana force, Gates con tag y función, grafo de slots (Gates, nodos y círculos), tabla de compatibilidad entre tags e inscripción de habilidades; todas las cifras de Mana son **[SUPUESTO]** de ejemplo. La v0.8.2 añade la fatiga, los estados DOWN, K.O. y Deadly y los descansos a la vista Jugar (1.2), convierte Equipo y Méritos y defectos en listas de una línea con tooltip, deja las tiradas de HP y MP solo en Construir, y fija que los Gates conectan por defecto salvo incompatibilidad (4.1.2). La v0.8.1 ajusta la vista Jugar (feats como lista, derivados en mini tarjetas) y documenta el diseño nuevo de Mana por Gates, Magia con conjuros y habilidades de clase por nivel, que todavía **no está implementado**. La v0.8 cambió los atributos (STR, DEX, PER, INT, WIS y CHA; CON, SPR y MND se derivan), añade HP y MP con tiradas de dados, y rehace la ficha del visor: retrato, base y atributos arriba, todo lo demás plegado y el registro de sesiones abajo, con achievements asignables desde una lista con scroll (ver "Cambios respecto a versiones anteriores" al final).
+Estado: borrador del 2026-11-08. La v0.8.4 hace que **el SX sea una reserva común de Zeo y Mana** (4.1.3), agrega al visor los **formularios para Gates y Mana force**, y registra como propuesta la **fórmula de recuperación por hora** del diseñador (1.2, pendiente de aclarar qué es C). La v0.8.3 cambia la recuperación a la regla de D&D 5e (la más generosa: descanso largo con todo el HP y Dados de Golpe en el corto, 1.2), difiere la recuperación de MP, e **implementa Mana por Gates** (4.1.2): Mana force, Gates con tag y función, grafo de slots (Gates, nodos y círculos), tabla de compatibilidad entre tags e inscripción de habilidades; todas las cifras de Mana son **[SUPUESTO]** de ejemplo. La v0.8.2 añade la fatiga, los estados DOWN, K.O. y Deadly y los descansos a la vista Jugar (1.2), convierte Equipo y Méritos y defectos en listas de una línea con tooltip, deja las tiradas de HP y MP solo en Construir, y fija que los Gates conectan por defecto salvo incompatibilidad (4.1.2). La v0.8.1 ajusta la vista Jugar (feats como lista, derivados en mini tarjetas) y documenta el diseño nuevo de Mana por Gates, Magia con conjuros y habilidades de clase por nivel, que todavía **no está implementado**. La v0.8 cambió los atributos (STR, DEX, PER, INT, WIS y CHA; CON, SPR y MND se derivan), añade HP y MP con tiradas de dados, y rehace la ficha del visor: retrato, base y atributos arriba, todo lo demás plegado y el registro de sesiones abajo, con achievements asignables desde una lista con scroll (ver "Cambios respecto a versiones anteriores" al final).
 
 Convención del documento:
 - **[PENDIENTE]**: falta un dato o una decisión del diseñador.
@@ -86,6 +86,8 @@ Todo esto vive en la vista **Jugar**. El HP actual sigue siendo un valor del nav
 - **[SUPUESTO]** Se toma de 5e que un dado cura al menos 1 (igual que la tirada de HP de cada nivel). No se aplican las restricciones de 5e de que haga falta al menos 1 HP para beneficiarse de un descanso ni la de un solo descanso largo por 24 h **[PENDIENTE]** decidir si se piden.
 - **[DIFERIDO] Recuperación de MP.** Los descansos **no recuperan MP todavía**. El diseñador indicó que el MP también se recuperaría con el bono de CON pero con **otra fórmula**; se define más adelante, junto con la relación entre el MP y el mana de 4.1.2.
 - **[PENDIENTE]** Si el largo recarga también las cargas diarias del equipo (7); hoy esas cargas se derivan del registro, no del navegador.
+
+**Fórmula de recuperación por hora (v0.8.4) [PROPUESTA del diseñador, sin implementar].** El diseñador propone describir la recuperación con `H = (2 + C + 3) · V + 5 + 5 · C` y `R = C + V / 10`, donde H es el HP, C es CON y R es la recuperación; V no tiene nombre y se **despeja**: `V = (H − 5 − 5·C) / (C + 5)`. R se mide en **HP por hora**. Casos con C = valor de CON: H 5 y C 1 → R 0,92; H 5 y C 30 → R 29,57; H 500 y C 1 → R 9,17; H 500 y C 30 → R 30,99 HP/h. R es casi C (V/10 solo aporta entre −0,4 y +8), así que el HP casi no cambia la velocidad sino el tiempo hasta el máximo. Con C = valor de CON, el personaje de ejemplo (H 56, C 13) recupera 12,9 HP/h y llega al máximo en 4,3 h; con C = modificador de CON (+1) recupera 1,77 HP/h, o sea 14 HP en 8 h. **[PENDIENTE]** Definir si C es el valor o el modificador de CON, y si esta fórmula **reemplaza** a los Dados de Golpe o convive con ellos.
 
 Las cifras viven en `data/vitalidad.json` (`descanso.dadosDeGolpe`: `porNivel`, `recuperaLargo`, `atributo`, `minimoPorDado`) y las calculan `Core.dadosDeGolpe`, `Core.curaDadoDeGolpe` y `Core.descansoLargo`.
 
@@ -372,7 +374,7 @@ Entradas del registro (los nodos y los círculos **no** son entradas: el motor l
 ]
 ```
 
-- **`xp-subsistema` de mana** suma «SX de mana». Es un **umbral acumulado**, igual que la lectura de Zeo: el SX **no se gasta** **[SUPUESTO]** (`sxGasta: false`).
+- **El SX de mana** (lo asignado a Mana, 4.1.3) es un **umbral acumulado**, igual que la lectura de Zeo: lo que se asigna a Mana no se vuelve a gastar al construir un Gate **[SUPUESTO]** (`sxGasta: false`).
 - **`mana-fuerza`:** `cantidad` entera distinta de 0, `fuente` (`criatura-contratada`, `contrato-magico` u `otra`) y `nota`. Perder MF (cantidad negativa) exige nota, y la MF no puede quedar bajo 0. La MF **inicial** es 1 (humano, `mfInicial`), y una raza puede cambiarla con `raza.manaFuerza` **[SUPUESTO]**. La **contabilidad de MF** (base y cada aporte con su fuente y nota) sale en un desplegable del visor.
 - **`gate`:** `id` (letras y números, sin guiones: `g1`), `funcion` (`capacidad`, `intensidad`, `potencia` o `sentidos`), `tag` (debe existir en `data/mana-tags.json`) y `oportunidad` (texto: la oportunidad para construirlo). El Gate número *k* exige **MF ≥ `mfBase`^(k−1)** (`mfBase` = 2: MF 1 permite 1 Gate, 2 permite 2, 4 permite 3, 8 permite 4) y **SX de mana ≥ `sxPorGate[k−1]`** (`[10, 20, 40, 80, 160, 320, 640]`, **[SUPUESTO]**); si falta algo, la entrada se rechaza con el motivo.
 - **`inscribir` / `desinscribir`:** un slot admite **una** habilidad tipo conjuro (6.2) del personaje. Para cambiarla hay que desinscribir antes. **[SUPUESTO]** La misma habilidad puede ocupar varios slots, y no se exige que coincida con el tag del slot.
@@ -382,13 +384,45 @@ Entradas del registro (los nodos y los círculos **no** son entradas: el motor l
 
 **Resultado del motor** (`resultado.mana`): SX, MF y su contabilidad, Gates (con su orden, MF y SX exigidos, función y tag), conexiones entre pares, nodos, círculos, slots con su habilidad inscrita (o libre), totales (incluye pares sin conexión) y el requisito del siguiente Gate (MF, SX y oportunidad).
 
-**Visor.** La sección **Mana** (plegada) muestra SX, MF, Gates y slots; el requisito del siguiente Gate; un **grafo circular** (Gates equidistantes, línea continua si conectan, línea roja discontinua si sus tags son incompatibles, triángulo sombreado si forman un círculo y círculo con relleno si el Gate tiene una habilidad inscrita); la lista de slots con tooltip; y la contabilidad de MF. En **Construir** cada slot ofrece elegir una habilidad e **Inscribir**, o **Quitar**, y eso va al borrador (10.5). Por ahora **los Gates y la MF se agregan escribiendo la entrada en el JSON**.
+**Visor.** La sección **Mana** (plegada) muestra SX, MF, Gates y slots; el requisito del siguiente Gate; un **grafo circular** (Gates equidistantes, línea continua si conectan, línea roja discontinua si sus tags son incompatibles, triángulo sombreado si forman un círculo y círculo con relleno si el Gate tiene una habilidad inscrita); la lista de slots con tooltip; y la contabilidad de MF. En **Construir** cada slot ofrece elegir una habilidad e **Inscribir**, o **Quitar**, y eso va al borrador (10.5). Desde la v0.8.4 **los Gates y la Mana force también se agregan desde el visor** (ver abajo).
+
+**Formularios de Construir (v0.8.4).** Dentro de Mana hay dos formularios que crean entradas del borrador (10.5), y el motor las valida igual que si estuvieran en el JSON:
+
+- **Mana force:** cambio (entero, positivo o negativo), fuente y nota. Perder exige nota.
+- **Construir un Gate:** el tag (la lista avisa con qué Gates actuales **no conectaría**), la función y la oportunidad. El `id` se asigna solo (`g1`, `g2`…). Sobre el formulario el visor dice qué le falta al próximo Gate (Mana force y SX) y, si hay SX en la reserva, avisa que se asigne a Mana.
 
 - **[PENDIENTE]** El **contenido real de la tabla de compatibilidad** (los ~200 tags y sus pares incompatibles), si el GM puede forzar o romper una conexión concreta y dejarlo en el registro, y qué tag lleva un nodo o un círculo (hoy: la unión de los tags de sus Gates).
 - **[PENDIENTE]** Cuánto SX cuesta de verdad cada Gate, si el SX se **gasta** o es solo un umbral (hoy umbral), cuánto da cada fuente de MF, y qué hace cada función (capacidad, intensidad, potencia, sentidos; hoy dicen «Efecto por definir»).
 - **[PENDIENTE]** Si lo que se inscribe debe coincidir con el tag del slot, y si la misma habilidad puede repetirse en varios slots.
-- **[PENDIENTE]** Formularios del visor para **agregar Gates y MF** (hoy solo JSON), y si hay niveles de mana con tabla de SX como en Zeo.
+- **[PENDIENTE]** Si hay niveles de mana con tabla de SX como en Zeo.
 - **[DIFERIDO]** La relación con el MP que se tira (1.1: ¿el MP es el combustible de las habilidades inscritas, o lo reemplazan los slots?) y la **recuperación de MP** (1.2).
+
+### 4.1.3 SX compartido por Zeo y Mana (v0.8.4) [DECIDIDO el problema; la solución es SUPUESTO]
+
+**El problema.** Zeo y Mana gastan el mismo recurso, el SX, y cada uno lo trae en su propio esquema («sx de rama», «SX de mana»). Al repartir SX en una sesión, el GM no sabe a cuál ponerlo.
+
+**La solución propuesta: una reserva común.** El SX se gana en **un solo lugar** y se reparte después:
+
+- **`sx`**: SX ganado **sin destino**. Va a la **reserva común**. Campos: `cantidad` (entero positivo) y `nota` opcional.
+- **`sx-asignar`**: pasa SX de la reserva a un subsistema. Campos: `subsistema` (`zeo` o `mana`), `rama` (solo Zeo: `heaven`, `void` o `earth`) y `cantidad`. Se rechaza si pide más de lo que hay en la reserva, si el destino no existe o si Zeo no trae rama; un rechazo no cambia la reserva.
+- **`xp-subsistema`** sigue existiendo como **atajo**: el SX nace ya con destino y no pasa por la reserva. Los registros anteriores siguen valiendo sin cambios.
+
+```json
+[
+  { "tipo": "sx", "cantidad": 12, "nota": "Botín de la cumbre" },
+  { "tipo": "sx-asignar", "subsistema": "mana", "cantidad": 10 },
+  { "tipo": "sx-asignar", "subsistema": "zeo", "rama": "void", "cantidad": 2 }
+]
+```
+
+- **[SUPUESTO]** Lo asignado **se queda** en el subsistema: no vuelve a la reserva ni se reasigna. La reserva solo baja al asignar, así que el SX asignado cuenta como acumulado de ese subsistema (la lectura como umbral de Zeo y de Mana no cambia).
+- **[SUPUESTO]** Quién asigna: el jugador o el GM, como cualquier entrada del registro. El motor no distingue.
+- **[PENDIENTE]** Si el SX **ganado se gasta** de verdad al construir un Gate o subir una rama (el SX como moneda que baja), en vez de ser solo un umbral acumulado. Con la reserva actual, «gastar» solo ocurre al asignar.
+- **[PENDIENTE]** Si hay un tope de SX en la reserva o un plazo para asignarla.
+
+**Resultado del motor** (`resultado.sx`): `reserva` (sin asignar), `ganadoEnReserva`, `asignado`, `directo`, `total` (ganado = reserva + directo), `zeo` (total y por rama) y `mana`. Cada sesión anota `sxGanado` y `sxAsignado`, y lo asignado se suma además a los chips de Zeo y Mana de esa sesión. El error de un Gate sin SX suficiente avisa si hay SX en la reserva.
+
+**Visor.** Una sección **SX** (plegada, antes de Zeo) muestra la reserva sin asignar, lo que hay en Zeo y en Mana, el SX ganado y el desglose. En **Construir** tiene dos formularios: **Registrar SX ganado** (cantidad y destino; el destino inicial es la reserva) y **Asignar de la reserva** (cantidad y destino). Zeo y Mana avisan cuando hay SX sin asignar.
 
 ### 4.2 Magia (conjuros) (v0.8.1) [DECIDIDO la dirección; los slots están implementados desde v0.8.3, el catálogo de conjuros no]
 
@@ -746,7 +780,7 @@ El visor de solo lectura ya existe en `viewer/` y se construye dentro del repo (
 2. **Los atributos**: los seis base en una fila (tres por fila en pantallas angostas) y, debajo, los tres derivados como **mini tarjetas en una sola línea** (valor, modificador y «→ HP» o «→ MP»; la fórmula, en el tooltip). HP y MP citan su atributo: «dado + CON 13 (+1)».
 3. **El registro de sesiones** (los «logs»), al final.
 
-Entre la ficha y el registro hay secciones plegables, todas cerradas la primera vez (el estado se recuerda en el navegador). **En Construir**: Borrador, **Feats**, **Achievements y fate**, **Equipo**, **Méritos y defectos** (un solo desplegable desde la v0.8.2), **Tiradas de HP y MP**, **Zeo**, **Mana** y **Magia**. **En Jugar**: Feats, Equipo y Méritos y defectos son tarjetas siempre visibles (abajo), y quedan plegadas solo **Achievements y fate**, **Zeo**, **Mana** y **Magia**. Cada cabecera muestra la cifra que importa (slots, fate, saldo de puntos, HP y MP máximos, nivel zeo, mana…).
+Entre la ficha y el registro hay secciones plegables, todas cerradas la primera vez (el estado se recuerda en el navegador). **En Construir**: Borrador, **Feats**, **Achievements y fate**, **Equipo**, **Méritos y defectos** (un solo desplegable desde la v0.8.2), **Tiradas de HP y MP**, **SX**, **Zeo**, **Mana** y **Magia**. **En Jugar**: Feats, Equipo y Méritos y defectos son tarjetas siempre visibles (abajo), y quedan plegadas solo **Achievements y fate**, **SX**, **Zeo**, **Mana** y **Magia**. Cada cabecera muestra la cifra que importa (slots, fate, saldo de puntos, HP y MP máximos, nivel zeo, mana…).
 
 **Listas de una línea con tooltip (v0.8.2) [DECIDIDO].** Los feats pasivos, el equipo y los méritos y defectos comparten el mismo formato en Jugar: una fila de aproximadamente una línea por elemento, con el nombre subrayado con puntos y **el detalle en un tooltip**. El tooltip sale con el cursor, con el foco del teclado (Tab) y con un toque, se cierra con Esc o al tocar fuera, y se recoloca para no salirse de la pantalla. Equipo muestra la armadura y cada extremidad con el tipo de objeto y las cargas (`9/10`); Méritos y defectos muestra primero los méritos y después los defectos en una misma lista, con su valor a la derecha (`−3` un mérito que cuesta, `+2` un defecto que aporta), y debajo los traits. El saldo (`Iniciales 4 + defectos 3 − méritos 5 = 2`) es un chip con el desglose en el tooltip. Las dos tarjetas van una junto a la otra en pantalla ancha.
 
@@ -770,7 +804,7 @@ Entre la ficha y el registro hay secciones plegables, todas cerradas la primera 
 
 **Añadir y quitar en Construir [PROPUESTA].** El registro es de solo añadir, así que *añadir* es crear una entrada en el borrador (hoy: feats, achievements y tiradas; a futuro: objetos, méritos, Gates y MF con el mismo patrón de tarjeta) y *quitar* es sacarla del borrador, o añadir la entrada compensatoria (`perder`, `desequipar`). **El JSON sigue siendo la fuente de verdad** y es el camino para corregir el historial; las tarjetas son una comodidad para armar entradas válidas sin escribir JSON a mano. Mientras no se elija cómo guardar (10.6), el paso del borrador al archivo sigue siendo copiar y pegar.
 
-**Zeo, Mana y Magia** se pliegan igual que el resto. **Mana** (v0.8.3) tiene el grafo circular de Gates, la lista de slots, el requisito del siguiente Gate y la contabilidad de MF (4.1.2); en Construir, cada slot permite elegir una habilidad e **Inscribir** o **Quitar** (entradas `inscribir` y `desinscribir` en el borrador). **Magia** lista las habilidades tipo conjuro (los feats activos convertidos, 6.2) con los slots donde están inscritas y con el costo en mana marcado como pendiente.
+**SX, Zeo, Mana y Magia** se pliegan igual que el resto. **SX** (v0.8.4) es la reserva común de Zeo y Mana, con sus formularios para registrar y asignar SX en Construir (4.1.3). **Mana** (v0.8.3) tiene el grafo circular de Gates, la lista de slots, el requisito del siguiente Gate y la contabilidad de MF (4.1.2); en Construir, cada slot permite elegir una habilidad e **Inscribir** o **Quitar**, y además los formularios de **Mana force** y de **Construir un Gate** (v0.8.4). Todo esto va al borrador como entradas `sx`, `sx-asignar`, `xp-subsistema`, `mana-fuerza`, `gate`, `inscribir` y `desinscribir`; las sesiones del registro muestran como chips los Gates, la Mana force, el SX de la reserva y las inscripciones. **Magia** lista las habilidades tipo conjuro (los feats activos convertidos, 6.2) con los slots donde están inscritas y con el costo en mana marcado como pendiente.
 
 ### 10.6 Notas de jugadores y del GM, y guardado simultáneo [PENDIENTE decidir el almacenamiento]
 
@@ -806,7 +840,7 @@ Entre la ficha y el registro hay secciones plegables, todas cerradas la primera 
 
 ## 11. Hitos
 
-Estado en v0.8.3: el motor (M1) y el visor (M2) están implementados y probados localmente (59 pruebas), incluido el mana por Gates; M3 está avanzado (catálogo de 665 feats con requisitos estructurados, achievement feats y conversión de activos; faltan revisar los candidatos a activo y los efectos). Falta activar GitHub Pages. M0 (importar pixelkeep) sigue pendiente.
+Estado en v0.8.4: el motor (M1) y el visor (M2) están implementados y probados localmente (65 pruebas), incluido el mana por Gates; M3 está avanzado (catálogo de 665 feats con requisitos estructurados, achievement feats y conversión de activos; faltan revisar los candidatos a activo y los efectos). Falta activar GitHub Pages. M0 (importar pixelkeep) sigue pendiente.
 
 | Hito | Contenido | Criterio de aceptación |
 |---|---|---|
@@ -892,6 +926,14 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 - El descanso largo no baja un HP que ya está sobre el máximo, y desde un HP negativo (−20 de 56) cura hasta 56.
 - El descanso no toca el MP.
 
+### SX compartido: reserva y asignación (v0.8.4)
+
+- 30 SX en la reserva y nada asignado: reserva 30, Zeo 0 y Mana 0.
+- Con 30 en la reserva, asignar 12 a Mana y 10 a Zeo (void): reserva 8, Mana 12 y void 10; la sesión anota `sxGanado` 30 y dos asignaciones.
+- `xp-subsistema` de 40 a Mana más 5 a la reserva: reserva 5, directo 40, total 45.
+- Rechazados: asignar más de lo que hay (11 de 10), asignar con la reserva vacía, destino que no sea zeo ni mana, Zeo sin rama, cantidad 0 o negativa. Un rechazo no toca la reserva.
+- Un Gate sin SX suficiente pero con SX en la reserva: el error avisa «hay 30 SX sin asignar»; asignando antes a Mana, el Gate se construye.
+
 ### Mana: Gates y slots (v0.8.3, implementado)
 
 - Dos Gates cuyos tags no figuran como incompatibles en la tabla conectan siempre (3 Gates sin incompatibilidades: 7 slots).
@@ -966,15 +1008,24 @@ Otros casos de Mana (con los datos de ejemplo):
 20. Clases: el catálogo trae las 37 clases de Pathfinder 1e con su progresión de ataque base; decidir cuáles se permiten en el sistema y si hay clases propias.
 21. HP y MP: dado de cada clase para HP y para MP, relación del MP con el mana ganado, si MND tiene efecto y si el HP y el MP actuales deben entrar al registro (1.1).
 22. Achievements: sustituir las 12 entradas de ejemplo por la lista real, con su fate y sus condiciones.
-23. Mana por Gates (4.1.2): sustituir los 13 tags de ejemplo por la tabla real (~200 tags y sus pares incompatibles), fijar el SX por Gate y si se gasta, el valor de cada fuente de MF, qué hace cada función, si el GM puede forzar o romper una conexión, si lo inscrito debe coincidir con el tag del slot, y formularios del visor para agregar Gates y MF. Ya está decidido que nodos y círculos son aditivos y que los Gates conectan por defecto salvo incompatibilidad.
+23. Mana por Gates (4.1.2): sustituir los 13 tags de ejemplo por la tabla real (~200 tags y sus pares incompatibles), fijar el SX por Gate y si se gasta, el valor de cada fuente de MF, qué hace cada función, si el GM puede forzar o romper una conexión, si lo inscrito debe coincidir con el tag del slot, y qué hace falta para borrar o corregir un Gate ya construido. Ya está decidido que nodos y círculos son aditivos y que los Gates conectan por defecto salvo incompatibilidad.
 24. Magia: sistema y edición del catálogo de conjuros, origen de los datos y escuelas por clase (4.2).
 25. Habilidades de clase: origen del dato y del texto de cada habilidad de las 37 clases; qué clases se permiten (6.5).
 26. Fatiga y recuperación (1.2): a qué se aplica el penalizador de fatiga, qué significan DOWN, K.O. y Deadly en la mesa, si se piden las condiciones de 5e (al menos 1 HP para beneficiarse y un solo descanso largo por 24 h) y si el largo recarga las cargas del equipo.
 27. **[DIFERIDO]** Recuperación de MP: la fórmula propia (usa el bono de CON, pero con otra fórmula que el HP) y su relación con el mana de 4.1.2.
+28. Recuperación por hora (1.2): `R = C + V/10`: aclarar si C es el valor o el modificador de CON, y si reemplaza a los Dados de Golpe o convive con ellos.
+29. SX compartido (4.1.3): si el SX se gasta de verdad al construir Gates o subir ramas, si se puede reasignar, y si la reserva tiene tope.
 
 ---
 
 ## Cambios respecto a versiones anteriores
+
+### v0.8.4
+
+- **SX compartido [DECIDIDO el problema, SUPUESTO la solución]:** Zeo y Mana usan el mismo recurso y cada uno lo traía en su esquema. Ahora el SX se gana **sin destino** en una **reserva común** (`sx`) y se **asigna** después a Zeo (por rama) o a Mana (`sx-asignar`); `xp-subsistema` queda como atajo con destino. Resultado `resultado.sx`, sesiones con `sxGanado` y `sxAsignado`. Nueva sección 4.1.3.
+- **Visor:** sección **SX** con la reserva y los formularios para registrar y asignar; formularios de **Mana force** y de **Construir un Gate** dentro de Mana (el tag avisa con qué Gates no conectaría); los chips de cada sesión muestran Gates, Mana force, SX de la reserva e inscripciones; Zeo y Mana avisan si hay SX sin asignar.
+- **Recuperación por hora [PROPUESTA, sin implementar]:** el diseñador aportó `H = (C + 5)·V + 5 + 5·C` y `R = C + V/10`; se despeja V y R sale en HP por hora. Se probó con cuatro casos extremos y queda pendiente aclarar si C es el valor o el modificador de CON (1.2).
+- 65 pruebas del motor (antes 59): reserva, asignación, atajo directo, rechazos y el aviso del Gate. El personaje de ejemplo suma 12 SX en la reserva sin asignar.
 
 ### v0.8.3
 

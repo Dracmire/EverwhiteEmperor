@@ -96,6 +96,10 @@
     if (e.tipo === 'tirada') return (e.recurso === 'hp' || e.recurso === 'mp') && typeof e.dado === 'string' && typeof e.resultado === 'number';
     if (e.tipo === 'inscribir') return typeof e.slot === 'string' && typeof e.habilidad === 'string';
     if (e.tipo === 'desinscribir') return typeof e.slot === 'string';
+    if (e.tipo === 'mana-fuerza') return typeof e.fuente === 'string' && typeof e.cantidad === 'number';
+    if (e.tipo === 'gate') return typeof e.id === 'string' && typeof e.tag === 'string' && typeof e.funcion === 'string';
+    if (e.tipo === 'sx') return typeof e.cantidad === 'number';
+    if (e.tipo === 'sx-asignar' || e.tipo === 'xp-subsistema') return typeof e.subsistema === 'string' && typeof e.cantidad === 'number';
     return false;
   }
 
@@ -254,6 +258,8 @@
     return typeof v === 'number' ? Math.max(minimoVital(rec, max), Math.min(max, Math.round(v))) : max;
   }
   function conSigno(n) { return n < 0 ? '−' + Math.abs(n) : String(n); }
+  /** Un cambio con signo explícito: +2 o −1. */
+  function deltaTxt(n) { return (n < 0 ? '−' : '+') + Math.abs(n); }
   function valorAtributo(calc, k) {
     return calc.personaje.derivados[k] !== undefined ? calc.personaje.derivados[k] : calc.personaje.atributos[k];
   }
@@ -374,6 +380,45 @@
       bloqueAtributos(calc) + perfilTexto + '</section>';
   }
 
+  // ---- SX compartido por Zeo y Mana: una reserva común y su reparto
+
+  function notaReserva(x) {
+    return x.reserva > 0
+      ? '<p class="mute" style="font-size:14px"><b>' + f(x.reserva) + ' SX sin asignar</b> en la reserva común: se reparten en la sección SX.</p>'
+      : '';
+  }
+
+  /** Opciones de destino: Zeo por rama y Mana; con `conReserva` se suma «Reserva» como primera. */
+  function opcionesDestinoSx(calcB, conReserva) {
+    var o = conReserva ? '<option value="reserva">Reserva común (decidir después)</option>' : '';
+    calcB.zeo.ramas.forEach(function (r) { o += '<option value="zeo:' + esc(r.rama) + '">Zeo · ' + esc(Core.rotulo(r.rama)) + '</option>'; });
+    return o + '<option value="mana">Mana</option>';
+  }
+
+  function seccionSx(calcB, con) {
+    var x = calcB.sx;
+    var caja = function (rotuloTxt, valor, cls) { return '<div class="caja ' + (cls || '') + '"><small>' + rotuloTxt + '</small><b>' + valor + '</b></div>'; };
+    var cajas = '<div class="cajas">' + caja('Reserva sin asignar', f(x.reserva), x.reserva > 0 ? 'saldo' : '') + caja('En Zeo', f(x.zeo.total)) + caja('En Mana', f(x.mana)) + caja('SX ganado', f(x.total)) + '</div>';
+    var ramas = calcB.zeo.ramas.map(function (r) { return Core.rotulo(r.rama) + ' ' + f(x.zeo.ramas[r.rama]); }).join(' · ');
+    var cuerpo = '<p class="sub">El SX es un solo recurso que gastan Zeo y Mana. Lo que se gana sin decidir su destino queda en la <b>reserva común</b>; después se <b>asigna</b> a Zeo (a una de sus tres ramas) o a Mana. ' +
+      'Una vez asignado se queda en ese subsistema y no vuelve a la reserva. Si la sesión ya sabe el destino, el SX puede entrar directo. Es un supuesto de diseño: la especificación 4.1.3 lo explica.</p>' + cajas +
+      '<p class="mute" style="font-size:14px">Zeo por rama: ' + esc(ramas) + '. De lo ganado, ' + f(x.ganadoEnReserva) + ' pasó por la reserva (' + f(x.asignado) + ' ya asignado) y ' + f(x.directo) + ' entró directo.</p>';
+    if (con) {
+      cuerpo += '<div class="picker-bloque"><h3 style="font-size:20px">Registrar SX ganado</h3>' +
+        '<p class="sub">Si no sabes todavía a qué va, déjalo en la reserva.</p>' +
+        '<div class="acc-fila"><label class="campo-et">Cantidad<input class="campo" type="number" inputmode="numeric" min="1" step="1" id="sx-gan-n" value="1" style="width:110px;min-width:0"></label>' +
+        '<label class="campo-et">Destino<select class="btn" id="sx-gan-d">' + opcionesDestinoSx(calcB, true) + '</select></label>' +
+        '<button class="btn prim" type="button" data-accion="sx-ganar">Agregar</button></div></div>' +
+        '<div class="picker-bloque"><h3 style="font-size:20px">Asignar de la reserva</h3>' +
+        '<p class="sub">' + (x.reserva > 0 ? 'Hay ' + f(x.reserva) + ' SX en la reserva.' : 'La reserva está vacía: primero registra SX ganado.') + '</p>' +
+        '<div class="acc-fila"><label class="campo-et">Cantidad<input class="campo" type="number" inputmode="numeric" min="1" step="1" max="' + x.reserva + '" id="sx-asi-n" value="' + (x.reserva > 0 ? x.reserva : 1) + '" style="width:110px;min-width:0"' + (x.reserva > 0 ? '' : ' disabled') + '></label>' +
+        '<label class="campo-et">Destino<select class="btn" id="sx-asi-d"' + (x.reserva > 0 ? '' : ' disabled') + '>' + opcionesDestinoSx(calcB, false) + '</select></label>' +
+        '<button class="btn prim" type="button" data-accion="sx-asignar"' + (x.reserva > 0 ? '' : ' disabled') + '>Asignar</button></div></div>';
+    }
+    var resumen = chip('Reserva ' + f(x.reserva), x.reserva > 0 ? 'acc' : 'soft') + chip('Zeo ' + f(x.zeo.total), 'soft') + chip('Mana ' + f(x.mana), 'soft');
+    return desplegable('sx', 'SX', resumen, cuerpo);
+  }
+
   // ---- subsistemas plegables: zeo, mana y magia
 
   function seccionZeo(calc) {
@@ -407,7 +452,7 @@
         '<div class="mini" aria-hidden="true"><i style="width:' + (l.llenado * 100).toFixed(1) + '%"></i>' + marcas + '</div>' +
         '<span class="mute" style="font-size:13px">' + texto + '</span></div>';
     }).join('');
-    var cuerpo = '<div class="zeo-head"><p class="sub" style="flex:1 1 360px;min-width:0">El nivel zeo es el menor de las tres ramas. ' + resumenTxt +
+    var cuerpo = notaReserva(calc.sx) + '<div class="zeo-head"><p class="sub" style="flex:1 1 360px;min-width:0">El nivel zeo es el menor de las tres ramas. ' + resumenTxt +
       ' Tabla de ' + esc(z.unidad) + ' por nivel: ' + z.niveles.join(' · ') + ' (lectura: ' + lectura + ', por confirmar).</p>' +
       '<div class="zeo-nivel"><div style="display:flex;flex-direction:column"><span class="eyebrow">Nivel zeo</span><span class="mute num" style="font-size:13px">= mín(' + nivelesTxt + ')</span></div><b>' + z.nivel + '</b></div></div>' +
       '<div class="grid g300">' + ramas + '</div>' +
@@ -501,6 +546,38 @@
     return fila({ etiqueta: nivel, nombre: nombreSlot(x, m), tip: ayudaSlot(x, m), tipEnNombre: true, der: der });
   }
 
+  /** Mana force y Gates desde el visor: cada formulario crea una entrada del borrador, que el motor valida. */
+  function formulariosMana(calcB, m) {
+    var ctx = estado.ctx;
+    var siguienteId = 'g' + (m.gates.length + 1);
+    var n = m.gates.length + 1;
+    while (m.gates.some(function (g) { return g.id === siguienteId; })) siguienteId = 'g' + (++n);
+    var fuentes = ctx.mana.fuentesMF.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.nombre) + '</option>'; }).join('');
+    var funciones = ctx.mana.funciones.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.nombre) + '</option>'; }).join('');
+    var tags = ctx.manaTags.slice().sort(function (a, b) { return a.nombre.localeCompare(b.nombre, 'es'); }).map(function (t) {
+      var choca = m.gates.filter(function (g) { return (t.incompatibles || []).indexOf(g.tag) >= 0; }).map(function (g) { return g.id; });
+      return '<option value="' + esc(t.id) + '">' + esc(t.nombre) + (choca.length ? ' · sin conexión con ' + choca.join(', ') : '') + '</option>';
+    }).join('');
+    var sig = m.siguiente;
+    var estadoGate = sig
+      ? (sig.disponible ? 'Cumples los requisitos del Gate ' + sig.numero + ' (Mana force ' + sig.mfRequerida + ' y ' + f(sig.sxRequerido) + ' SX).'
+        : 'Al Gate ' + sig.numero + ' le faltan ' + [sig.mfFalta ? sig.mfFalta + ' de Mana force' : '', sig.sxFalta ? f(sig.sxFalta) + ' SX' : ''].filter(Boolean).join(' y ') + '.') +
+        (calcB.sx.reserva > 0 && sig.sxFalta ? ' Hay ' + f(calcB.sx.reserva) + ' SX en la reserva: asígnalos a Mana en la sección SX.' : '')
+      : '';
+    return '<div class="picker-bloque"><h3 style="font-size:20px">Mana force</h3>' +
+      '<p class="sub">Mana force ' + m.fuerza.total + ' ahora. Registra lo que gana o pierde el personaje; perder exige una nota. Cada potencia de 2 compra un Gate.</p>' +
+      '<div class="acc-fila"><label class="campo-et">Cambio<input class="campo" type="number" inputmode="numeric" step="1" id="mf-n" value="1" style="width:110px;min-width:0"></label>' +
+      '<label class="campo-et">Fuente<select class="btn" id="mf-f">' + fuentes + '</select></label>' +
+      '<label class="campo-et">Nota<input class="campo" type="text" id="mf-nota" placeholder="Ej.: contrato con el lobo blanco" autocomplete="off" style="width:260px"></label>' +
+      '<button class="btn prim" type="button" data-accion="mf-agregar">Agregar</button></div></div>' +
+      '<div class="picker-bloque"><h3 style="font-size:20px">Construir un Gate</h3>' +
+      '<p class="sub">Será el Gate <b>' + esc(siguienteId) + '</b>. ' + esc(estadoGate) + ' El tag decide con quién conecta: los pares incompatibles quedan sin conexión. La función es solo del Gate.</p>' +
+      '<div class="acc-fila"><label class="campo-et">Tag<select class="btn" id="gt-tag">' + tags + '</select></label>' +
+      '<label class="campo-et">Función<select class="btn" id="gt-fn">' + funciones + '</select></label>' +
+      '<label class="campo-et">Oportunidad para construirlo<input class="campo" type="text" id="gt-op" placeholder="Ej.: el altar del glaciar" autocomplete="off" style="width:260px"></label>' +
+      '<button class="btn prim" type="button" data-accion="gate-agregar" data-id="' + esc(siguienteId) + '">Agregar Gate</button></div></div>';
+  }
+
   function seccionMana(calc, calcB, pj, con) {
     var m = calcB.mana;
     var mf = m.fuerza;
@@ -513,7 +590,7 @@
         'Mana force ' + sig.mfRequerida + (sig.mfFalta ? ' (te faltan ' + sig.mfFalta + ')' : ' (cumples)') + ' y ' + f(sig.sxRequerido) + ' SX' + (sig.sxFalta ? ' (te faltan ' + f(sig.sxFalta) + ')' : ' (cumples)') +
         ', más una oportunidad para construirlo.' + (sig.disponible ? ' <b>Ya puedes construirlo.</b>' : '') + '</p>'
       : '';
-    var cuerpo = (con ? '<p class="sub">Mana es una serie de poderes como Zeo, y crece con SX. Cada potencia de 2 de Mana force compra un Gate; los Gates conectan por defecto salvo tags incompatibles. Un Gate, un nodo (2 Gates conectados) y un círculo (3) son slots donde se inscribe una habilidad.</p>' : '') + cajas + proximo;
+    var cuerpo = notaReserva(calcB.sx) + (con ? '<p class="sub">Mana es una serie de poderes como Zeo, y crece con SX. Cada potencia de 2 de Mana force compra un Gate; los Gates conectan por defecto salvo tags incompatibles. Un Gate, un nodo (2 Gates conectados) y un círculo (3) son slots donde se inscribe una habilidad.</p>' : '') + cajas + proximo;
     if (m.gates.length) {
       var legend = '<p class="mute" style="font-size:13px">Línea continua: los Gates conectan. Línea roja discontinua: tags incompatibles, no conectan. Triángulo sombreado: círculo. Un Gate con relleno tiene su habilidad inscrita.</p>';
       cuerpo += '<div class="mana-grid"><div class="mana-grafo">' + svgGrafoMana(m) + legend + '</div><div class="mana-slots"><span class="eyebrow">Slots · ' + m.totales.ocupados + ' de ' + m.totales.slots + ' con habilidad</span>' +
@@ -522,8 +599,7 @@
     } else {
       cuerpo += '<p class="mute">Todavía no hay Gates. Con Mana force ' + mf.total + ' se permite ' + plural(mf.permitidos, 'Gate', 'Gates') + '.</p>';
     }
-    cuerpo += contabilidadMF(calc, m) +
-      (con ? '<p class="mute" style="font-size:13px">Por ahora los Gates y la Mana force se agregan escribiendo su entrada en el registro (<code>gate</code> y <code>mana-fuerza</code>, ver la especificación 4.1.2); el visor valida y deriva todo. La inscripción sí se hace desde aquí.</p>' : '');
+    cuerpo += contabilidadMF(calc, m) + (con ? formulariosMana(calcB, m) : '');
     var resumen = chip('MF ' + mf.total, 'acc') + chip(plural(m.totales.gates, 'Gate', 'Gates'), 'soft') + chip(plural(m.totales.slots, 'slot', 'slots') + (m.totales.ocupados ? ' · ' + m.totales.ocupados + ' inscrito' + (m.totales.ocupados === 1 ? '' : 's') : ''), 'soft') +
       chip(f(m.total) + ' SX', 'soft');
     return desplegable('mana', 'Mana', resumen, cuerpo);
@@ -773,6 +849,23 @@
       (resto > 0 ? '<button class="btn" type="button" data-accion="mas" style="align-self:flex-start">Mostrar más (' + resto + ' restantes)</button>' : '') + '</div>';
   }
 
+  function nombreFuenteMF(id) {
+    var c = estado.ctx.mana.fuentesMF.find(function (x) { return x.id === id; });
+    return c ? c.nombre : id;
+  }
+  function nombreTagMana(id) {
+    var t = estado.ctx.manaTags.find(function (x) { return x.id === id; });
+    return t ? t.nombre : id;
+  }
+  function nombreFuncionMana(id) {
+    var fn = estado.ctx.mana.funciones.find(function (x) { return x.id === id; });
+    return fn ? fn.nombre : id;
+  }
+  /** «Mana» o «Zeo · Heaven»: a dónde va un SX. */
+  function destinoSx(subsistema, rama) {
+    return subsistema === 'zeo' ? 'Zeo' + (rama ? ' · ' + Core.rotulo(rama) : '') : 'Mana';
+  }
+
   function etiquetaEntrada(e) {
     if (e.tipo === 'feat') {
       var cat = estado.indiceFeats[e.id];
@@ -787,6 +880,11 @@
       return 'Inscribir · ' + (h ? h.nombre : e.habilidad) + ' en ' + e.slot;
     }
     if (e.tipo === 'desinscribir') return 'Desinscribir · ' + e.slot;
+    if (e.tipo === 'mana-fuerza') return 'Mana force ' + deltaTxt(e.cantidad) + ' · ' + nombreFuenteMF(e.fuente) + (e.nota ? ' (' + e.nota + ')' : '');
+    if (e.tipo === 'gate') return 'Gate ' + e.id + ' · ' + nombreTagMana(e.tag) + ' · ' + nombreFuncionMana(e.funcion);
+    if (e.tipo === 'sx') return 'SX +' + e.cantidad + ' a la reserva';
+    if (e.tipo === 'sx-asignar') return 'SX ' + e.cantidad + ' de la reserva → ' + destinoSx(e.subsistema, e.rama);
+    if (e.tipo === 'xp-subsistema') return 'SX +' + e.cantidad + ' → ' + destinoSx(e.subsistema, e.rama);
     return e.recurso.toUpperCase() + ' · ' + e.dado + ' → ' + e.resultado;
   }
 
@@ -935,6 +1033,11 @@
     var li = Object.keys(s.lineas);
     if (li.length) c.push(['Líneas · ' + li.map(function (l) { return l + ' +' + s.lineas[l]; }).join(' · '), '']);
     if (s.mana) c.push(['Mana +' + s.mana, '']);
+    if (s.sxGanado) c.push(['SX a la reserva +' + s.sxGanado, '']);
+    if (s.sxAsignado.length) c.push(['SX asignado de la reserva · ' + s.sxAsignado.map(function (a) { return destinoSx(a.subsistema, a.rama) + ' ' + a.cantidad; }).join(' · '), '']);
+    s.mf.forEach(function (m) { c.push(['Mana force ' + deltaTxt(m.cantidad) + ' · ' + nombreFuenteMF(m.fuente), '']); });
+    s.gates.forEach(function (g) { c.push(['Gate ' + g.id + ' · ' + g.tagNombre + ' (' + nombreFuncionMana(g.funcion) + ')', 'acc']); });
+    s.inscripciones.forEach(function (i) { c.push([(i.accion === 'inscribir' ? 'Inscribió ' : 'Quitó ') + i.nombre + (i.accion === 'inscribir' ? ' en ' : ' de ') + i.slot, '']); });
     var tir = { hp: 0, mp: 0 };
     s.tiradas.forEach(function (t) { tir[t.recurso] += 1; });
     if (tir.hp || tir.mp) c.push(['Tiradas · ' + (tir.hp ? 'HP ×' + tir.hp : '') + (tir.hp && tir.mp ? ' · ' : '') + (tir.mp ? 'MP ×' + tir.mp : ''), '']);
@@ -1005,7 +1108,7 @@
       (con ? seccionBorrador(calcB, pj, borr) + seccionFeats(calc, calcB, pj, con) : '') +
       seccionLogros(calc, calcB, con) +
       (con ? seccionEquipo(calc, con) + seccionMeritos(calc, pj, con) + seccionTiradas(calcB, con) : '') +
-      seccionZeo(calcB) + seccionMana(calc, calcB, pj, con) + seccionMagia(calcB) + '</section>';
+      seccionSx(calcB, con) + seccionZeo(calcB) + seccionMana(calc, calcB, pj, con) + seccionMagia(calcB) + '</section>';
     return '<div class="page">' +
       '<header class="topbar"><div class="brand"><b>EverwhiteEmperor</b><span class="eyebrow">Visor de personajes</span></div>' +
       '<div class="tools">' + selectorModo() + (pj.datosDeEjemplo ? chip('Datos de ejemplo · personaje inventado', 'gold') : '') + sel +
@@ -1223,6 +1326,13 @@
     toast(cfg.descanso.corto.nombre + ': ' + ultima.dado + ' → ' + resultado + ' ' + (c.mod < 0 ? '−' : '+') + ' ' + Math.abs(c.mod) + ' ' + c.atributo + ', +' + (despues - antes) + ' HP (de ' + conSigno(antes) + ' a ' + conSigno(despues) + ').');
   }
 
+  /** El valor entero de un campo numérico, o null si está vacío o no es entero. */
+  function enteroDe(id) {
+    var c = document.getElementById(id);
+    var v = c && c.value !== '' ? Number(c.value) : NaN;
+    return Number.isInteger(v) ? v : null;
+  }
+
   function accion(boton) {
     var a = boton.getAttribute('data-accion');
     var pj = pjActual();
@@ -1264,6 +1374,37 @@
     } else if (a === 'desinscribir') {
       var slotD = boton.getAttribute('data-slot');
       agregar({ tipo: 'desinscribir', slot: slotD }, 'Se quitará la habilidad de ' + slotD + ' (borrador).');
+    } else if (a === 'mf-agregar') {
+      var mfN = enteroDe('mf-n');
+      if (!mfN) { toast('Escribe cuánta Mana force gana (+) o pierde (−): un entero distinto de 0.', true); return; }
+      var mfNota = (document.getElementById('mf-nota').value || '').trim();
+      var mfE = { tipo: 'mana-fuerza', cantidad: mfN, fuente: document.getElementById('mf-f').value };
+      if (mfNota) mfE.nota = mfNota;
+      agregar(mfE, 'Mana force ' + deltaTxt(mfN) + ' agregada al borrador.');
+    } else if (a === 'gate-agregar') {
+      var gtOp = (document.getElementById('gt-op').value || '').trim();
+      if (!gtOp) { toast('Escribe la oportunidad que permitió construir el Gate.', true); return; }
+      var gtId = boton.getAttribute('data-id');
+      var gtTag = document.getElementById('gt-tag').value;
+      agregar({ tipo: 'gate', id: gtId, funcion: document.getElementById('gt-fn').value, tag: gtTag, oportunidad: gtOp }, 'Gate ' + gtId + ' (' + nombreTagMana(gtTag) + ') agregado al borrador.');
+    } else if (a === 'sx-ganar') {
+      var gN = enteroDe('sx-gan-n');
+      if (!gN || gN < 1) { toast('Escribe cuánto SX se ganó: un entero positivo.', true); return; }
+      var gD = document.getElementById('sx-gan-d').value;
+      if (gD === 'reserva') agregar({ tipo: 'sx', cantidad: gN }, 'SX +' + gN + ' a la reserva (borrador).');
+      else {
+        var gP = gD.split(':');
+        var gE = { tipo: 'xp-subsistema', subsistema: gP[0], cantidad: gN };
+        if (gP[0] === 'zeo') gE.rama = gP[1];
+        agregar(gE, 'SX +' + gN + ' → ' + destinoSx(gP[0], gP[1]) + ' (borrador).');
+      }
+    } else if (a === 'sx-asignar') {
+      var aN = enteroDe('sx-asi-n');
+      if (!aN || aN < 1) { toast('Escribe cuánto SX asignar: un entero positivo.', true); return; }
+      var aP = document.getElementById('sx-asi-d').value.split(':');
+      var aE = { tipo: 'sx-asignar', subsistema: aP[0], cantidad: aN };
+      if (aP[0] === 'zeo') aE.rama = aP[1];
+      agregar(aE, aN + ' SX asignados a ' + destinoSx(aP[0], aP[1]) + ' (borrador).');
     } else if (a === 'gastar-dado') {
       gastarDado('azar');
     } else if (a === 'registrar-dado') {

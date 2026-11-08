@@ -659,6 +659,72 @@ const gate = (id, tag, funcion, op) => ({ tipo: 'gate', id: id, funcion: funcion
 const base = (entradas) => pj([[xp(3000), SX(700), MF(15, 'criatura-contratada', 'prueba')].concat(entradas)]);
 const tagsDe = () => Object.fromEntries(contexto().manaTags.map((t) => [t.id, t]));
 
+// ------------------------------------------------------ SX compartido: reserva y asignación
+
+const SXR = (n) => ({ tipo: 'sx', cantidad: n });
+const ASIG = (sub, n, rama) => Object.assign({ tipo: 'sx-asignar', subsistema: sub, cantidad: n }, rama ? { rama: rama } : {});
+
+test('SX sin destino va a la reserva común y no mueve ni Zeo ni Mana', () => {
+  const r = Core.calcularPersonaje(contexto(), pj([[xp(1000), SXR(30)]]));
+  assert.deepEqual(errores(r), []);
+  assert.deepEqual([r.sx.reserva, r.sx.ganadoEnReserva, r.sx.asignado, r.sx.directo, r.sx.total], [30, 30, 0, 0, 30]);
+  assert.equal(r.mana.total, 0);
+  assert.equal(r.zeo.ramas.every((x) => x.sx === 0), true);
+});
+
+test('sx-asignar saca de la reserva y suma al subsistema elegido (zeo por rama)', () => {
+  const r = Core.calcularPersonaje(contexto(), pj([[xp(1000), SXR(30), ASIG('mana', 12), ASIG('zeo', 10, 'void')]]));
+  assert.deepEqual(errores(r), []);
+  assert.deepEqual([r.sx.reserva, r.sx.asignado, r.sx.total], [8, 22, 30]);
+  assert.equal(r.mana.total, 12);
+  assert.equal(r.zeo.ramas.find((x) => x.rama === 'void').sx, 10);
+  assert.deepEqual(r.sx.zeo, { total: 10, ramas: { heaven: 0, void: 10, earth: 0 } });
+  // La sesión anota lo asignado y lo suma a sus chips de Zeo y Mana.
+  const s = r.sesiones[0];
+  assert.deepEqual([s.sxGanado, s.mana, s.zeo.void], [30, 12, 10]);
+  assert.deepEqual(s.sxAsignado, [{ subsistema: 'mana', rama: null, cantidad: 12 }, { subsistema: 'zeo', rama: 'void', cantidad: 10 }]);
+});
+
+test('xp-subsistema sigue valiendo: el SX nace con destino y no pasa por la reserva', () => {
+  const r = Core.calcularPersonaje(contexto(), pj([[xp(1000), SX(40), SXR(5)]]));
+  assert.deepEqual(errores(r), []);
+  assert.deepEqual([r.sx.reserva, r.sx.directo, r.sx.total, r.mana.total], [5, 40, 45, 40]);
+});
+
+test('sx-asignar: más que la reserva, destino inválido, zeo sin rama o cantidad inválida son rechazados', () => {
+  const casos = [
+    [[xp(1000), SXR(10), ASIG('mana', 11)], /reserva de SX tiene 10/],
+    [[xp(1000), ASIG('mana', 1)], /reserva de SX tiene 0/],
+    [[xp(1000), SXR(10), ASIG('fate', 5)], /destino debe ser zeo o mana/],
+    [[xp(1000), SXR(10), ASIG('zeo', 5)], /zeo exige rama/],
+    [[xp(1000), SXR(10), ASIG('mana', 0)], /entero positivo/],
+    [[xp(1000), SXR(0)], /entero positivo/],
+  ];
+  casos.forEach(([entradas, patron]) => {
+    const e = errores(Core.calcularPersonaje(contexto(), pj([entradas])));
+    assert.equal(e.length, 1, JSON.stringify(entradas));
+    assert.match(e[0], patron);
+  });
+});
+
+test('una entrada rechazada no cambia la reserva (zeo sin rama no consume SX)', () => {
+  const r = Core.calcularPersonaje(contexto(), pj([[xp(1000), SXR(10), ASIG('zeo', 5)]]));
+  assert.equal(errores(r).length, 1);
+  assert.deepEqual([r.sx.reserva, r.sx.asignado], [10, 0]);
+});
+
+test('un Gate sin SX suficiente avisa de la reserva sin asignar', () => {
+  const r = Core.calcularPersonaje(contexto(), pj([[xp(3000), SXR(30), MF(15, 'otra', 'prueba'), gate('g1', 'hielo')]]));
+  const e = errores(r);
+  assert.equal(e.length, 1);
+  assert.match(e[0], /exige 10 SX de mana y el personaje tiene 0/);
+  assert.match(e[0], /hay 30 SX sin asignar en la reserva/);
+  // Asignando antes, el Gate se construye.
+  const ok = Core.calcularPersonaje(contexto(), pj([[xp(3000), SXR(30), ASIG('mana', 10), MF(15, 'otra', 'prueba'), gate('g1', 'hielo')]]));
+  assert.deepEqual(errores(ok), []);
+  assert.equal(ok.mana.gates.length, 1);
+});
+
 test('grafo de Gates: n Gates conectados dan n + C(n,2) + C(n,3) slots', () => {
   const tags = tagsDe();
   const slots = (...ts) => Core.grafoMana(ts.map((t, i) => ({ id: 'g' + (i + 1), tag: t })), tags).slots.length;

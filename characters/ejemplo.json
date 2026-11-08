@@ -566,6 +566,11 @@
           "cantidad": 25
         },
         {
+          "tipo": "sx",
+          "cantidad": 12,
+          "nota": "Botín de la cumbre: aún sin decidir si va a Zeo o a Mana"
+        },
+        {
           "tipo": "inscribir",
           "slot": "g1",
           "habilidad": "power-attack"
