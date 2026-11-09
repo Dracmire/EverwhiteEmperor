@@ -335,6 +335,7 @@
       const sig = mejoras.find(function (m) { return !m.alcanzada; });
       return {
         id: h.id, nombre: h.nombre, nivel: h.nivel, ejecucion: h.ejecucion || 'pasivo', detalle: h.detalle || '', origen: origen,
+        efectos: Array.isArray(h.efectos) ? h.efectos : null,
         sustituye: h.sustituye && porId[h.sustituye] ? { id: h.sustituye, nombre: porId[h.sustituye].nombre } : null,
         mejoras: mejoras, proximaMejora: sig ? sig.nivel : null,
       };
@@ -354,14 +355,147 @@
     };
   }
 
+  // ------------------------------------------------------ ventajas pasivas (6.6)
+
+  function textoConSigno(n) {
+    return (n < 0 ? '−' : '+') + Math.abs(n);
+  }
+
+  /**
+   * Las ventajas de las pasivas del personaje, sumadas y desglosadas (6.6). Lo que no necesita activarse (los feats pasivos y las
+   * habilidades pasivas de la clase y del arquetipo) aporta `efectos`: líneas que se agrupan por objetivo y condición y se suman
+   * (+2 a la CA y +1 a la CA son +3; +4 a la CA contra ataques de oportunidad es otra línea). Lo activo no entra: va a Magia y
+   * habilidades. `cfg` = { catalogo (data/efectos.json), efectosFeats (data/feats.efectos.json → efectos), clase (resultado de
+   * habilidadesDeClase o null), feats (lista del personaje), nivel, atributos ({ WIS: 14, ... }) }.
+   *
+   * Un efecto es o numérico (`objetivo` del catálogo con `valor`, `atributo`, `porNivel`, `cadaNiveles`, `minimo`) o una línea de texto
+   * (`grupo` + `texto`). Lleva `nivel` (desde cuándo cuenta; por defecto el de la habilidad) y puede llevar `reemplaza`: de los efectos
+   * de una misma habilidad con la misma clave solo vale el de mayor nivel alcanzado (el daño sin armas pasa de 1d6 a 1d8, no se suma).
+   * Los números son informativos: no se distinguen tipos de bonificador ni se limita el apilado.
+   */
+  function calcularVentajas(cfg) {
+    const cat = cfg.catalogo || { grupos: [], objetivos: {} };
+    const objetivos = cat.objetivos || {};
+    const ordenObjetivo = Object.keys(objetivos);
+    const grupos = (cat.grupos || []).slice();
+    const nivel = cfg.nivel;
+    const efectosFeats = cfg.efectosFeats || {};
+    const cl = cfg.clase;
+    const fuentes = [];
+    const titulos = { feats: [], clase: [] };
+    const sinDesglose = [];
+    (cfg.feats || []).forEach(function (x, indice) {
+      if (x.tipo === 'habilidad-tipo-conjuro') return;
+      titulos.feats.push({ id: x.id, nombre: x.nombre, indice: indice });
+      const efs = efectosFeats[x.id];
+      if (!Array.isArray(efs)) { sinDesglose.push({ id: x.id, nombre: x.nombre, tipo: 'feat' }); return; }
+      fuentes.push({ id: x.id, nombre: x.nombre, tipo: 'feat', nivel: 1, eleccion: x.eleccion || '', efectos: efs });
+    });
+    ((cl && cl.habilidades) || []).forEach(function (h) {
+      if (h.ejecucion === 'activo') return;
+      titulos.clase.push({ id: h.id, nombre: h.nombre, origen: h.origen, nivel: h.nivel });
+      if (!Array.isArray(h.efectos)) { sinDesglose.push({ id: h.id, nombre: h.nombre, tipo: h.origen }); return; }
+      fuentes.push({ id: h.id, nombre: h.nombre, tipo: h.origen, nivel: h.nivel, eleccion: '', efectos: h.efectos });
+    });
+
+    // Efectos que ya cuentan a este nivel, con la regla de `reemplaza` aplicada.
+    const vigentes = [];
+    fuentes.forEach(function (f) {
+      const alcanzados = f.efectos.map(function (e) { return { f: f, e: e, desde: typeof e.nivel === 'number' ? e.nivel : f.nivel }; })
+        .filter(function (o) { return o.desde <= nivel; });
+      const mejorPorClave = {};
+      alcanzados.forEach(function (o) {
+        if (!o.e.reemplaza) return;
+        const k = o.e.reemplaza;
+        if (!mejorPorClave[k] || o.desde >= mejorPorClave[k].desde) mejorPorClave[k] = o;
+      });
+      alcanzados.forEach(function (o) {
+        if (o.e.reemplaza && mejorPorClave[o.e.reemplaza] !== o) return;
+        vigentes.push(o);
+      });
+    });
+
+    const sust = function (t, f) { return String(t || '').replace(/\{eleccion\}/g, f.eleccion || 'su elección'); };
+    const lineas = {};
+    const orden = [];
+    vigentes.forEach(function (o) {
+      const e = o.e;
+      const f = o.f;
+      const condicion = sust(e.condicion, f) || null;
+      if (e.objetivo) {
+        const def = objetivos[e.objetivo];
+        let v = (e.valor || 0);
+        if (e.cadaNiveles) v = v * (Math.floor((nivel - o.desde) / e.cadaNiveles) + 1);
+        if (e.atributo) v += Math.max(0, modAtributo((cfg.atributos || {})[e.atributo] || 0));
+        if (e.porNivel) v += e.porNivel * nivel;
+        if (typeof e.minimo === 'number') v = Math.max(v, e.minimo);
+        if (v === 0) return;
+        const clave = ['n', e.objetivo, e.etiqueta || '', condicion || ''].join('|');
+        if (!lineas[clave]) {
+          lineas[clave] = { clave: clave, tipo: 'numero', objetivo: e.objetivo, grupo: def ? def.grupo : 'capacidades', valor: 0, condicion: condicion, etiqueta: e.etiqueta || null, partes: [], notas: [] };
+          orden.push(clave);
+        }
+        const ln = lineas[clave];
+        ln.valor += v;
+        const parte = ln.partes.find(function (p) { return p.id === f.id; });
+        if (parte) parte.valor += v;
+        else ln.partes.push({ id: f.id, nombre: f.nombre, tipo: f.tipo, valor: v, bonificador: e.tipo || null });
+        if (e.nota && ln.notas.indexOf(e.nota) < 0) ln.notas.push(e.nota);
+      } else if (e.texto) {
+        const texto = sust(e.texto, f);
+        const grupo = e.grupo || 'capacidades';
+        const clave = ['t', grupo, texto, condicion || ''].join('|');
+        if (!lineas[clave]) {
+          lineas[clave] = { clave: clave, tipo: 'texto', objetivo: null, grupo: grupo, texto: texto, condicion: condicion, partes: [], notas: [] };
+          orden.push(clave);
+        }
+        const ln = lineas[clave];
+        if (!ln.partes.some(function (p) { return p.id === f.id; })) ln.partes.push({ id: f.id, nombre: f.nombre, tipo: f.tipo, valor: null, bonificador: null });
+        if (e.nota && ln.notas.indexOf(e.nota) < 0) ln.notas.push(e.nota);
+      }
+    });
+
+    // Escribe cada línea numérica con el formato del catálogo y ordena: primero los números (en el orden del catálogo, sin condición antes que con ella), luego los textos.
+    const lista = orden.map(function (k) { return lineas[k]; });
+    lista.forEach(function (ln) {
+      if (ln.tipo !== 'numero') return;
+      const def = objetivos[ln.objetivo] || {};
+      const u = def.unidad ? ' ' + def.unidad : '';
+      // El valor va aparte (valorTexto) para que el visor lo destaque: antes + valorTexto + despues es el texto de la línea.
+      const formato = (def.formato || '{v} (' + ln.objetivo + ')').replace(/\{etiqueta\}/g, ln.etiqueta || '');
+      const m = /\{(v|n)\}/.exec(formato);
+      ln.antes = m ? formato.slice(0, m.index) : '';
+      ln.valorTexto = m ? (m[1] === 'v' ? textoConSigno(ln.valor) : String(Math.abs(ln.valor))) + u : '';
+      ln.despues = m ? formato.slice(m.index + m[0].length) : formato;
+      ln.texto = ln.antes + ln.valorTexto + ln.despues;
+    });
+    const posicion = function (ln) { return orden.indexOf(ln.clave); };
+    const porGrupo = grupos.map(function (g) {
+      const propias = lista.filter(function (ln) { return ln.grupo === g.id; });
+      const numeros = propias.filter(function (ln) { return ln.tipo === 'numero'; }).sort(function (a, b) {
+        const d = ordenObjetivo.indexOf(a.objetivo) - ordenObjetivo.indexOf(b.objetivo);
+        if (d) return d;
+        if (!!a.condicion !== !!b.condicion) return a.condicion ? 1 : -1;
+        return posicion(a) - posicion(b);
+      });
+      const textos = propias.filter(function (ln) { return ln.tipo === 'texto'; }).sort(function (a, b) { return posicion(a) - posicion(b); });
+      return { id: g.id, nombre: g.nombre, lineas: numeros.concat(textos) };
+    }).filter(function (g) { return g.lineas.length; });
+    // Un grupo que el catálogo no conoce no se pierde: va al final como «Otros».
+    const conocidos = grupos.map(function (g) { return g.id; });
+    const huerfanas = lista.filter(function (ln) { return conocidos.indexOf(ln.grupo) < 0; });
+    if (huerfanas.length) porGrupo.push({ id: 'otros', nombre: 'Otros', lineas: huerfanas });
+    return { grupos: porGrupo, titulos: titulos, sinDesglose: sinDesglose, total: lista.length };
+  }
+
   /**
    * Progresión de conjuros de una clase a un nivel (4.2). `detalle.conjuros.porDia` es la tabla de la clase (una fila por nivel
    * de clase, un número por nivel de conjuro desde el 0). Sin `ritmo` el personaje de nivel N usa la fila N de la tabla.
    * Con `ritmo` (cada cuántos niveles de personaje llega un nivel de conjuro nuevo) el nivel de conjuro 0 y el 1 llegan en el
    * nivel 1 y el nivel de conjuro n >= 2 en el nivel `ritmo` × (n − 1): con ritmo 3, el 2.º en el nivel 3, el 3.º en el 6, el 4.º en
-   * el 9, etc. Las cantidades por día siguen la misma tabla a ese paso: el personaje de nivel N usa la fila floor(2N / ritmo) + 1
-   * (en la fila 2n − 1 aparece el nivel de conjuro n). `conjuros.trucos` ({ factor, redondeo }) reduce los trucos por día respecto
-   * de la tabla (en el wizard, a la mitad: 4 → 2). Devuelve null si la clase no lanza conjuros (su espacio en Magia lo ocupan
+   * el 9, etc. Lo que cambia es solo CUÁNDO llega cada nivel de conjuro: las cantidades por día salen siempre de la fila del nivel
+   * del personaje, y las de un nivel de conjuro que todavía no llega no se cuentan. `conjuros.trucos` ({ factor, redondeo })
+   * reduce los trucos por día respecto de la tabla (en el wizard, a la mitad: 4 → 2). Devuelve null si la clase no lanza conjuros (su espacio en Magia lo ocupan
    * las habilidades activas).
    */
   function progresionConjuros(detalle, nivel) {
@@ -370,7 +504,6 @@
     const ritmo = c.ritmo || null;
     const tabla = c.porDia;
     const fila = function (n) { return tabla[Math.min(tabla.length, Math.max(1, n)) - 1]; };
-    const filaDe = function (n) { return ritmo ? Math.floor(n * 2 / ritmo) + 1 : n; };
     const maxNivelConjuro = Math.max.apply(null, tabla.map(function (f) { return f.length; })) - 1;
     // Nivel de personaje en el que llega cada nivel de conjuro.
     const llegadas = [];
@@ -386,7 +519,7 @@
       return tr.redondeo === 'abajo' ? Math.floor(v) : tr.redondeo === 'cerca' ? Math.round(v) : Math.ceil(v);
     };
     const porDia = llegadas.filter(function (ll) { return ll.enNivel <= nivel; }).map(function (ll) {
-      const f = fila(filaDe(nivel));
+      const f = fila(nivel);
       const base = f[ll.nivelConjuro] === undefined ? 0 : f[ll.nivelConjuro];
       return { nivelConjuro: ll.nivelConjuro, cantidad: ll.nivelConjuro === 0 ? ajustaTrucos(base) : base, cantidadBase: base, enNivel: ll.enNivel };
     });
@@ -1290,6 +1423,10 @@
       },
       clase: habilidadesDeClase(detalleClase, arquetipoDef ? arquetipoDef.id : null, nivelInfo.nivel),
       conjuros: progresionConjuros(detalleClase, nivelInfo.nivel),
+      ventajas: calcularVentajas({
+        catalogo: ctx.efectos, efectosFeats: ctx.efectosFeats, clase: habilidadesDeClase(detalleClase, arquetipoDef ? arquetipoDef.id : null, nivelInfo.nivel),
+        feats: estado.feats, nivel: nivelInfo.nivel, atributos: todos,
+      }),
       xp: estado.xp,
       nivel: nivelInfo,
       sesiones: sesionesOut,
@@ -1474,6 +1611,8 @@
     meritos: 'meritos.json',
     feats: 'feats.pf1.json',
     conversiones: 'feats.conversiones.json',
+    efectos: 'efectos.json',
+    efectosFeats: 'feats.efectos.json',
     items: 'items.json',
     achievements: 'achievements.json',
     traits: 'traits.json',
@@ -1496,6 +1635,9 @@
       meritos: raw.meritos.meritos,
       // Las decisiones de diseño (conversiones) se aplican encima del catálogo importado.
       feats: raw.feats.feats.map(function (f) { return conv[f.id] ? Object.assign({}, f, conv[f.id]) : f; }),
+      // Qué suma cada ventaja pasiva (data/efectos.json: grupos y objetivos; data/feats.efectos.json: efectos por feat).
+      efectos: raw.efectos || { grupos: [], objetivos: {} },
+      efectosFeats: (raw.efectosFeats && raw.efectosFeats.efectos) || {},
       items: raw.items.items,
       achievements: raw.achievements.achievements,
       traits: raw.traits.traits,
@@ -1528,6 +1670,7 @@
     proximoSlot: proximoSlot,
     habilidadesDeClase: habilidadesDeClase,
     progresionConjuros: progresionConjuros,
+    calcularVentajas: calcularVentajas,
     rutaClase: rutaClase,
     etiquetaAlineamiento: etiquetaAlineamiento,
     ATRIBUTOS_BASE: ATRIBUTOS_BASE,

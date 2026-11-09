@@ -1,0 +1,33 @@
+{
+  "version": "0.9",
+  "nota": "Catálogo de lo que puede sumar una ventaja pasiva (la tarjeta Pasivas del visor). Los grupos fijan el orden de las columnas y cada objetivo dice a qué grupo va y cómo se escribe. En `formato`, {v} es el valor con signo (+4, −2) y {n} el valor sin signo; la unidad, si hay, va detrás del número. Un efecto de una habilidad de clase (`efectos` en data/clases/<id>.json) o de un feat (data/feats.efectos.json) usa estos objetivos. Los números son informativos: el visor no distingue tipos de bonificador ni apila o limita nada.",
+  "grupos": [
+    { "id": "defensa", "nombre": "Defensa" },
+    { "id": "salvaciones", "nombre": "Salvaciones" },
+    { "id": "ataque", "nombre": "Ataque e iniciativa" },
+    { "id": "movimiento", "nombre": "Movimiento" },
+    { "id": "habilidades", "nombre": "Habilidades" },
+    { "id": "magia", "nombre": "Lanzamiento" },
+    { "id": "vitalidad", "nombre": "Vitalidad" },
+    { "id": "resistencias", "nombre": "Inmunidades y resistencias" },
+    { "id": "capacidades", "nombre": "Capacidades" }
+  ],
+  "objetivos": {
+    "ca": { "grupo": "defensa", "formato": "{v} a la CA" },
+    "dmc": { "grupo": "defensa", "formato": "{v} a la DMC" },
+    "rc": { "grupo": "defensa", "formato": "Resistencia a conjuros {n}" },
+    "salv-fort": { "grupo": "salvaciones", "formato": "{v} a la salvación de Fortaleza" },
+    "salv-ref": { "grupo": "salvaciones", "formato": "{v} a la salvación de Reflejos" },
+    "salv-vol": { "grupo": "salvaciones", "formato": "{v} a la salvación de Voluntad" },
+    "salv-todas": { "grupo": "salvaciones", "formato": "{v} a las salvaciones" },
+    "ataque": { "grupo": "ataque", "formato": "{v} a las tiradas de ataque" },
+    "dano": { "grupo": "ataque", "formato": "{v} al daño" },
+    "iniciativa": { "grupo": "ataque", "formato": "{v} a la iniciativa" },
+    "velocidad": { "grupo": "movimiento", "unidad": "pies", "formato": "{v} de velocidad" },
+    "caida": { "grupo": "movimiento", "unidad": "pies", "formato": "Reduce {n} el daño por caída" },
+    "habilidad": { "grupo": "habilidades", "formato": "{v} a {etiqueta}" },
+    "concentracion": { "grupo": "magia", "formato": "{v} a las pruebas de concentración" },
+    "penetracion": { "grupo": "magia", "formato": "{v} para vencer la resistencia a conjuros" },
+    "pg": { "grupo": "vitalidad", "formato": "{v} pg" }
+  }
+}

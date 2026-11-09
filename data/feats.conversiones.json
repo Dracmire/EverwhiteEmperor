@@ -5,6 +5,14 @@
     "power-attack": {
       "ejecucion": "activo",
       "nota": "Ejemplo del personaje de muestra: un feat que se declara cada turno se trata como habilidad tipo conjuro."
+    },
+    "spring-attack": {
+      "ejecucion": "activo",
+      "nota": "Se declara en el turno (moverse, atacar y seguir moviéndose): una opción táctica, no una ventaja que se suma."
+    },
+    "empower-spell": {
+      "ejecucion": "activo",
+      "nota": "Se aplica a un conjuro al lanzarlo o prepararlo: una opción táctica, va a Magia y habilidades."
     }
   }
 }

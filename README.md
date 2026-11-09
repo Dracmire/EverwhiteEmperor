@@ -2,13 +2,13 @@
 
 Tracker de personajes de TTRPG basado en Pathfinder 1e, para un sistema propio: una clase por personaje, atributos STR, DEX, PER, INT, WIS y CHA (CON, SPR y MND se derivan), HP y MP con dados, XP por tags y grados, subsistemas (zeo y mana), méritos y defectos, traits, feats, achievements, fate y equipo por extremidad. Todo se deriva de un registro por sesión.
 
-Estado: borrador (v0.9.7). Las cifras de Mana (SX por Gate, Mana force y los 13 tags de ejemplo) son supuestos hasta que el diseñador las fije. La especificación está en [`docs/ESPECIFICACION.md`](docs/ESPECIFICACION.md).
+Estado: borrador (v0.9.8). Las cifras de Mana (SX por Gate, Mana force y los 13 tags de ejemplo) son supuestos hasta que el diseñador las fije. La especificación está en [`docs/ESPECIFICACION.md`](docs/ESPECIFICACION.md).
 
 ## Qué hay
 
 | Ruta | Contenido |
 |---|---|
-| `data/` | Reglas y catálogos en JSON: curva y tags de XP, zeo, mana (Mana force, SX por Gate y tabla de compatibilidad entre tags), vitalidad (fatiga, estados y descansos), razas, habilidades y arquetipos de clase (`data/clases/`, solo Monk y Wizard), méritos y defectos, objetos, achievements, traits, y el catálogo de Pathfinder 1e (665 feats y 37 clases, importados). Los catálogos de ejemplo están marcados. |
+| `data/` | Reglas y catálogos en JSON: curva y tags de XP, zeo, mana (Mana force, SX por Gate y tabla de compatibilidad entre tags), vitalidad (fatiga, estados y descansos), razas, habilidades y arquetipos de clase (`data/clases/`, solo Monk y Wizard) y lo que suman las pasivas (`efectos.json`, `feats.efectos.json`), méritos y defectos, objetos, achievements, traits, y el catálogo de Pathfinder 1e (665 feats y 37 clases, importados). Los catálogos de ejemplo están marcados. |
 | `characters/` | Un JSON por personaje (el registro por sesión). `ejemplo.json` es un personaje inventado de nivel 7; `musashi-nanaya.json` (monje, Sombra asesina) y `herb-azzio.json` (mago, Polímata sin escuela) son dos personajes de muestra en borrador. Sus retratos van en `characters/retratos/` (campo `imagen`). |
 | `src/core.js` | Motor de cálculo: reproduce el registro y devuelve XP, nivel, atributos derivados, HP y MP, zeo, mana (Gates, nodos, círculos y slots), la reserva de SX que comparten, fate, feats, méritos, equipo y avisos. |
 | `viewer/` | Visor (HTML, CSS y JS sin dependencias): ficha con retrato, HP y MP y atributos, secciones plegadas y registro de sesiones; vistas Jugar (listas con tooltip, fatiga y recuperación en HP por hora) y Construir (selector de feats, asignación de achievements, tiradas de HP y MP, formularios de Mana force y de Gates, reparto del SX entre Zeo y Mana, e inscripción de habilidades en los slots de Mana). No escribe en los personajes: el borrador se copia como JSON. |

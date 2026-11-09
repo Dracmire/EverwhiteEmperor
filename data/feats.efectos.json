@@ -1,0 +1,31 @@
+{
+  "version": "0.9",
+  "nota": "Qué suma cada feat pasivo en la tarjeta Pasivas del visor. Los efectos son un resumen propio de la regla (no el texto del libro) y sirven solo para ver las ventajas juntas; los feats que no están aquí aparecen en el visor como «sin desglose». Campos de un efecto: objetivo (uno de data/efectos.json) o grupo + texto para una línea sin número; valor, atributo (suma su modificador si es positivo), porNivel (suma ese valor por nivel), minimo (el total no baja de ahí), condicion (cuándo se aplica: separa la línea), etiqueta (la habilidad concreta, con objetivo habilidad), tipo y nota (se muestran en el desglose, no separan la línea). {eleccion} dentro de condicion o texto se sustituye por la elección del feat (por ejemplo, el arma). Un feat de ejecución activa no va aquí: pasa a Magia y habilidades (data/feats.conversiones.json).",
+  "efectos": {
+    "dodge": [
+      { "objetivo": "ca", "valor": 1, "tipo": "esquiva" }
+    ],
+    "mobility": [
+      { "objetivo": "ca", "valor": 4, "tipo": "esquiva", "condicion": "contra ataques de oportunidad por moverse" }
+    ],
+    "stealthy": [
+      { "objetivo": "habilidad", "etiqueta": "Escapismo", "valor": 2, "nota": "+4 con 10 o más rangos" },
+      { "objetivo": "habilidad", "etiqueta": "Sigilo", "valor": 2, "nota": "+4 con 10 o más rangos" }
+    ],
+    "improved-initiative": [
+      { "objetivo": "iniciativa", "valor": 4 }
+    ],
+    "toughness": [
+      { "objetivo": "pg", "porNivel": 1, "minimo": 3, "nota": "El mayor entre 3 y el nivel; no se suma a la vitalidad calculada" }
+    ],
+    "combat-casting": [
+      { "objetivo": "concentracion", "valor": 4, "condicion": "al lanzar a la defensiva o agarrado" }
+    ],
+    "spell-penetration": [
+      { "objetivo": "penetracion", "valor": 2 }
+    ],
+    "craft-wand": [
+      { "grupo": "capacidades", "texto": "Puede crear varitas" }
+    ]
+  }
+}

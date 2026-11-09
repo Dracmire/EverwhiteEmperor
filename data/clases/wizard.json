@@ -10,7 +10,7 @@
     "atributo": "INT",
     "fuente": "Tabla de conjuros por día del Wizard (PF1 CRB). Cada fila es un nivel de clase y cada número, los conjuros por día desde el nivel 0 en adelante.",
     "ritmo": 3,
-    "nota": "Progresión del mago [SUPUESTO el reparto por día]: llega un nivel de conjuro nuevo cada 3 niveles de personaje en vez de cada 2 (nivel de conjuro 2 en el nivel 3, 3 en el 6, 4 en el 9, 5 en el 12, 6 en el 15, 7 en el 18…), y el nivel 1 da trucos y conjuros de nivel 1. Las cantidades por día siguen la tabla del Wizard de PF1 a ese paso (2 niveles de la tabla por cada 3 de personaje). Los trucos por día se reducen a la mitad (redondeo hacia arriba: 4 → 2, y los 3 del nivel 1 → 2). No incluye conjuros extra por INT ni por escuela.",
+    "nota": "Progresión del mago [DECIDIDO el ritmo, de 3 niveles]: llega un nivel de conjuro nuevo cada 3 niveles de personaje en vez de cada 2 (nivel de conjuro 2 en el nivel 3, 3 en el 6, 4 en el 9, 5 en el 12, 6 en el 15, 7 en el 18…), y el nivel 1 da trucos y conjuros de nivel 1. Las cantidades por día salen de la tabla del Wizard de PF1 según el nivel del personaje (así un mago de nivel 7 tiene 9 conjuros por día y 2 trucos), pero no cuenta los niveles de conjuro que todavía no llegan. Los trucos por día se reducen a la mitad (redondeo hacia arriba: 4 → 2, y los 3 del nivel 1 → 2). No incluye conjuros extra por INT ni por escuela.",
     "trucos": {
       "factor": 0.5,
       "redondeo": "arriba"
@@ -192,6 +192,9 @@
       "nombre": "Weapon and Armor Proficiency",
       "nivel": 1,
       "ejecucion": "pasivo",
+      "efectos": [
+        { "grupo": "capacidades", "texto": "Maneja garrote, daga, bastón y ballestas; no lleva armadura ni escudo" }
+      ],
       "detalle": "Maneja garrote, daga, bastón y ballestas ligera y pesada; no lleva armadura ni escudo. La armadura le estorba al lanzar conjuros."
     },
     {
@@ -199,6 +202,7 @@
       "nombre": "Spells",
       "nivel": 1,
       "ejecucion": "pasivo",
+      "efectos": [],
       "detalle": "Lanza conjuros arcanos de la lista de hechicero y mago, prepara cada día los que va a usar y su atributo de lanzamiento es INT. Aquí solo se documenta la clase: en este sistema la magia pasa por Mana (4.2)."
     },
     {
@@ -206,6 +210,7 @@
       "nombre": "Spellbook",
       "nivel": 1,
       "ejecucion": "pasivo",
+      "efectos": [],
       "detalle": "Guarda sus conjuros en un libro: empieza con todos los trucos y tres conjuros de nivel 1 más uno por punto de su bono de INT, y añade dos conjuros nuevos en cada nivel."
     },
     {
@@ -227,6 +232,7 @@
       "nombre": "Arcane School",
       "nivel": 1,
       "ejecucion": "pasivo",
+      "efectos": [],
       "detalle": "Elige una escuela de especialista o universalista, y la elección es permanente. El especialista tiene dos escuelas de oposición (preparar sus conjuros cuesta dos espacios), un espacio extra por nivel de conjuro y un poder de escuela desde el nivel 1. El universalista no tiene restricciones y recibe Hand of the Apprentice.",
       "mejoras": [
         {
@@ -240,6 +246,9 @@
       "nombre": "Scribe Scroll",
       "nivel": 1,
       "ejecucion": "pasivo",
+      "efectos": [
+        { "grupo": "capacidades", "texto": "Escribe pergaminos con los conjuros que conoce" }
+      ],
       "detalle": "Puede escribir pergaminos con los conjuros que conoce. Es una habilidad de clase (el feat Scribe Scroll): no ocupa un slot de feat."
     },
     {
@@ -247,6 +256,7 @@
       "nombre": "Bonus Feat",
       "nivel": 5,
       "ejecucion": "pasivo",
+      "efectos": [],
       "detalle": "Un feat de metamagia, de creación de objetos o Spell Mastery, cumpliendo sus requisitos. En este sistema se elige dentro de los slots normales.",
       "mejoras": [
         {
@@ -288,6 +298,9 @@
           "sustituye": "arcane-school",
           "nivel": 1,
           "ejecucion": "pasivo",
+          "efectos": [
+            { "grupo": "capacidades", "texto": "Prepara conjuros de cualquier escuela sin restricciones" }
+          ],
           "detalle": "Sin escuela: puede preparar conjuros de cualquier escuela sin restricciones. Ganas un slot de feat extra en este nivel y en los niveles 4, 8, 12, 16 y 20.",
           "mejoras": [
             {

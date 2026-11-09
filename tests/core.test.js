@@ -1416,7 +1416,7 @@ test('personajes de muestra: Musashi Nanaya (monje) y Herb\'Azzio (mago)', () =>
   // Magia: el monje no lanza conjuros; el mago de nivel 7 llega al 3.º (un nivel de conjuro nuevo cada 3 niveles) y los trucos van a la mitad (4 → 2).
   assert.equal(mu.conjuros, null);
   assert.equal(he.conjuros.nivelMax, 3);
-  assert.deepEqual(he.conjuros.porDia.map((x) => x.cantidad), [2, 3, 2, 1]);
+  assert.deepEqual(he.conjuros.porDia.map((x) => x.cantidad), [2, 4, 3, 2]);
   assert.deepEqual(he.conjuros.proximos, [{ nivelConjuro: 4, enNivel: 9 }, { nivelConjuro: 5, enNivel: 12 }]);
   // Herb'Azzio (v0.9.6): dados d4 y d10; Estrella Mana nivel 2 (Gate de Oro = Sentidos y de Fuego = Capacidad), contrato de Ashura (2 por nivel).
   assert.deepEqual([he.recursos.hp.tiradas[0].dado, he.recursos.mp.tiradas[0].dado], ['d4', 'd10']);
@@ -1449,15 +1449,21 @@ test('progresión de conjuros del mago: un nivel de conjuro nuevo cada 3 niveles
   // El nivel de conjuro n >= 2 llega en el nivel 3 × (n − 1): 3, 6, 9, 12, 15, 18, 21, 24; el 0 y el 1 en el nivel 1.
   assert.deepEqual(en(1).llegadas.map((x) => x.enNivel), [1, 1, 3, 6, 9, 12, 15, 18, 21, 24]);
   assert.deepEqual([1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20].map((n) => en(n).nivelMax), [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7]);
-  // Cantidades por día: siguen la tabla de PF a 2 filas por cada 3 niveles (fila floor(2N/3) + 1).
+  // Cantidades por día: salen de la fila de la tabla del nivel del personaje, sin contar los niveles de conjuro que aún no llegan.
   assert.deepEqual(en(3).porDia.map((x) => x.cantidad), [2, 2, 1]);
-  assert.deepEqual(en(6).porDia.map((x) => x.cantidad), [2, 3, 2, 1]);
-  assert.deepEqual(en(9).porDia.map((x) => x.cantidad), [2, 4, 3, 2, 1]);
-  assert.deepEqual(en(20).porDia.map((x) => x.cantidad), [2, 4, 4, 4, 4, 3, 3, 2]);
+  assert.deepEqual(en(5).porDia.map((x) => x.cantidad), [2, 3, 2]);
+  assert.deepEqual(en(6).porDia.map((x) => x.cantidad), [2, 3, 3, 2]);
+  assert.deepEqual(en(7).porDia.map((x) => x.cantidad), [2, 4, 3, 2]);
+  assert.deepEqual(en(9).porDia.map((x) => x.cantidad), [2, 4, 4, 3, 2]);
+  assert.deepEqual(en(20).porDia.map((x) => x.cantidad), [2, 4, 4, 4, 4, 4, 4, 4]);
+  // Un mago de nivel N tiene siempre al menos N conjuros por día (sin contar los trucos).
+  for (let n = 1; n <= 20; n++) assert.ok(en(n).porDia.slice(1).reduce((a, x) => a + x.cantidad, 0) >= n, 'nivel ' + n);
   assert.deepEqual([1, 5, 9, 20].map((n) => en(n).porDia[0].cantidad), [2, 2, 2, 2]);
   assert.deepEqual(en(8).proximo, { nivelConjuro: 4, enNivel: 9 });
   // Nunca pierde conjuros por día al subir de nivel (el total no baja).
   for (let n = 2; n <= 20; n++) assert.ok(en(n).total >= en(n - 1).total, 'nivel ' + n);
+  // Con el ritmo de 3, a los 7 niveles faltan los niveles de conjuro 4 y 5; con el ritmo de PF (sin `ritmo`) un mago de nivel 7 ya tiene el 4.
+  assert.equal(Core.progresionConjuros(Object.assign({}, mago, { conjuros: Object.assign({}, mago.conjuros, { ritmo: undefined }) }), 7).nivelMax, 4);
   // Los dos próximos niveles de conjuro, con el nivel de personaje en que llegan.
   assert.deepEqual(en(7).proximos, [{ nivelConjuro: 4, enNivel: 9 }, { nivelConjuro: 5, enNivel: 12 }]);
   assert.deepEqual(en(1).proximos, [{ nivelConjuro: 2, enNivel: 3 }, { nivelConjuro: 3, enNivel: 6 }]);
@@ -1656,4 +1662,118 @@ test('data/conjuros.json: ids únicos, niveles de 0 a 9 y listas de clases que e
     assert.ok(!('descripcion' in c), c.id + ': el catálogo no copia el texto');
   });
   assert.deepEqual(cat.listas.filter((k) => !clases.has(k)), []);
+});
+
+// ------------------------------------------------------- ventajas pasivas (6.6)
+
+test('ventajas pasivas: lo que no se activa se suma y se desglosa por grupo (Musashi, nivel 7)', () => {
+  const c = contexto();
+  const mu = Core.calcularPersonaje(c, leer('characters/musashi-nanaya.json'));
+  const v = mu.ventajas;
+  const linea = (grupo, texto) => (v.grupos.find((g) => g.id === grupo) || { lineas: [] }).lineas.find((l) => l.texto === texto);
+  // WIS 16 = +3, más +1 a los niveles 4 (y 8…): +4 a la CA y a la DMC solo sin armadura; el +1 de Dodge y el +4 de Mobility son otras líneas.
+  const defensaTodas = v.grupos.find((g) => g.id === 'defensa').lineas;
+  const caMonk = defensaTodas.find((l) => l.texto === '+4 a la CA' && l.condicion === 'sin armadura, sin escudo y con carga ligera');
+  assert.ok(caMonk, 'CA de Monk');
+  assert.deepEqual(caMonk.partes.map((p) => p.nombre), ['AC Bonus']);
+  assert.ok(defensaTodas.find((l) => l.texto === '+4 a la DMC' && l.condicion));
+  assert.equal(linea('defensa', '+1 a la CA').condicion, null);
+  assert.ok(defensaTodas.some((l) => l.texto === '+4 a la CA' && l.condicion === 'contra ataques de oportunidad por moverse'));
+  assert.equal(defensaTodas.filter((l) => l.texto === '+4 a la CA').length, 2, 'dos líneas de +4 a la CA con condiciones distintas, no una de +8');
+  // Los números van antes que los textos, sin condición antes que con ella, y el valor viene aparte para destacarlo.
+  const defensa = v.grupos.find((g) => g.id === 'defensa').lineas;
+  assert.equal(defensa[0].condicion, null);
+  assert.equal(defensa[0].valorTexto, '+1');
+  // Velocidad: +10 pies cada 3 niveles desde el 3 → +20 a nivel 7. La caída se reemplaza (30 pies), no se suma.
+  assert.ok(linea('movimiento', '+20 pies de velocidad'));
+  assert.ok(linea('movimiento', 'Reduce 30 pies el daño por caída'));
+  assert.equal(linea('movimiento', 'Reduce 30 pies el daño por caída').valorTexto, '30 pies');
+  // El daño sin armas pasa de 1d6 a 1d8 a nivel 4: solo queda la línea del nivel más alto alcanzado.
+  const dano = v.grupos.find((g) => g.id === 'ataque').lineas.filter((l) => /Daño sin armas/.test(l.texto));
+  assert.deepEqual(dano.map((l) => l.texto), ['Daño sin armas 1d8']);
+  // Salvaciones con condición separadas.
+  assert.ok(linea('salvaciones', '+2 a las salvaciones'));
+  assert.ok(v.grupos.find((g) => g.id === 'salvaciones').lineas.some((l) => l.valor === 4 && l.condicion === 'contra veneno'));
+  // Los feats y habilidades activas no entran: Spring Attack y Sneak Attack van a Magia y habilidades.
+  const nombres = v.titulos.feats.map((t) => t.nombre).concat(v.titulos.clase.map((t) => t.nombre));
+  assert.ok(nombres.indexOf('Dodge') >= 0 && nombres.indexOf('AC Bonus') >= 0);
+  assert.equal(nombres.indexOf('Spring Attack'), -1);
+  assert.equal(nombres.indexOf('Sneak Attack'), -1);
+  assert.equal(nombres.indexOf('Flurry of Blows'), -1);
+  assert.deepEqual(v.sinDesglose, []);
+  // Cada línea dice de qué salen sus números.
+  assert.deepEqual(linea('defensa', '+1 a la CA').partes.map((p) => p.nombre), ['Dodge']);
+});
+
+test('ventajas pasivas: Herb\'Azzio suma lo suyo y Empower Spell es una habilidad, no una pasiva', () => {
+  const c = contexto();
+  const he = Core.calcularPersonaje(c, leer('characters/herb-azzio.json'));
+  const todas = [].concat(...he.ventajas.grupos.map((g) => g.lineas));
+  const texto = (t) => todas.find((l) => l.texto === t);
+  assert.ok(texto('+4 a la iniciativa'));
+  assert.ok(texto('+7 pg'), 'Toughness: el mayor entre 3 y el nivel (7)');
+  assert.ok(texto('+4 a las pruebas de concentración'));
+  assert.ok(texto('+2 para vencer la resistencia a conjuros'));
+  assert.equal(he.ventajas.titulos.feats.some((t) => t.id === 'empower-spell'), false);
+  assert.ok(he.feats.lista.some((x) => x.id === 'empower-spell' && x.tipo === 'habilidad-tipo-conjuro'));
+  assert.ok(he.feats.lista.some((x) => x.id === 'spring-attack') === false);
+  const mu = Core.calcularPersonaje(c, leer('characters/musashi-nanaya.json'));
+  assert.ok(mu.feats.lista.some((x) => x.id === 'spring-attack' && x.tipo === 'habilidad-tipo-conjuro'));
+  // Sneak Attack del arquetipo es activo: aparece entre las habilidades activas de la clase, no entre las pasivas.
+  assert.equal(mu.clase.habilidades.find((h) => h.id === 'sneak-attack').ejecucion, 'activo');
+});
+
+test('ventajas pasivas: valores por atributo, por nivel, mínimo y reemplazo con un catálogo propio', () => {
+  const cat = { grupos: [{ id: 'g', nombre: 'G' }], objetivos: { x: { grupo: 'g', formato: '{v} a X' }, y: { grupo: 'g', unidad: 'pies', formato: 'Y {n}' } } };
+  const clase = (nivel) => ({
+    habilidades: [{ id: 'h', nombre: 'H', nivel: 1, ejecucion: 'pasivo', origen: 'clase', efectos: [
+      { objetivo: 'x', atributo: 'WIS' }, { objetivo: 'x', valor: 1, nivel: 4, cadaNiveles: 4 },
+      { objetivo: 'x', porNivel: 1, minimo: 3, condicion: 'mínimo' },
+      { objetivo: 'y', valor: 10, nivel: 1, reemplaza: 'k' }, { objetivo: 'y', valor: 20, nivel: 5, reemplaza: 'k' },
+      { objetivo: 'x', valor: 0, condicion: 'cero' },
+    ] }],
+  });
+  const calc = (nivel, wis) => Core.calcularVentajas({ catalogo: cat, clase: clase(nivel), feats: [], nivel: nivel, atributos: { WIS: wis } });
+  const lineas = (r) => r.grupos[0].lineas.map((l) => l.texto + (l.condicion ? ' [' + l.condicion + ']' : ''));
+  assert.deepEqual(lineas(calc(1, 16)), ['+3 a X', '+3 a X [mínimo]', 'Y 10 pies']);
+  assert.deepEqual(lineas(calc(4, 16)), ['+4 a X', '+4 a X [mínimo]', 'Y 10 pies']);
+  assert.deepEqual(lineas(calc(8, 8)), ['+2 a X', '+8 a X [mínimo]', 'Y 20 pies']);   // WIS 8 = −1: un atributo bajo no resta
+  assert.equal(calc(1, 16).grupos[0].lineas.length, 3, 'un valor 0 no genera línea');
+});
+
+test('ventajas pasivas: feats con elección, feats sin desglose y un grupo desconocido', () => {
+  const cat = { grupos: [{ id: 'g', nombre: 'G' }], objetivos: { x: { grupo: 'g', formato: '{v} a X' } } };
+  const r = Core.calcularVentajas({
+    catalogo: cat, nivel: 3, atributos: {}, clase: null,
+    efectosFeats: { 'wf': [{ objetivo: 'x', valor: 1, condicion: 'con {eleccion}' }, { grupo: 'zzz', texto: 'algo raro' }] },
+    feats: [{ id: 'wf', nombre: 'Weapon Focus (espada)', eleccion: 'espada', tipo: 'feat' }, { id: 'nuevo', nombre: 'Nuevo', tipo: 'feat' }, { id: 'act', nombre: 'Act', tipo: 'habilidad-tipo-conjuro' }],
+  });
+  assert.equal(r.grupos[0].lineas[0].condicion, 'con espada');
+  assert.deepEqual(r.sinDesglose.map((x) => x.id), ['nuevo']);
+  assert.equal(r.grupos[r.grupos.length - 1].id, 'otros', 'un grupo que el catálogo no conoce no se pierde');
+  assert.deepEqual(r.titulos.feats.map((t) => t.id), ['wf', 'nuevo']);
+});
+
+test('data/efectos.json y los efectos de feats y clases usan objetivos y grupos del catálogo', () => {
+  const c = contexto();
+  const grupos = c.efectos.grupos.map((g) => g.id);
+  Object.keys(c.efectos.objetivos).forEach((k) => assert.ok(grupos.indexOf(c.efectos.objetivos[k].grupo) >= 0, 'objetivo ' + k));
+  const revisar = (nombre, efs) => efs.forEach((e) => {
+    if (e.objetivo) assert.ok(c.efectos.objetivos[e.objetivo], nombre + ': objetivo ' + e.objetivo);
+    else { assert.ok(e.texto, nombre + ': un efecto sin objetivo lleva texto'); assert.ok(grupos.indexOf(e.grupo || 'capacidades') >= 0, nombre + ': grupo ' + e.grupo); }
+    if (e.objetivo === 'habilidad') assert.ok(e.etiqueta, nombre + ': una habilidad lleva etiqueta');
+  });
+  const idsFeats = new Set(c.feats.map((f) => f.id));
+  Object.keys(c.efectosFeats).forEach((id) => {
+    assert.ok(idsFeats.has(id), 'el feat ' + id + ' existe');
+    assert.notEqual(c.feats.find((f) => f.id === id).ejecucion, 'activo', id + ' es activo: no lleva efectos pasivos');
+    revisar(id, c.efectosFeats[id]);
+  });
+  Object.keys(c.clasesDetalle).forEach((id) => {
+    const d = c.clasesDetalle[id];
+    d.habilidades.concat([].concat(...(d.arquetipos || []).map((a) => a.habilidades || []))).forEach((h) => {
+      if (h.ejecucion === 'activo') assert.equal(h.efectos, undefined, id + '/' + h.id + ' es activa: no lleva efectos');
+      if (h.efectos) revisar(id + '/' + h.id, h.efectos);
+    });
+  });
 });

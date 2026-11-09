@@ -871,7 +871,7 @@
   }
 
   /**
-   * Cuerpo de Magia (4.2): los conjuros por día de la clase (con los dos próximos niveles), el repertorio y las habilidades activas,
+   * Cuerpo de Magia y habilidades (4.2): las opciones tácticas, todo lo que se activa. Los conjuros por día de la clase (con los dos próximos niveles), el repertorio y las habilidades activas,
    * que ocupan el lugar de los conjuros: las de la clase y las que salen de un feat de ejecución activa.
    */
   function cuerpoMagia(calcB, con) {
@@ -901,8 +901,8 @@
       ? '<p class="mute" style="font-size:13px">Próximas: ' + esc(prox.slice(0, 4).map(function (h) { return h.nombre + ' (nivel ' + h.nivel + ')'; }).join(', ')) + (prox.length > 4 ? ' y ' + (prox.length - 4) + ' más' : '') + '.</p>'
       : '';
     return prog + bloqueRepertorio(calcB, con) +
-      '<div class="bloque-feats"><span class="eyebrow">Habilidades activas</span>' +
-      (tarjetas ? '<div class="grid g300">' + tarjetas + '</div>' : '<p class="mute">Todavía no hay habilidades activas. Una habilidad activa de la clase o un feat de ejecución activa aparece aquí al ganarlo.</p>') + '</div>' + proximas +
+      '<div class="bloque-feats"><span class="eyebrow">Habilidades · opciones tácticas</span>' +
+      (tarjetas ? '<div class="grid g300">' + tarjetas + '</div>' : '<p class="mute">Todavía no hay habilidades que activar. Una habilidad de la clase o un feat que necesita activarse aparece aquí al ganarlo.</p>') + '</div>' + proximas +
       (con ? formulariosConjuros(calcB) : '');
   }
 
@@ -916,12 +916,12 @@
 
   /** Vista Jugar: tarjeta siempre visible, donde irían los conjuros. */
   function seccionMagiaJuego(calcB) {
-    return '<section class="card bloque-juego"><div class="row-between" style="align-items:center"><h2>Magia</h2><span class="chips">' + chipsMagia(calcB) + '</span></div>' + cuerpoMagia(calcB, false) + '</section>';
+    return '<section class="card bloque-juego"><div class="row-between" style="align-items:center"><h2>Magia y habilidades</h2><span class="chips">' + chipsMagia(calcB) + '</span></div>' + cuerpoMagia(calcB, false) + '</section>';
   }
 
   /** Vista Construir: plegable. */
   function seccionMagia(calcB) {
-    return desplegable('magia', 'Magia', chipsMagia(calcB), cuerpoMagia(calcB, true));
+    return desplegable('magia', 'Magia y habilidades', chipsMagia(calcB), cuerpoMagia(calcB, true));
   }
 
   function etiquetaSesion(calc, id) {
@@ -1055,22 +1055,58 @@
       '<span class="chip ' + (activo ? 'acc' : '') + '">' + (activo ? 'Habilidad tipo conjuro' : 'Pasivo') + '</span>' + enlaceFeat(cat) + '</div>';
   }
 
-  /** Vista Jugar: los feats y las habilidades pasivas de la clase comparten tarjeta; las activas están en Magia. */
+  // ---- la tarjeta Pasivas (6.6): ventajas sumadas
+
+  /** Una línea del desglose: el valor sumado (destacado), lo que modifica, la condición y de dónde sale. */
+  function lineaVentaja(ln) {
+    var partes = ln.partes.map(function (p) {
+      return p.nombre + (p.valor !== null ? ' ' + (p.valor < 0 ? '−' : '+') + Math.abs(p.valor) : '') + (p.bonificador ? ' (' + p.bonificador + ')' : '');
+    });
+    var cuerpo = ln.tipo === 'numero'
+      ? esc(ln.antes) + '<b class="ven-v">' + esc(ln.valorTexto) + '</b>' + esc(ln.despues)
+      : esc(ln.texto);
+    return '<li class="ven ' + ln.tipo + '"' + tip(partes.length > 1 ? partes.join('\n') : '') + '>' +
+      '<span class="ven-t">' + cuerpo + (ln.condicion ? ' <span class="ven-c">' + esc(ln.condicion) + '</span>' : '') + '</span>' +
+      '<span class="ven-f">' + esc(ln.partes.map(function (p) { return p.nombre; }).join(' · ')) + '</span>' +
+      (ln.notas.length ? '<small class="ven-n">' + esc(ln.notas.join(' ')) + '</small>' : '') + '</li>';
+  }
+
+  /** El desglose de las ventajas pasivas por grupo (Defensa, Salvaciones, …), línea por línea. */
+  function bloqueVentajas(v) {
+    var grupos = v.grupos.map(function (g) {
+      return '<div class="pas-grupo"><span class="eyebrow">' + esc(g.nombre) + '</span><ul class="ven-lista">' + g.lineas.map(lineaVentaja).join('') + '</ul></div>';
+    }).join('');
+    var sin = v.sinDesglose.length
+      ? '<p class="mute" style="font-size:13px"' + tip('Sus efectos todavía no están descritos en los datos (data/feats.efectos.json o el archivo de la clase).') + '>Sin desglose todavía: ' + esc(v.sinDesglose.map(function (x) { return x.nombre; }).join(', ')) + '.</p>'
+      : '';
+    return (grupos ? '<div class="pas-grupos">' + grupos + '</div>' : '<p class="mute">Todavía no hay ventajas pasivas que sumar.</p>') + sin;
+  }
+
+  /** Vista Jugar: arriba los títulos de las pasivas (feats y habilidades de la clase), debajo lo que suman, línea por línea. Lo que se activa va a Magia y habilidades. */
   function seccionFeatsJuego(calc, calcB) {
     var ft = calcB.feats;
     var cl = calcB.clase;
+    var v = calcB.ventajas;
     var confirmados = calc.feats.lista.length;
-    var pasivos = [];
-    ft.lista.forEach(function (x, i) { if (x.tipo !== 'habilidad-tipo-conjuro') pasivos.push({ x: x, borrador: i >= confirmados }); });
-    var filas = pasivos.map(function (o) {
-      var cat = estado.indiceFeats[o.x.id];
-      return fila({ nombre: o.x.nombre, tip: cat && cat.resumen ? cat.resumen : '', medio: o.borrador ? chip('Borrador', 'gold') : '', der: enlaceFeat(cat) });
+    var chipsFeats = v.titulos.feats.map(function (t) {
+      var cat = estado.indiceFeats[t.id];
+      var borrador = t.indice >= confirmados;
+      return chipTip(t.nombre, borrador ? 'gold' : 'soft', (borrador ? 'Borrador. ' : '') + (cat && cat.resumen ? cat.resumen : 'Feat pasivo.'));
     }).join('');
-    return '<section class="card bloque-juego"><div class="row-between" style="align-items:center"><h2>Feats y habilidades pasivas</h2>' +
-      '<span class="chips">' + chip(ft.slotsUsados + ' de ' + ft.slotsTotales + ' slots', ft.slotsLibres ? 'acc' : 'soft') + (ft.slotsLibres ? chip(plural(ft.slotsLibres, 'libre', 'libres'), 'gold') : '') + chipArquetipo(cl) + '</span></div>' +
-      '<div class="bloque-feats"><span class="eyebrow">Feats</span>' +
-      (filas ? '<ul class="ren-lista">' + filas + '</ul>' : '<p class="mute">Sin feats pasivos.</p>') + '</div>' +
-      bloqueClasePasiva(cl, false) + '</section>';
+    var chipsClase = cl ? cl.habilidades.filter(function (h) { return !esActiva(h); }).map(function (h) {
+      return chipTip(h.nombre, h.origen === 'arquetipo' ? 'gold' : 'soft', tipHabilidad(h));
+    }).join('') : '';
+    var prox = cl ? cl.proximas.filter(function (h) { return !esActiva(h); }) : [];
+    var proximas = prox.length
+      ? '<p class="mute" style="font-size:13px">Próximas: ' + esc(prox.slice(0, 4).map(function (h) { return h.nombre + ' (nivel ' + h.nivel + ')'; }).join(', ')) + (prox.length > 4 ? ' y ' + (prox.length - 4) + ' más' : '') + '.</p>'
+      : '';
+    return '<section class="card bloque-juego pasivas"><div class="row-between" style="align-items:center"><h2>Pasivas</h2>' +
+      '<span class="chips">' + chip(ft.slotsUsados + ' de ' + ft.slotsTotales + ' slots de feat', ft.slotsLibres ? 'acc' : 'soft') + (ft.slotsLibres ? chip(plural(ft.slotsLibres, 'libre', 'libres'), 'gold') : '') + chipArquetipo(cl) + '</span></div>' +
+      '<div class="pas-titulos">' +
+      '<div class="bloque-feats"><span class="eyebrow">Feats</span>' + (chipsFeats ? '<div class="chips">' + chipsFeats + '</div>' : '<p class="mute">Sin feats pasivos.</p>') + '</div>' +
+      (cl ? '<div class="bloque-feats"><span class="eyebrow">' + esc(cl.nombre) + (cl.arquetipo ? ' · ' + esc(cl.arquetipo.nombre) : '') + '</span>' + (chipsClase ? '<div class="chips">' + chipsClase + '</div>' : '<p class="mute">Todavía sin habilidades pasivas de clase.</p>') + '</div>' : '') +
+      '</div>' + proximas +
+      '<div class="pas-ventajas"><span class="eyebrow">Lo que suman</span>' + bloqueVentajas(v) + '</div></section>';
   }
 
   function seccionFeats(calc, calcB, pj, con) {
@@ -1091,7 +1127,8 @@
       (ft.proximoSlot ? '; el próximo llega al nivel ' + ft.proximoSlot : '') + '.</p>' : '') +
       '<div class="slots">' + slots + '</div><div class="lista">' + (lista || '<p class="mute">Sin feats.</p>') + '</div>' +
       bloqueClasePasiva(calcB.clase, con) +
-      (activos.length ? '<p class="mute" style="font-size:13px">' + esc(activos.map(function (a) { return a.nombre; }).join(', ')) + (activos.length === 1 ? ' es un feat de ejecución activa: se reclasifica' : ' son feats de ejecución activa: se reclasifican') + ' como habilidad tipo conjuro.</p>' : '') +
+      '<div class="bloque-feats"><span class="eyebrow">Lo que suman las pasivas</span>' + bloqueVentajas(calcB.ventajas) + '</div>' +
+      (activos.length ? '<p class="mute" style="font-size:13px">' + esc(activos.map(function (a) { return a.nombre; }).join(', ')) + (activos.length === 1 ? ' es un feat de ejecución activa: se reclasifica' : ' son feats de ejecución activa: se reclasifican') + ' como habilidad tipo conjuro (van a Magia y habilidades).</p>' : '') +
       (con ? bloquePicker(calcB, pj) : '');
     var hayBorr = ft.lista.length > confirmados;
     var resumen = chip(ft.slotsUsados + ' de ' + ft.slotsTotales + ' slots', ft.slotsLibres ? 'acc' : 'soft') + (ft.slotsLibres ? chip(plural(ft.slotsLibres, 'libre', 'libres'), 'gold') : '') +
@@ -1146,7 +1183,7 @@
       (filas ? '<ul class="ren-lista">' + filas + '</ul>' : '<p class="mute">Todavía sin habilidades pasivas de clase.</p>') + '</div>' + proximas;
   }
 
-  /** Una habilidad activa de la clase, como tarjeta: es lo que ocupa el lugar de los conjuros en la tarjeta de Magia. */
+  /** Una habilidad activa de la clase, como tarjeta: es lo que ocupa el lugar de los conjuros en la tarjeta de Magia y habilidades. */
   function tarjetaActivaClase(h) {
     var logradas = h.mejoras.filter(function (m) { return m.alcanzada; }).map(function (m) { return '<small class="mute">Nivel ' + m.nivel + ': ' + esc(m.detalle) + '</small>'; }).join('');
     return '<div class="tarjeta-activa"><div class="row-between" style="align-items:center"><b>' + esc(h.nombre) + '</b>' + chip('Activa', 'acc') + '</div>' +

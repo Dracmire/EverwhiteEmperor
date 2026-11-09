@@ -409,3 +409,18 @@ textarea.json:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px
 .cajas.chicas .caja small { font-size: 11px; line-height: 1.2; }
 .cajas.chicas .caja b { font-size: 20px; line-height: 1.1; }
 .cajas.chicas .caja.proximo b { font-family: inherit; font-size: 12px; line-height: 1.5; font-weight: 600; }
+
+/* Pasivas (6.6): títulos arriba, lo que suman debajo, línea por línea */
+.pas-titulos { display: grid; gap: 14px 28px; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); }
+.pas-ventajas { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
+.pas-grupos { column-width: 320px; column-gap: 32px; }
+.pas-grupo { display: flex; flex-direction: column; gap: 4px; min-width: 0; break-inside: avoid; margin-bottom: 18px; }
+.ven-lista { list-style: none; margin: 0; padding: 0; }
+.ven { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 12px; padding: 7px 4px; border-bottom: 1px solid var(--line); min-width: 0; }
+.ven-t { flex: 1 1 180px; min-width: 0; overflow-wrap: anywhere; line-height: 1.4; }
+.ven.texto .ven-t::before { content: "• "; color: var(--mute); }
+.ven-v { font-family: Fraunces, Georgia, serif; font-size: 18px; font-weight: 700; font-variant-numeric: lining-nums; color: var(--acc); }
+.ven-c { font-size: 13px; color: var(--mute); }
+.ven-f { margin-left: auto; font-size: 12px; color: var(--mute); text-align: right; }
+.ven-n { flex-basis: 100%; font-size: 12px; color: var(--mute); }
+.ven[data-tip]:hover { background: var(--surf2); }

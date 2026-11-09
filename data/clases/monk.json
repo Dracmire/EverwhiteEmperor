@@ -12,6 +12,7 @@
       "nombre": "Bonus Feat",
       "nivel": 1,
       "ejecucion": "pasivo",
+      "efectos": [],
       "detalle": "Un feat de una lista corta, sin pedir sus requisitos. Lista inicial: Catch Off-Guard, Combat Reflexes, Deflect Arrows, Dodge, Improved Grapple, Scorpion Style y Throw Anything. En este sistema se elige dentro de los slots normales.",
       "mejoras": [
         { "nivel": 2, "detalle": "Otro feat de la lista inicial." },
@@ -26,6 +27,15 @@
       "nombre": "Improved Unarmed Strike",
       "nivel": 1,
       "ejecucion": "pasivo",
+      "efectos": [
+        { "grupo": "capacidades", "texto": "Golpes sin armas sin provocar ataques de oportunidad; cuentan como armas naturales" },
+        { "grupo": "ataque", "texto": "Daño sin armas 1d6", "nivel": 1, "reemplaza": "dano-sin-armas" },
+        { "grupo": "ataque", "texto": "Daño sin armas 1d8", "nivel": 4, "reemplaza": "dano-sin-armas" },
+        { "grupo": "ataque", "texto": "Daño sin armas 1d10", "nivel": 8, "reemplaza": "dano-sin-armas" },
+        { "grupo": "ataque", "texto": "Daño sin armas 2d6", "nivel": 12, "reemplaza": "dano-sin-armas" },
+        { "grupo": "ataque", "texto": "Daño sin armas 2d8", "nivel": 16, "reemplaza": "dano-sin-armas" },
+        { "grupo": "ataque", "texto": "Daño sin armas 2d10", "nivel": 20, "reemplaza": "dano-sin-armas" }
+      ],
       "detalle": "Golpea sin armas sin provocar ataques de oportunidad, y sus puños, codos, rodillas y pies cuentan como armas naturales a todo efecto. Su daño sin armas es 1d6 (criatura mediana).",
       "mejoras": [
         { "nivel": 4, "detalle": "Daño sin armas 1d8." },
@@ -65,6 +75,12 @@
       "nombre": "AC Bonus",
       "nivel": 1,
       "ejecucion": "pasivo",
+      "efectos": [
+        { "objetivo": "ca", "atributo": "WIS", "condicion": "sin armadura, sin escudo y con carga ligera" },
+        { "objetivo": "ca", "valor": 1, "nivel": 4, "cadaNiveles": 4, "condicion": "sin armadura, sin escudo y con carga ligera" },
+        { "objetivo": "dmc", "atributo": "WIS", "condicion": "sin armadura, sin escudo y con carga ligera" },
+        { "objetivo": "dmc", "valor": 1, "nivel": 4, "cadaNiveles": 4, "condicion": "sin armadura, sin escudo y con carga ligera" }
+      ],
       "detalle": "Sin armadura, sin escudo y con carga ligera, suma su bono de WIS a la CA y a la DMC.",
       "mejoras": [
         { "nivel": 4, "detalle": "+1 más a la CA y la DMC." },
@@ -79,6 +95,9 @@
       "nombre": "Evasion",
       "nivel": 2,
       "ejecucion": "pasivo",
+      "efectos": [
+        { "grupo": "salvaciones", "texto": "Reflejos superada contra un efecto que reduce el daño a la mitad: no recibe daño" }
+      ],
       "detalle": "Si supera una salvación de Reflejos que normalmente reduce el daño a la mitad, no recibe ningún daño."
     },
     {
@@ -86,6 +105,9 @@
       "nombre": "Fast Movement",
       "nivel": 3,
       "ejecucion": "pasivo",
+      "efectos": [
+        { "objetivo": "velocidad", "valor": 10, "nivel": 3, "cadaNiveles": 3, "condicion": "sin armadura ni carga media o pesada" }
+      ],
       "detalle": "Sin armadura ni carga media o pesada, gana +10 pies de velocidad.",
       "mejoras": [
         { "nivel": 6, "detalle": "+20 pies en total." },
@@ -100,6 +122,9 @@
       "nombre": "Maneuver Training",
       "nivel": 3,
       "ejecucion": "pasivo",
+      "efectos": [
+        { "grupo": "ataque", "texto": "Maniobras de combate: ataque base igual a su nivel de monje" }
+      ],
       "detalle": "Para las maniobras de combate usa su nivel de monje como ataque base, no el ataque base real."
     },
     {
@@ -107,6 +132,9 @@
       "nombre": "Still Mind",
       "nivel": 3,
       "ejecucion": "pasivo",
+      "efectos": [
+        { "objetivo": "salv-todas", "valor": 2, "condicion": "contra efectos de encantamiento" }
+      ],
       "detalle": "+2 a las salvaciones contra los efectos de encantamiento."
     },
     {
@@ -126,6 +154,17 @@
       "nombre": "Slow Fall",
       "nivel": 4,
       "ejecucion": "pasivo",
+      "efectos": [
+        { "objetivo": "caida", "valor": 20, "nivel": 4, "reemplaza": "caida", "condicion": "al alcance de una pared" },
+        { "objetivo": "caida", "valor": 30, "nivel": 6, "reemplaza": "caida", "condicion": "al alcance de una pared" },
+        { "objetivo": "caida", "valor": 40, "nivel": 8, "reemplaza": "caida", "condicion": "al alcance de una pared" },
+        { "objetivo": "caida", "valor": 50, "nivel": 10, "reemplaza": "caida", "condicion": "al alcance de una pared" },
+        { "objetivo": "caida", "valor": 60, "nivel": 12, "reemplaza": "caida", "condicion": "al alcance de una pared" },
+        { "objetivo": "caida", "valor": 70, "nivel": 14, "reemplaza": "caida", "condicion": "al alcance de una pared" },
+        { "objetivo": "caida", "valor": 80, "nivel": 16, "reemplaza": "caida", "condicion": "al alcance de una pared" },
+        { "objetivo": "caida", "valor": 90, "nivel": 18, "reemplaza": "caida", "condicion": "al alcance de una pared" },
+        { "grupo": "movimiento", "texto": "Reduce el daño por caída de cualquier distancia", "nivel": 20, "reemplaza": "caida", "condicion": "al alcance de una pared" }
+      ],
       "detalle": "Si está al alcance de una pared, reduce el daño por caída en 20 pies.",
       "mejoras": [
         { "nivel": 6, "detalle": "30 pies." },
@@ -150,6 +189,9 @@
       "nombre": "Purity of Body",
       "nivel": 5,
       "ejecucion": "pasivo",
+      "efectos": [
+        { "grupo": "resistencias", "texto": "Inmune a toda enfermedad, incluida la sobrenatural y la mágica" }
+      ],
       "detalle": "Es inmune a todas las enfermedades, incluidas las sobrenaturales y mágicas."
     },
     {
@@ -164,6 +206,9 @@
       "nombre": "Improved Evasion",
       "nivel": 9,
       "ejecucion": "pasivo",
+      "efectos": [
+        { "grupo": "salvaciones", "texto": "Reflejos fallida contra un efecto que reduce el daño a la mitad: recibe solo la mitad" }
+      ],
       "detalle": "Como Evasion, pero si falla la salvación de Reflejos igualmente recibe solo la mitad del daño."
     },
     {
@@ -171,6 +216,9 @@
       "nombre": "Diamond Body",
       "nivel": 11,
       "ejecucion": "pasivo",
+      "efectos": [
+        { "grupo": "resistencias", "texto": "Inmune a todos los venenos" }
+      ],
       "detalle": "Es inmune a todos los venenos."
     },
     {
@@ -185,6 +233,9 @@
       "nombre": "Diamond Soul",
       "nivel": 13,
       "ejecucion": "pasivo",
+      "efectos": [
+        { "objetivo": "rc", "valor": 10, "porNivel": 1 }
+      ],
       "detalle": "Obtiene resistencia a conjuros igual a 10 + su nivel de monje."
     },
     {
@@ -199,6 +250,9 @@
       "nombre": "Timeless Body",
       "nivel": 17,
       "ejecucion": "pasivo",
+      "efectos": [
+        { "grupo": "capacidades", "texto": "No sufre penalizadores por envejecer" }
+      ],
       "detalle": "Ya no sufre penalizadores por envejecer, aunque la edad sigue pasando."
     },
     {
@@ -206,6 +260,9 @@
       "nombre": "Tongue of the Sun and Moon",
       "nivel": 17,
       "ejecucion": "pasivo",
+      "efectos": [
+        { "grupo": "capacidades", "texto": "Habla con cualquier criatura viva" }
+      ],
       "detalle": "Puede hablar con cualquier criatura viva."
     },
     {
@@ -220,6 +277,10 @@
       "nombre": "Perfect Self",
       "nivel": 20,
       "ejecucion": "pasivo",
+      "efectos": [
+        { "grupo": "resistencias", "texto": "Reducción de daño 10/caótico" },
+        { "grupo": "capacidades", "texto": "Criatura exterior nativa" }
+      ],
       "detalle": "Se convierte en una criatura exterior nativa y obtiene reducción de daño 10/caótico."
     }
   ],
@@ -236,7 +297,7 @@
           "nombre": "Sneak Attack",
           "sustituye": "stunning-fist",
           "nivel": 1,
-          "ejecucion": "pasivo",
+          "ejecucion": "activo",
           "detalle": "+1d6 de daño de precisión cuando el objetivo no puede defenderse bien: desprevenido, flanqueado o sin su bono de Destreza a la CA. Funciona en cada golpe de una ráfaga.",
           "mejoras": [
             { "nivel": 5, "detalle": "+2d6 en total." },
@@ -251,6 +312,9 @@
           "sustituye": "maneuver-training",
           "nivel": 3,
           "ejecucion": "pasivo",
+          "efectos": [
+            { "grupo": "movimiento", "texto": "Avanza a velocidad normal sin el penalizador a Sigilo por moverse y sin dejar rastro audible en superficies duras" }
+          ],
           "detalle": "Avanza a su velocidad normal sin el penalizador a Sigilo por moverse, y no deja rastro audible sobre superficies duras. Sigue sin dar bono para fintar ni para disfrazarse."
         },
         {
@@ -259,6 +323,10 @@
           "sustituye": "purity-of-body",
           "nivel": 5,
           "ejecucion": "pasivo",
+          "efectos": [
+            { "objetivo": "salv-todas", "valor": 4, "condicion": "contra veneno" },
+            { "grupo": "capacidades", "texto": "Aplica venenos a sus armas sin riesgo de envenenarse" }
+          ],
           "detalle": "Aplica venenos a sus armas sin riesgo de envenenarse y gana +4 a las salvaciones contra veneno (a la inmunidad total llega con Diamond Body)."
         },
         {
