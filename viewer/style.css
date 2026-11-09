@@ -395,12 +395,17 @@ textarea.json:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px
 .ficha-hab { display: flex; flex-wrap: wrap; gap: 14px 32px; }
 .ficha-hab-grupo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 
-/* Conjuros y técnicas (v0.9.5): una fila por nivel; los trucos van a la mitad de tamaño. */
+/* Conjuros (Magia) y técnicas (Estrella Mana): una fila por grupo. */
 .conj-grupo { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
 .conj-et { flex: 0 0 76px; font-size: 12px; font-weight: 600; color: var(--mute); }
 .conj-grupo .chips { gap: 6px; align-items: center; }
-.conj-truco { gap: 3px 8px; }
-.conj-truco .conj-et { flex-basis: 76px; font-size: 10px; }
-.conj-truco .chips { gap: 4px; }
-.conj-truco .chip { padding: 1px 6px; font-size: 10px; line-height: 1.3; }
 .conj-grupo .link { font-size: 12px; margin-left: -2px; }
+/* Contenedor de SX de una técnica que se está aprendiendo. */
+.tm-barra { display: inline-block; width: 120px; height: 8px; border-radius: 999px; background: var(--track); overflow: hidden; }
+.tm-barra > i { display: block; height: 100%; background: var(--acc); }
+/* Tarjetas compactas de conjuros por día (v0.9.6). */
+.cajas.chicas { gap: 6px; }
+.cajas.chicas .caja { flex: 0 0 auto; min-width: 62px; padding: 5px 10px; border-radius: 10px; }
+.cajas.chicas .caja small { font-size: 11px; line-height: 1.2; }
+.cajas.chicas .caja b { font-size: 20px; line-height: 1.1; }
+.cajas.chicas .caja.proximo b { font-family: inherit; font-size: 12px; line-height: 1.5; font-weight: 600; }

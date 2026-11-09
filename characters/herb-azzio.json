@@ -172,51 +172,61 @@
         {
           "tipo": "gate",
           "id": "g1",
+          "funcion": "sentidos",
           "tag": "oro"
         },
         {
           "tipo": "gate",
           "id": "g2",
+          "funcion": "capacidad",
           "tag": "fuego"
         },
         {
-          "tipo": "conjuro",
+          "tipo": "mana-tecnica",
           "nombre": "Sagita Lux Magica",
           "nivel": 1,
           "costo": "Magia invertida, máximo 12",
           "descripcion": "Crea 1 proyectil por cada punto de magia invertido, pero retrasa la acción 1 punto de iniciativa por cada punto de magia invertido. Máximo 12."
         },
         {
-          "tipo": "conjuro",
+          "tipo": "mana-tecnica",
           "nombre": "Senderos de la Magia",
           "nivel": 2
         },
         {
-          "tipo": "conjuro",
+          "tipo": "mana-tecnica",
+          "nombre": "Heat Pulse",
+          "nivel": 1
+        },
+        {
+          "tipo": "mana-tecnica",
           "nombre": "Circle Activation",
-          "categoria": "tecnica",
+          "categoria": "activa",
+          "nivel": 1,
           "costo": "Mana 1",
           "descripcion": "Circula magia por el circuito mágico para aumentar tu RES mágica y purgar efectos mágicos menores."
         },
         {
-          "tipo": "conjuro",
+          "tipo": "mana-tecnica",
           "nombre": "Parallel World Casting",
           "nivel": 3,
-          "aprendiendo": true,
-          "requisitos": {
-            "gates": 3,
-            "sx": 200
-          }
+          "costoSx": 200,
+          "descripcion": "Requiere un círculo de Mana (3 Gates) y 200 SX."
         },
         {
           "tipo": "inscribir",
           "slot": "g1",
-          "conjuro": "sagita-lux-magica"
+          "tecnica": "sagita-lux-magica"
         },
         {
           "tipo": "inscribir",
           "slot": "g1-g2",
-          "conjuro": "senderos-de-la-magia"
+          "tecnica": "senderos-de-la-magia"
+        },
+        {
+          "tipo": "inscribir",
+          "slot": "g2",
+          "tecnica": "heat-pulse"
         }
       ]
     }

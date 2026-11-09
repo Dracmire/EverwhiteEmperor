@@ -2,7 +2,7 @@
 
 Tracker de personajes de TTRPG basado en Pathfinder 1e, para un sistema propio: una clase por personaje, atributos STR, DEX, PER, INT, WIS y CHA (CON, SPR y MND se derivan), HP y MP con dados, XP por tags y grados, subsistemas (zeo y mana), méritos y defectos, traits, feats, achievements, fate y equipo por extremidad. Todo se deriva de un registro por sesión.
 
-Estado: borrador (v0.9.5). Las cifras de Mana (SX por Gate, Mana force y los 13 tags de ejemplo) son supuestos hasta que el diseñador las fije. La especificación está en [`docs/ESPECIFICACION.md`](docs/ESPECIFICACION.md).
+Estado: borrador (v0.9.6). Las cifras de Mana (SX por Gate, Mana force y los 13 tags de ejemplo) son supuestos hasta que el diseñador las fije. La especificación está en [`docs/ESPECIFICACION.md`](docs/ESPECIFICACION.md).
 
 ## Qué hay
 
