@@ -1,0 +1,469 @@
+{
+  "version": "0.1.0",
+  "fuente": "Hoja de Musashi Nanaya: bloque de técnicas Zeo (columnas D a O) y filas OUT.",
+  "notas": {
+    "estructura": "Cada línea tiene una técnica raíz (nivel 1) con su rama (heaven, earth o void) y una lista de mejoras por nivel (2 a 5). La hoja trae 3 por nivel en los niveles 2 a 4; Meditación trae 4 en el nivel 3. El nivel 5 aún no tiene opciones.",
+    "cuantas": "El catálogo lista todas las opciones de un nivel. Cuántas se pueden tomar lo marca la regla de data/zeo.json (3 al abrirse, +1 por cada técnica extra del nivel anterior, hasta el tope).",
+    "descripcion": "descripcion es el texto de lo que hace la técnica. Está en null hasta que el diseñador lo entregue. Una técnica del registro puede traer su propia descripcion si no está en este catálogo.",
+    "origen": "origen null = línea de los 10 slots iniciales. Con origen (Werewolf, Ninja, Knight…) la línea llega de fuera y va en una línea extra (L11 en adelante).",
+    "ortografia": "Se corrigieron erratas evidentes de la hoja (Ki Erasinng, FireAcumulaton, Wepons). Meditación estaba desalineada en la hoja: se leyeron 3 mejoras de nivel 2 y 4 de nivel 3."
+  },
+  "lineas": [
+    {
+      "id": "sentir-el-ki",
+      "nombre": "Sentir el Ki",
+      "rama": "heaven",
+      "origen": null,
+      "descripcion": null,
+      "niveles": {
+        "2": [
+          {
+            "id": "ki-mark",
+            "nombre": "Ki Mark",
+            "descripcion": null
+          },
+          {
+            "id": "ki-vision",
+            "nombre": "Ki Vision",
+            "descripcion": null
+          },
+          {
+            "id": "sensitive-ki",
+            "nombre": "Sensitive Ki",
+            "descripcion": null
+          }
+        ],
+        "3": [
+          {
+            "id": "sense-burst",
+            "nombre": "Sense Burst",
+            "descripcion": null
+          },
+          {
+            "id": "blind-ki",
+            "nombre": "Blind Ki",
+            "descripcion": null
+          },
+          {
+            "id": "shadow-mark",
+            "nombre": "Shadow Mark",
+            "descripcion": null
+          }
+        ],
+        "4": [
+          {
+            "id": "long-range-sense",
+            "nombre": "Long Range Sense",
+            "descripcion": null
+          },
+          {
+            "id": "ki-snooping",
+            "nombre": "Ki Snooping",
+            "descripcion": null
+          },
+          {
+            "id": "chi-of-the-land",
+            "nombre": "Chi of the Land",
+            "descripcion": null
+          }
+        ],
+        "5": []
+      }
+    },
+    {
+      "id": "traccion-de-ki",
+      "nombre": "Tracción de Ki",
+      "rama": "heaven",
+      "origen": null,
+      "descripcion": null,
+      "niveles": {
+        "2": [
+          {
+            "id": "wall-runner",
+            "nombre": "Wall Runner",
+            "descripcion": null
+          },
+          {
+            "id": "wall-jumper",
+            "nombre": "Wall Jumper",
+            "descripcion": null
+          },
+          {
+            "id": "balance-ki",
+            "nombre": "Balance Ki",
+            "descripcion": null
+          }
+        ],
+        "3": [
+          {
+            "id": "wall-hook",
+            "nombre": "Wall Hook",
+            "descripcion": null
+          },
+          {
+            "id": "green-root",
+            "nombre": "Green Root",
+            "descripcion": null
+          },
+          {
+            "id": "skater-run",
+            "nombre": "Skater Run",
+            "descripcion": null
+          }
+        ],
+        "4": [],
+        "5": []
+      }
+    },
+    {
+      "id": "salto-flotante",
+      "nombre": "Salto Flotante",
+      "rama": "earth",
+      "origen": null,
+      "descripcion": null,
+      "niveles": {
+        "2": [],
+        "3": [],
+        "4": [],
+        "5": []
+      }
+    },
+    {
+      "id": "meditacion",
+      "nombre": "Meditación",
+      "rama": "void",
+      "origen": null,
+      "descripcion": null,
+      "niveles": {
+        "2": [
+          {
+            "id": "sleeping-manipulation",
+            "nombre": "Sleeping Manipulation",
+            "descripcion": null
+          },
+          {
+            "id": "battle-mind",
+            "nombre": "Battle Mind",
+            "descripcion": null
+          },
+          {
+            "id": "deep-meditation",
+            "nombre": "Deep Meditation",
+            "descripcion": null
+          }
+        ],
+        "3": [
+          {
+            "id": "steadfast-mind",
+            "nombre": "Steadfast Mind",
+            "descripcion": null
+          },
+          {
+            "id": "calm-of-water",
+            "nombre": "Calm of Water",
+            "descripcion": null
+          },
+          {
+            "id": "firewatch",
+            "nombre": "Firewatch",
+            "descripcion": null
+          },
+          {
+            "id": "ki-breathing",
+            "nombre": "Ki Breathing",
+            "descripcion": null
+          }
+        ],
+        "4": [],
+        "5": []
+      }
+    },
+    {
+      "id": "ocultar-el-ki",
+      "nombre": "Ocultar el Ki",
+      "rama": "heaven",
+      "origen": null,
+      "descripcion": null,
+      "niveles": {
+        "2": [
+          {
+            "id": "ki-erasing",
+            "nombre": "Ki Erasing",
+            "descripcion": null
+          },
+          {
+            "id": "ki-melding",
+            "nombre": "Ki Melding",
+            "descripcion": null
+          },
+          {
+            "id": "feather-ki",
+            "nombre": "Feather Ki",
+            "descripcion": null
+          }
+        ],
+        "3": [],
+        "4": [],
+        "5": []
+      }
+    },
+    {
+      "id": "blank-mind",
+      "nombre": "Blank Mind",
+      "rama": "void",
+      "origen": null,
+      "descripcion": null,
+      "niveles": {
+        "2": [
+          {
+            "id": "empty-heart",
+            "nombre": "Empty Heart",
+            "descripcion": null
+          },
+          {
+            "id": "dual-mind",
+            "nombre": "Dual Mind",
+            "descripcion": null
+          },
+          {
+            "id": "steel-spirit",
+            "nombre": "Steel Spirit",
+            "descripcion": null
+          }
+        ],
+        "3": [],
+        "4": [],
+        "5": []
+      }
+    },
+    {
+      "id": "tecnica-de-muerte",
+      "nombre": "Técnica de Muerte",
+      "rama": "earth",
+      "origen": null,
+      "descripcion": null,
+      "niveles": {
+        "2": [],
+        "3": [],
+        "4": [],
+        "5": []
+      }
+    },
+    {
+      "id": "tecnica-del-escape",
+      "nombre": "Técnica del Escape",
+      "rama": "earth",
+      "origen": null,
+      "descripcion": null,
+      "niveles": {
+        "2": [
+          {
+            "id": "speed-of-stag",
+            "nombre": "Speed of Stag",
+            "descripcion": null
+          },
+          {
+            "id": "quickness",
+            "nombre": "Quickness",
+            "descripcion": null
+          },
+          {
+            "id": "vanishing",
+            "nombre": "Vanishing",
+            "descripcion": null
+          }
+        ],
+        "3": [],
+        "4": [],
+        "5": []
+      }
+    },
+    {
+      "id": "katon",
+      "nombre": "Katón",
+      "rama": "heaven",
+      "origen": null,
+      "descripcion": "Ki en fuego.",
+      "niveles": {
+        "2": [
+          {
+            "id": "hearthwarm",
+            "nombre": "Hearthwarm",
+            "descripcion": null
+          },
+          {
+            "id": "fire-accumulation",
+            "nombre": "Fire Accumulation",
+            "descripcion": null
+          },
+          {
+            "id": "fire-charmer",
+            "nombre": "Fire Charmer",
+            "descripcion": null
+          }
+        ],
+        "3": [
+          {
+            "id": "yang-body",
+            "nombre": "Yang Body",
+            "descripcion": null
+          },
+          {
+            "id": "fire-sense",
+            "nombre": "Fire Sense",
+            "descripcion": null
+          },
+          {
+            "id": "fire-eater",
+            "nombre": "Fire Eater",
+            "descripcion": null
+          }
+        ],
+        "4": [],
+        "5": []
+      }
+    },
+    {
+      "id": "tetsu-no-hada",
+      "nombre": "Tetsu no hada",
+      "rama": "earth",
+      "origen": null,
+      "descripcion": null,
+      "niveles": {
+        "2": [
+          {
+            "id": "iron-back",
+            "nombre": "Iron Back",
+            "descripcion": null
+          },
+          {
+            "id": "iron-sides",
+            "nombre": "Iron Sides",
+            "descripcion": null
+          },
+          {
+            "id": "iron-palm",
+            "nombre": "Iron Palm",
+            "descripcion": null
+          }
+        ],
+        "3": [],
+        "4": [],
+        "5": []
+      }
+    },
+    {
+      "id": "jutsu-de-sombras",
+      "nombre": "Jutsu de Sombras",
+      "rama": "heaven",
+      "origen": "Werewolf",
+      "descripcion": null,
+      "niveles": {
+        "2": [],
+        "3": [],
+        "4": [],
+        "5": []
+      }
+    },
+    {
+      "id": "buki-no-sendo",
+      "nombre": "Buki no Sendo",
+      "rama": "earth",
+      "origen": "Ninja",
+      "descripcion": null,
+      "niveles": {
+        "2": [
+          {
+            "id": "swift-sword-path",
+            "nombre": "Swift Sword Path",
+            "descripcion": null
+          },
+          {
+            "id": "flowing-fist-path",
+            "nombre": "Flowing Fist Path",
+            "descripcion": null
+          },
+          {
+            "id": "hidden-weapons-path",
+            "nombre": "Hidden Weapons Path",
+            "descripcion": null
+          }
+        ],
+        "3": [],
+        "4": [],
+        "5": []
+      }
+    },
+    {
+      "id": "sento-no-kao",
+      "nombre": "Sento no Kao",
+      "rama": "void",
+      "origen": "Knight",
+      "descripcion": null,
+      "niveles": {
+        "2": [],
+        "3": [],
+        "4": [],
+        "5": []
+      },
+      "nota": "En la hoja figura como \"Sento no Kao +1\" (sin aclarar qué suma el +1)."
+    },
+    {
+      "id": "giman-gijutsu",
+      "nombre": "Giman gijutsu",
+      "rama": "void",
+      "origen": "Knight",
+      "descripcion": null,
+      "niveles": {
+        "2": [],
+        "3": [],
+        "4": [],
+        "5": []
+      }
+    }
+  ],
+  "bonos": [
+    {
+      "origen": "Knight",
+      "linea": "tecnica-del-escape",
+      "niveles": 2,
+      "nota": "La hoja dice \"Tecnica del Escape + 2\". Semántica por confirmar."
+    },
+    {
+      "origen": "Knight",
+      "linea": "tecnica-de-muerte",
+      "niveles": 3,
+      "nota": "La hoja dice \"Tecnica de Muerte +3\". Semántica por confirmar."
+    }
+  ],
+  "pendientes": [
+    {
+      "origen": "Round 1 - Evil Locket",
+      "texto": "Awakening Lv 3"
+    },
+    {
+      "origen": "Round 1 - Evil Locket",
+      "texto": "Dowsing Lv 1"
+    },
+    {
+      "origen": "Round 2 - Stone Cold",
+      "texto": "Doton (new)"
+    },
+    {
+      "origen": "Round 2 - Stone Cold",
+      "texto": "Zenjutsu - Yume Mi Jutsu"
+    },
+    {
+      "origen": "Round 3 - Enemies and Aliens",
+      "texto": "Self Diagnose"
+    },
+    {
+      "origen": "Round 3 - Enemies and Aliens",
+      "texto": "Self Sacrifice"
+    },
+    {
+      "origen": "decamate",
+      "texto": "tecnología curativa (revive)"
+    }
+  ]
+}

@@ -220,6 +220,144 @@ test('zeo: los slots de línea (ocupados y libres) y la primera libre', () => {
   assert.deepEqual(algo.zeo.reglas, { opcionesPorNivel: [1, 3, 5, 5, 3], opcionesBase: 3, extraPorTecnica: 1 });
 });
 
+// ------------------------------------------------- catálogo de técnicas Zeo (data/zeo-tecnicas.json)
+
+const tec = (linea, nivel, tecnica, extra) => Object.assign({ tipo: 'zeo-tecnica', linea, nivel, tecnica }, extra || {});
+
+test('el catálogo de técnicas Zeo es consistente: ids únicos, ramas válidas y niveles 2 a 5', () => {
+  const ctx = contexto();
+  assert.ok(ctx.zeoTecnicas.length >= 14);
+  const ids = new Set();
+  ctx.zeoTecnicas.forEach((l) => {
+    assert.ok(ctx.zeo.ramas.includes(l.rama), l.id + ': rama ' + l.rama);
+    assert.ok(l.origen === null || typeof l.origen === 'string', l.id);
+    [l].concat([2, 3, 4, 5].reduce((a, n) => a.concat(l.niveles[n] || []), [])).forEach((x) => {
+      assert.ok(x.id && x.nombre, l.id);
+      assert.ok(!ids.has(x.id), 'id repetido: ' + x.id);
+      ids.add(x.id);
+    });
+  });
+  assert.equal(ctx.zeoTecnicas.filter((l) => l.origen === null).length, 10);
+});
+
+test('zeo-tecnica con catálogo: la raíz se resuelve por nombre o id y la línea la muestra', () => {
+  const ctx = contexto();
+  const r = Core.calcularPersonaje(ctx, pj([[tec('L01', 1, 'sentir el ki'), tec('L02', 1, 'traccion-de-ki'), tec('L01', 2, 'Ki Mark')]]));
+  assert.deepEqual(errores(r), []);
+  const l1 = r.zeo.lineas[0];
+  assert.equal(l1.raiz.nombre, 'Sentir el Ki');
+  assert.equal(l1.raiz.id, 'sentir-el-ki');
+  assert.equal(l1.rama, 'heaven');
+  assert.equal(l1.extra, false);
+  assert.equal(l1.niveles[1].tomadas[0].nombre, 'Ki Mark');
+  assert.equal(l1.niveles[1].tomadas[0].rama, 'heaven');
+  assert.equal(l1.niveles[1].tomadas[0].catalogo, true);
+  assert.equal(r.zeo.lineas[1].raiz.nombre, 'Tracción de Ki');
+  // Las opciones del nivel 2 salen del catálogo y marcan lo tomado.
+  assert.deepEqual(l1.niveles[1].opciones.map((o) => [o.nombre, o.tomada]), [['Ki Mark', true], ['Ki Vision', false], ['Sensitive Ki', false]]);
+  assert.deepEqual(l1.niveles[0].opciones, []);
+  // El catálogo del resultado dice qué raíces ya están en uso.
+  const usada = (id) => r.zeo.catalogo.find((c) => c.id === id).usada;
+  assert.equal(usada('sentir-el-ki'), 'L01');
+  assert.equal(usada('tracción-de-ki'.normalize('NFD').replace(/[̀-ͯ]/g, '')), 'L02');
+  assert.equal(usada('blank-mind'), null);
+});
+
+test('zeo-tecnica con catálogo: rechaza mejoras ajenas, de otro nivel o raíces repetidas', () => {
+  const ctx = contexto();
+  const r = Core.calcularPersonaje(ctx, pj([[
+    tec('L01', 1, 'Sentir el Ki'),
+    tec('L01', 2, 'Wall Runner'),        // es de Tracción de Ki
+    tec('L01', 2, 'Sense Burst'),        // es de nivel 3
+    tec('L01', 2, 'Meditación'),         // es una raíz
+    tec('L02', 1, 'Ki Mark'),            // es una mejora, no una raíz
+    tec('L02', 1, 'Sentir el Ki'),       // ya es la raíz de L01
+    tec('L01', 2, 'Ki Vision'),          // bien
+    tec('L01', 2, 'ki vision'),          // repetida
+  ]]));
+  const msgs = errores(r);
+  assert.equal(msgs.length, 6);
+  assert.match(msgs[0], /Wall Runner.*mejora de Tracción de Ki.*no de la línea L01 \(Sentir el Ki\)/);
+  assert.match(msgs[1], /Sense Burst.*es de nivel 3, no del 2/);
+  assert.match(msgs[2], /Meditación.*técnica raíz/);
+  assert.match(msgs[3], /Ki Mark.*mejora de nivel 2 de Sentir el Ki.*no una técnica raíz/);
+  assert.match(msgs[4], /Sentir el Ki.*ya es la raíz de L01/);
+  assert.match(msgs[5], /ya está tomada en L01/);
+  assert.equal(r.zeo.lineas[0].total, 2);
+});
+
+test('zeo-tecnica: una línea con raíz libre acepta nombres libres, pero no mejoras de otra línea del catálogo', () => {
+  const ctx = contexto();
+  const r = Core.calcularPersonaje(ctx, pj([[
+    tec('L01', 1, 'Garra de escarcha', { rama: 'void', descripcion: 'Congela al tocar.' }),
+    tec('L01', 2, 'Aliento helado'),
+    tec('L01', 2, 'Ki Mark'),
+    tec('L02', 1, 'Otra', { rama: 'sombra' }),
+  ]]));
+  const msgs = errores(r);
+  assert.equal(msgs.length, 2);
+  assert.match(msgs[0], /Ki Mark.*mejora de Sentir el Ki.*no de la línea L01 \(Garra de escarcha\)/);
+  assert.match(msgs[1], /rama de la técnica/);
+  const l = r.zeo.lineas[0];
+  assert.equal(l.raiz.catalogo, false);
+  assert.equal(l.raiz.descripcion, 'Congela al tocar.');
+  assert.equal(l.rama, 'void');
+  assert.equal(l.niveles[1].tomadas[0].rama, 'void');
+  assert.deepEqual(l.niveles[1].opciones, []);
+});
+
+test('zeo-tecnica: líneas extra (L11 en adelante) piden origen y llegan en orden', () => {
+  const ctx = contexto();
+  const r = Core.calcularPersonaje(ctx, pj([[
+    tec('L11', 1, 'Algo libre'),                                  // sin origen
+    tec('L12', 1, 'Otra libre', { origen: 'Knight' }),            // salta L11
+    tec('L11', 1, 'Buki no Sendo'),                               // origen del catálogo (Ninja)
+    tec('L12', 1, 'Pasivo de logro', { origen: 'Round 1 - Evil Locket', descripcion: 'Dowsing.' }),
+    tec('L11', 2, 'Swift Sword Path'),                            // sin origen: ya existe la línea
+    tec('L13', 1, 'Katón'),                                       // raíz base en línea extra: pide origen
+    tec('L14', 1, 'Nada'),                                        // no existe todavía
+  ]]));
+  const msgs = errores(r);
+  assert.equal(msgs.length, 4);
+  assert.match(msgs[0], /L11 es una línea extra: indica el origen/);
+  assert.match(msgs[1], /la línea "L12" no existe/);
+  assert.match(msgs[2], /L13 es una línea extra: indica el origen/);
+  assert.match(msgs[3], /la línea "L14" no existe/);
+  assert.equal(r.zeo.lineas.length, 12);
+  assert.deepEqual(r.zeo.slots, { total: 10, ocupados: 0, libres: 10, primeraLibre: 'L01' });
+  assert.deepEqual(r.zeo.extras, { total: 2, proxima: 'L13' });
+  const l11 = r.zeo.lineas[10];
+  assert.equal(l11.extra, true);
+  assert.equal(l11.raiz.nombre, 'Buki no Sendo');
+  assert.equal(l11.raiz.origen, 'Ninja');
+  assert.equal(l11.rama, 'earth');
+  assert.equal(r.zeo.lineas[11].raiz.origen, 'Round 1 - Evil Locket');
+});
+
+test('zeo-tecnica: una raíz con origen (Werewolf, Ninja, Knight) no cabe en un slot inicial', () => {
+  const ctx = contexto();
+  const r = Core.calcularPersonaje(ctx, pj([[tec('L05', 1, 'Jutsu de Sombras'), tec('L11', 1, 'Jutsu de Sombras')]]));
+  const msgs = errores(r);
+  assert.equal(msgs.length, 1);
+  assert.match(msgs[0], /Jutsu de Sombras.*viene de Werewolf.*línea extra \(L11\)/);
+  assert.equal(r.zeo.lineas[10].raiz.origen, 'Werewolf');
+});
+
+test('zeo-tecnica: origen y descripcion deben ser textos; la descripción propia gana a la del catálogo', () => {
+  const ctx = contexto();
+  const copia = JSON.parse(JSON.stringify(ctx));
+  copia.zeoTecnicas.find((l) => l.id === 'katon').descripcion = 'Ki en fuego.';
+  const r = Core.calcularPersonaje(copia, pj([[
+    tec('L01', 1, 'Katón'),
+    tec('L02', 1, 'Blank Mind', { origen: ' ' }),
+    tec('L02', 1, 'Blank Mind', { descripcion: 3 }),
+    tec('L02', 1, 'Blank Mind', { descripcion: 'Mente en blanco.' }),
+  ]]));
+  assert.equal(errores(r).length, 2);
+  assert.equal(r.zeo.lineas[0].raiz.descripcion, 'Ki en fuego.');
+  assert.equal(r.zeo.lineas[1].raiz.descripcion, 'Mente en blanco.');
+});
+
 // ------------------------------------------------------- feats y achievements
 
 test('slots de feats de Pathfinder 1e', () => {
@@ -1186,6 +1324,9 @@ test('personajes de muestra: Musashi Nanaya (monje) y Herb\'Azzio (mago)', () =>
   // Zeo: Musashi tiene ocupadas las 10 líneas iniciales; Herb'Azzio ninguna.
   assert.deepEqual(mu.zeo.slots, { total: 10, ocupados: 10, libres: 0, primeraLibre: null });
   assert.ok(mu.zeo.lineas.every((l) => l.ocupada && l.niveles[0].tomadas.length === 1));
+  assert.deepEqual(mu.zeo.lineas.map((l) => l.raiz.nombre), ['Sentir el Ki', 'Tracción de Ki', 'Salto Flotante', 'Meditación', 'Ocultar el Ki', 'Blank Mind', 'Técnica de Muerte', 'Técnica del Escape', 'Katón', 'Tetsu no hada']);
+  assert.ok(mu.zeo.lineas.every((l) => l.raiz.catalogo && !l.extra));
+  assert.deepEqual(mu.zeo.extras, { total: 0, proxima: 'L11' });
   assert.deepEqual(he.zeo.slots, { total: 10, ocupados: 0, libres: 10, primeraLibre: 'L01' });
   // Magia: el monje no lanza conjuros; el mago de nivel 7 llega al 3.º con la progresión retardada.
   assert.equal(mu.conjuros, null);

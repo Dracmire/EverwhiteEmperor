@@ -441,35 +441,118 @@
 
   // ---- subsistemas plegables: zeo, mana y magia
 
-  /** Un nivel de una línea de técnicas: casillas tomadas (llenas), visibles sin tomar (huecas) y todavía ocultas (punteadas). */
+  function textoDescripcion(d) {
+    return d ? '<p class="zdesc">' + esc(d) + '</p>' : '<p class="zdesc sin">Sin descripción todavía.</p>';
+  }
+
+  function chipRama(rama) {
+    if (!rama) return '';
+    return '<span class="chip zrama" style="--rc:var(--' + esc(rama) + ', var(--acc))"><i aria-hidden="true"></i>' + esc(Core.rotulo(rama)) + '</span>';
+  }
+
+  /**
+   * Un nivel de una línea de técnicas: casillas (tomadas llenas, visibles huecas, ocultas punteadas), lo tomado con su
+   * descripción y, si la raíz es del catálogo, las mejoras de ese nivel que aún no se tomaron.
+   */
   function filaNivelZeo(n) {
     var pips = '';
     for (var i = 0; i < n.tope; i++) pips += '<i class="' + (i < n.tomadas.length ? '' : i < n.visibles ? 'visible' : 'oculto') + '"></i>';
     var txt = !n.abierto ? 'Cerrado' : n.tomadas.length + ' de ' + n.visibles + (n.visibles < n.tope ? ' (hasta ' + n.tope + ')' : '');
-    var nombres = n.tomadas.filter(function (t) { return t.nombre; }).map(function (t) { return esc(t.nombre); }).join(' · ');
+    var tomadas = n.tomadas.map(function (t) {
+      return '<li class="ztec tomada"><span class="ztec-nom">' + esc(t.nombre || 'Técnica sin nombre') + '</span>' +
+        (t.catalogo ? '' : '<span class="chip soft">Sin catálogo</span>') + (t.origen ? '<span class="chip soft">' + esc(t.origen) + '</span>' : '') +
+        textoDescripcion(t.descripcion) + '</li>';
+    }).join('');
+    var faltan = n.opciones.filter(function (o) { return !o.tomada; }).map(function (o) {
+      return '<li class="ztec"><span class="ztec-nom">' + esc(o.nombre) + '</span>' + (o.descripcion ? '<p class="zdesc">' + esc(o.descripcion) + '</p>' : '') + '</li>';
+    }).join('');
     return '<div class="znivel' + (n.abierto ? '' : ' cerrado') + '"><span class="znv">Nv. ' + n.nivel + '</span><span class="zpips" aria-hidden="true">' + pips + '</span>' +
-      '<span class="zt num">' + txt + '</span>' + (nombres ? '<span class="znom">' + nombres + '</span>' : '') + '</div>';
+      '<span class="zt num">' + txt + '</span>' + (tomadas || faltan ? '<ul class="ztecs">' + tomadas + faltan + '</ul>' : '') + '</div>';
   }
 
-  /** Una línea de técnicas como slot. La libre se dibuja con borde punteado. */
+  /**
+   * Una línea de técnicas como slot. La ocupada es desplegable y su resumen trae el nombre de la técnica raíz;
+   * la libre se dibuja con borde punteado.
+   */
   function tarjetaLineaZeo(l) {
-    var pie = l.ocupada ? plural(l.total, 'técnica', 'técnicas') + ' · hasta el nivel ' + l.nivelMax : 'Slot libre';
-    return '<div class="zlinea' + (l.ocupada ? '' : ' libre') + '"><div class="row-between" style="align-items:baseline;gap:8px"><span class="id">' + esc(l.id) + '</span>' +
-      '<span class="mute" style="font-size:13px">' + pie + '</span></div>' + l.niveles.map(filaNivelZeo).join('') + '</div>';
+    if (!l.ocupada) {
+      return '<div class="zlinea libre"><div class="row-between" style="align-items:baseline;gap:8px"><span class="id">' + esc(l.id) + '</span>' +
+        '<span class="mute" style="font-size:13px">Slot libre</span></div></div>';
+    }
+    var raiz = l.raiz;
+    var origen = raiz && raiz.origen ? raiz.origen : null;
+    var resumen = '<span class="id">' + esc(l.id) + '</span><span class="zraiz">' + esc(raiz && raiz.nombre ? raiz.nombre : 'Técnica sin nombre') + '</span>' +
+      chipRama(l.rama) + (l.extra ? chipTip('Extra' + (origen ? ' · ' + origen : ''), 'gold', 'Línea fuera de los slots iniciales' + (origen ? ': la otorga ' + origen : '')) : '') +
+      '<span class="zcuenta mute">' + plural(l.total, 'técnica', 'técnicas') + ' · nv. ' + l.nivelMax + '</span><span class="desp-flecha" aria-hidden="true"></span>';
+    var idDesp = 'zl-' + l.id;
+    return '<details class="zlinea" data-id="' + esc(idDesp) + '"' + (estado.abiertos[idDesp] ? ' open' : '') + '><summary>' + resumen + '</summary>' +
+      '<div class="zlinea-cuerpo">' + l.niveles.map(filaNivelZeo).join('') + '</div></details>';
   }
 
-  /** Registrar una técnica: línea, nivel y nombre opcional. El motor rechaza un nivel cerrado o sin opciones libres. */
-  function formularioZeo(z) {
-    var lineas = z.lineas.filter(function (l) { return l.ocupada || l.id === z.slots.primeraLibre; });
-    var optL = lineas.map(function (l) { return '<option value="' + esc(l.id) + '">' + esc(l.id) + (l.ocupada ? ' · ' + plural(l.total, 'técnica', 'técnicas') : ' · libre') + '</option>'; }).join('');
+  /** Orígenes ya conocidos (catálogo y líneas existentes), para sugerirlos al escribir uno. */
+  function origenesZeo(z) {
+    var vistos = {}, lista = [];
+    function sumar(o) { if (o && !vistos[o]) { vistos[o] = true; lista.push(o); } }
+    z.catalogo.forEach(function (c) { sumar(c.origen); });
+    z.lineas.forEach(function (l) { if (l.raiz) sumar(l.raiz.origen); });
+    return lista;
+  }
+
+  /** Cada formulario de Zeo arma una entrada zeo-tecnica; el motor rechaza un nivel cerrado, sin opciones libres o ajeno a la línea. */
+  function formulariosZeo(z) {
+    var libres = z.catalogo.filter(function (c) { return !c.usada; });
+    var optRaiz = function (c) {
+      return '<option value="' + esc(c.id) + '">' + esc(c.nombre) + ' · ' + esc(Core.rotulo(c.rama)) + (c.origen ? ' · ' + esc(c.origen) : '') + '</option>';
+    };
+    var base = libres.filter(function (c) { return !c.origen; });
+    var fuera = libres.filter(function (c) { return c.origen; });
+    var optT = (base.length ? '<optgroup label="Líneas iniciales">' + base.map(optRaiz).join('') + '</optgroup>' : '') +
+      (fuera.length ? '<optgroup label="Llegan de fuera (OUT)">' + fuera.map(optRaiz).join('') + '</optgroup>' : '') +
+      '<option value="">Otra (nombre libre)</option>';
+    var optRama = '<option value="">Sin rama</option>' + z.ramas.map(function (r) { return '<option value="' + esc(r.rama) + '">' + esc(Core.rotulo(r.rama)) + '</option>'; }).join('');
+    var datalist = '<datalist id="zeo-origenes">' + origenesZeo(z).map(function (o) { return '<option value="' + esc(o) + '">'; }).join('') + '</datalist>';
+    var destino = z.slots.primeraLibre
+      ? 'Sin origen va al primer slot libre (' + z.slots.primeraLibre + '). Con origen va a la línea extra ' + z.extras.proxima + '.'
+      : 'Los ' + z.slots.total + ' slots iniciales están ocupados: la línea nueva va a ' + z.extras.proxima + ' y pide el origen (clase, raza, logro…).';
+    var nueva = '<div class="picker-bloque"><h3 style="font-size:20px">Línea nueva (técnica raíz)</h3>' +
+      '<p class="sub">Elige la raíz del catálogo; con «Otra» escribes una propia. ' + esc(destino) + '</p>' +
+      '<div class="acc-fila"><label class="campo-et">Técnica<select class="btn" id="zl-t">' + optT + '</select></label>' +
+      '<label class="campo-et">Nombre (si es otra)<input class="campo" type="text" id="zl-nombre" autocomplete="off" placeholder="Ej.: Garra de escarcha"></label>' +
+      '<label class="campo-et">Rama (si es otra)<select class="btn" id="zl-rama">' + optRama + '</select></label></div>' +
+      '<div class="acc-fila"><label class="campo-et">Origen<input class="campo" type="text" id="zl-origen" list="zeo-origenes" autocomplete="off" placeholder="Knight, Ninja, Round 1…"></label>' +
+      '<label class="campo-et">Qué hace (si no está en el catálogo)<input class="campo" type="text" id="zl-desc" autocomplete="off" style="width:340px"></label>' +
+      '<button class="btn prim" type="button" data-accion="zeo-linea-nueva">Agregar línea</button></div>' + datalist + '</div>';
+
+    var grupos = '';
+    z.lineas.forEach(function (l) {
+      if (!l.ocupada || !l.raiz || !l.raiz.catalogo) return;
+      l.niveles.forEach(function (n) {
+        if (n.nivel < 2 || !n.abierto || n.libres < 1) return;
+        var faltan = n.opciones.filter(function (o) { return !o.tomada; });
+        if (!faltan.length) return;
+        grupos += '<optgroup label="' + esc(l.id + ' · ' + l.raiz.nombre + ' · Nivel ' + n.nivel) + '">' +
+          faltan.map(function (o) { return '<option value="' + esc(l.id + '|' + n.nivel + '|' + o.id) + '">' + esc(o.nombre) + '</option>'; }).join('') + '</optgroup>';
+      });
+    });
+    var mejora = '<div class="picker-bloque"><h3 style="font-size:20px">Mejora del catálogo</h3>' +
+      '<p class="sub">Solo salen las mejoras de niveles abiertos con opciones libres, en las líneas cuya raíz es del catálogo.</p>' +
+      '<div class="acc-fila"><label class="campo-et">Mejora<select class="btn" id="zm-t"' + (grupos ? '' : ' disabled') + '>' +
+      (grupos || '<option value="">Sin mejoras disponibles</option>') + '</select></label>' +
+      '<button class="btn prim" type="button" data-accion="zeo-mejora"' + (grupos ? '' : ' disabled') + '>Agregar mejora</button></div></div>';
+
+    var ocupadas = z.lineas.filter(function (l) { return l.ocupada; });
+    var optL = ocupadas.map(function (l) { return '<option value="' + esc(l.id) + '">' + esc(l.id + (l.raiz && l.raiz.nombre ? ' · ' + l.raiz.nombre : '')) + '</option>'; }).join('');
     var optN = '';
-    for (var i = 1; i <= z.lineas[0].niveles.length; i++) optN += '<option value="' + i + '">Nivel ' + i + '</option>';
-    return '<div class="picker-bloque"><h3 style="font-size:20px">Registrar una técnica</h3>' +
-      '<p class="sub">Elige la línea y el nivel. El nombre es opcional mientras no exista el catálogo de técnicas. Un nivel cerrado, o sin opciones libres, se rechaza.</p>' +
-      '<div class="acc-fila"><label class="campo-et">Línea<select class="btn" id="zt-l">' + optL + '</select></label>' +
+    for (var i = 2; i <= z.lineas[0].niveles.length; i++) optN += '<option value="' + i + '">Nivel ' + i + '</option>';
+    var libre = '<div class="picker-bloque"><h3 style="font-size:20px">Otra técnica (nombre libre)</h3>' +
+      '<p class="sub">Para una técnica que no está en el catálogo, o de un nivel sin opciones listadas. Si no la describes aquí, solo queda el nombre.</p>' +
+      '<div class="acc-fila"><label class="campo-et">Línea<select class="btn" id="zt-l"' + (optL ? '' : ' disabled') + '>' + (optL || '<option value="">Sin líneas</option>') + '</select></label>' +
       '<label class="campo-et">Nivel<select class="btn" id="zt-n">' + optN + '</select></label>' +
-      '<label class="campo-et">Nombre (opcional)<input class="campo" type="text" id="zt-nombre" placeholder="Ej.: Garra de escarcha" autocomplete="off" style="width:240px"></label>' +
-      '<button class="btn prim" type="button" data-accion="zeo-tecnica">Agregar</button></div></div>';
+      '<label class="campo-et">Nombre<input class="campo" type="text" id="zt-nombre" placeholder="Ej.: Aliento helado" autocomplete="off"></label></div>' +
+      '<div class="acc-fila"><label class="campo-et">Qué hace<input class="campo" type="text" id="zt-desc" autocomplete="off" style="width:340px"></label>' +
+      '<label class="campo-et">Origen (opcional)<input class="campo" type="text" id="zt-origen" list="zeo-origenes" autocomplete="off"></label>' +
+      '<button class="btn prim" type="button" data-accion="zeo-tecnica"' + (optL ? '' : ' disabled') + '>Agregar técnica</button></div></div>';
+    return nueva + mejora + libre;
   }
 
   function seccionZeo(calc, con) {
@@ -493,8 +576,9 @@
         (r.limita && limitan.length < z.ramas.length ? '<span class="chip acc">Limita el nivel zeo</span>' : '') + '</div></div>';
     }).join('');
     // Solo se dibujan las líneas ocupadas y UNA libre: las demás libres se cuentan, no se repiten.
-    var visibles = z.lineas.filter(function (l) { return l.ocupada || l.id === z.slots.primeraLibre; });
-    var lineas = visibles.map(tarjetaLineaZeo).join('');
+    var mostradas = z.lineas.filter(function (l) { return l.ocupada || l.id === z.slots.primeraLibre; });
+    var lineas = mostradas.filter(function (l) { return !l.extra; }).map(tarjetaLineaZeo).join('');
+    var lineasExtra = mostradas.filter(function (l) { return l.extra; }).map(tarjetaLineaZeo).join('');
     var rg = z.reglas;
     var cuerpo = notaReserva(calc.sx) + '<div class="zeo-head"><p class="sub" style="flex:1 1 360px;min-width:0">El nivel zeo es el menor de las tres ramas. ' + resumenTxt +
       ' Tabla de ' + esc(z.unidad) + ' por nivel: ' + z.niveles.join(' · ') + ' (lectura: ' + lectura + ', por confirmar).</p>' +
@@ -503,10 +587,12 @@
       '<div style="display:flex;flex-direction:column;gap:14px"><div style="display:flex;flex-direction:column;gap:4px"><h3 style="font-size:20px">Líneas de técnicas</h3>' +
       '<p class="sub">' + z.slots.ocupados + ' de ' + z.slots.total + ' líneas ocupadas. Cada línea es un slot con ' + z.lineas[0].niveles.length + ' niveles y varias técnicas por nivel; la inicial es una sola (opciones por nivel: ' + rg.opcionesPorNivel.join(', ') + '). ' +
       'La primera técnica de un nivel abre ' + rg.opcionesBase + ' opciones en el siguiente; cada técnica extra del mismo nivel suma ' + rg.extraPorTecnica + ' más, hasta el tope de ese nivel.</p></div>' +
-      '<div class="grid g300">' + lineas + '</div>' +
-      (z.slots.libres > 1 ? '<p class="mute" style="font-size:13px">Quedan ' + z.slots.libres + ' slots libres: se muestra uno.</p>' : '') + '</div>' +
-      (con ? formularioZeo(z) : '');
-    var resumen = chip('Nivel zeo ' + z.nivel, 'acc') + chip(z.slots.ocupados + ' de ' + z.slots.total + ' líneas', 'soft') +
+      '<div class="grid g300 zlineas">' + lineas + '</div>' +
+      (z.slots.libres > 1 ? '<p class="mute" style="font-size:13px">Quedan ' + z.slots.libres + ' slots libres: se muestra uno.</p>' : '') +
+      (lineasExtra ? '<h3 style="font-size:20px">Líneas extra</h3><p class="sub">Llegan de fuera de los ' + z.slots.total + ' slots iniciales (clase, raza, logro…); cada una lleva su origen.</p>' +
+        '<div class="grid g300 zlineas">' + lineasExtra + '</div>' : '') + '</div>' +
+      (con ? formulariosZeo(z) : '');
+    var resumen = chip('Nivel zeo ' + z.nivel, 'acc') + chip(z.slots.ocupados + ' de ' + z.slots.total + ' líneas' + (z.extras.total ? ' + ' + z.extras.total + ' extra' : ''), 'soft') +
       z.ramas.map(function (r) { return chip(Core.rotulo(r.rama) + ' ' + f(r.sx) + ' ' + z.unidad, 'soft'); }).join('');
     return desplegable('zeo', 'Zeo', resumen, cuerpo);
   }
@@ -1031,7 +1117,7 @@
     if (e.tipo === 'sx') return 'SX +' + e.cantidad + ' a la reserva';
     if (e.tipo === 'sx-asignar') return 'SX ' + e.cantidad + ' de la reserva → ' + destinoSx(e.subsistema, e.rama);
     if (e.tipo === 'xp-subsistema') return 'SX +' + e.cantidad + ' → ' + destinoSx(e.subsistema, e.rama);
-    if (e.tipo === 'zeo-tecnica') return 'Técnica Zeo · ' + e.linea + ' nivel ' + e.nivel + (e.tecnica ? ' · ' + e.tecnica : '');
+    if (e.tipo === 'zeo-tecnica') return 'Técnica Zeo · ' + e.linea + ' nivel ' + e.nivel + (e.tecnica ? ' · ' + e.tecnica : '') + (e.origen ? ' (' + e.origen + ')' : '');
     if (e.tipo === 'tirada') return e.recurso.toUpperCase() + ' · ' + e.dado + ' → ' + e.resultado;
     return e.tipo;
   }
@@ -1515,13 +1601,38 @@
     } else if (a === 'desinscribir') {
       var slotD = boton.getAttribute('data-slot');
       agregar({ tipo: 'desinscribir', slot: slotD }, 'Se quitará la habilidad de ' + slotD + ' (borrador).');
+    } else if (a === 'zeo-linea-nueva') {
+      var zeoV = estado.vista.calcB.zeo;
+      var zlT = document.getElementById('zl-t').value;
+      var zlNom = (document.getElementById('zl-nombre').value || '').trim();
+      var zlOri = (document.getElementById('zl-origen').value || '').trim();
+      var zlDesc = (document.getElementById('zl-desc').value || '').trim();
+      var zlRama = document.getElementById('zl-rama').value;
+      var zlRef = zlT ? zeoV.catalogo.filter(function (c) { return c.id === zlT; })[0] : null;
+      if (!zlRef && !zlNom) { toast('Elige una técnica del catálogo o escribe el nombre de una propia.', true); return; }
+      var zlExtra = !!(zlOri || (zlRef && zlRef.origen)) || !zeoV.slots.primeraLibre;
+      var zlLinea = zlExtra ? zeoV.extras.proxima : zeoV.slots.primeraLibre;
+      var zlE = { tipo: 'zeo-tecnica', linea: zlLinea, nivel: 1, tecnica: zlRef ? zlRef.id : zlNom };
+      if (zlOri) zlE.origen = zlOri;
+      if (!zlRef && zlRama) zlE.rama = zlRama;
+      if (zlDesc) zlE.descripcion = zlDesc;
+      agregar(zlE, 'Línea ' + zlLinea + ' (' + (zlRef ? zlRef.nombre : zlNom) + ') agregada al borrador.');
+    } else if (a === 'zeo-mejora') {
+      var zmP = (document.getElementById('zm-t').value || '').split('|');
+      if (zmP.length !== 3) { toast('Elige una mejora del catálogo.', true); return; }
+      agregar({ tipo: 'zeo-tecnica', linea: zmP[0], nivel: Number(zmP[1]), tecnica: zmP[2] },
+        'Mejora de ' + zmP[0] + ' (nivel ' + zmP[1] + ') agregada al borrador.');
     } else if (a === 'zeo-tecnica') {
       var ztL = document.getElementById('zt-l').value;
       var ztN = Number(document.getElementById('zt-n').value);
       var ztNom = (document.getElementById('zt-nombre').value || '').trim();
-      var ztE = { tipo: 'zeo-tecnica', linea: ztL, nivel: ztN };
-      if (ztNom) ztE.tecnica = ztNom;
-      agregar(ztE, 'Técnica de ' + ztL + ' (nivel ' + ztN + (ztNom ? ', ' + ztNom : '') + ') agregada al borrador.');
+      var ztDesc = (document.getElementById('zt-desc').value || '').trim();
+      var ztOri = (document.getElementById('zt-origen').value || '').trim();
+      if (!ztNom) { toast('Escribe el nombre de la técnica, o elige una mejora del catálogo.', true); return; }
+      var ztE = { tipo: 'zeo-tecnica', linea: ztL, nivel: ztN, tecnica: ztNom };
+      if (ztDesc) ztE.descripcion = ztDesc;
+      if (ztOri) ztE.origen = ztOri;
+      agregar(ztE, 'Técnica de ' + ztL + ' (nivel ' + ztN + ', ' + ztNom + ') agregada al borrador.');
     } else if (a === 'mf-agregar') {
       var mfN = enteroDe('mf-n');
       if (!mfN) { toast('Escribe cuánta Mana force gana (+) o pierde (−): un entero distinto de 0.', true); return; }
@@ -1595,7 +1706,7 @@
       estado.actual = sel.value;
       mostrar(estado.personajes[estado.actual]);
     });
-    Array.prototype.forEach.call(app.querySelectorAll('details.desp'), function (d) {
+    Array.prototype.forEach.call(app.querySelectorAll('details.desp, details.zlinea'), function (d) {
       d.addEventListener('toggle', function () {
         estado.abiertos[d.getAttribute('data-id')] = d.open;
         guardar(CLAVE_ABIERTOS, JSON.stringify(estado.abiertos));

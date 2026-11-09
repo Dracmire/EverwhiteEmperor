@@ -237,7 +237,23 @@ button[data-tip] { cursor: pointer; }
 .zpips i { width: 14px; height: 14px; border-radius: 4px; border: 1px solid var(--acc); background: var(--acc); }
 .zpips i.visible { background: transparent; }
 .zpips i.oculto { border: 1px dashed var(--mute); background: transparent; }
-.znom { grid-column: 2 / -1; font-size: 12px; color: var(--mute); }
+details.zlinea { display: block; padding: 0; }
+details.zlinea > summary { list-style: none; cursor: pointer; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; padding: 12px 14px; min-height: 48px; border-radius: 12px; }
+details.zlinea > summary::-webkit-details-marker { display: none; }
+details.zlinea > summary:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px; }
+details.zlinea[open] > summary { border-bottom: 1px solid var(--line); border-radius: 12px 12px 0 0; }
+details.zlinea[open] > summary .desp-flecha { transform: rotate(-135deg); margin-bottom: -4px; }
+.zlinea-cuerpo { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 12px; }
+.zraiz { flex: 1 1 120px; min-width: 0; font-weight: 600; font-size: 15px; overflow-wrap: anywhere; }
+.zcuenta { font-size: 12px; }
+.chip.zrama i { width: 8px; height: 8px; border-radius: 2px; background: var(--rc); margin-right: 6px; }
+.zlineas { align-items: start; }
+.ztecs { grid-column: 1 / -1; list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ztec { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; padding-left: 10px; border-left: 3px dashed var(--mute); color: var(--mute); font-size: 13px; }
+.ztec.tomada { border-left: 3px solid var(--acc); color: var(--ink); }
+.ztec-nom { font-weight: 600; }
+.zdesc { flex: 1 1 100%; margin: 0; font-size: 12px; color: var(--mute); }
+.zdesc.sin { font-style: italic; }
 .caja.proximo { background: transparent; border: 1px dashed var(--mute); }
 .caja.proximo b { color: var(--mute); }
 .mini { position: relative; height: 6px; border-radius: 999px; background: var(--track); }
