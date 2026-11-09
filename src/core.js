@@ -356,26 +356,28 @@
 
   /**
    * Progresión de conjuros de una clase a un nivel (4.2). `detalle.conjuros.porDia` es la tabla de la clase (una fila por nivel
-   * de clase, un número por nivel de conjuro desde el 0). Los conjuros de nivel menor a `retrasaDesde` siguen la tabla tal cual;
-   * del nivel `retrasaDesde` en adelante se retrasan `retraso` niveles: el personaje de nivel N usa la fila N - retraso para ellos.
-   * Los trucos (nivel 0) están desde el nivel 1. `conjuros.trucos` ({ factor, redondeo }) reduce los trucos por día respecto de
-   * la tabla (en el wizard, a la mitad: 4 → 2). Devuelve null si la clase no lanza conjuros (su espacio en Magia lo ocupan
+   * de clase, un número por nivel de conjuro desde el 0). Sin `ritmo` el personaje de nivel N usa la fila N de la tabla.
+   * Con `ritmo` (cada cuántos niveles de personaje llega un nivel de conjuro nuevo) el nivel de conjuro 0 y el 1 llegan en el
+   * nivel 1 y el nivel de conjuro n >= 2 en el nivel `ritmo` × (n − 1): con ritmo 3, el 2.º en el nivel 3, el 3.º en el 6, el 4.º en
+   * el 9, etc. Las cantidades por día siguen la misma tabla a ese paso: el personaje de nivel N usa la fila floor(2N / ritmo) + 1
+   * (en la fila 2n − 1 aparece el nivel de conjuro n). `conjuros.trucos` ({ factor, redondeo }) reduce los trucos por día respecto
+   * de la tabla (en el wizard, a la mitad: 4 → 2). Devuelve null si la clase no lanza conjuros (su espacio en Magia lo ocupan
    * las habilidades activas).
    */
   function progresionConjuros(detalle, nivel) {
     const c = detalle && detalle.conjuros;
     if (!c || !Array.isArray(c.porDia) || !c.porDia.length) return null;
-    const retraso = c.retraso || 0;
-    const desde = c.retrasaDesde === undefined ? 0 : c.retrasaDesde;
+    const ritmo = c.ritmo || null;
     const tabla = c.porDia;
     const fila = function (n) { return tabla[Math.min(tabla.length, Math.max(1, n)) - 1]; };
-    const retrasado = function (l) { return l > 0 && l >= desde; };
+    const filaDe = function (n) { return ritmo ? Math.floor(n * 2 / ritmo) + 1 : n; };
     const maxNivelConjuro = Math.max.apply(null, tabla.map(function (f) { return f.length; })) - 1;
-    // Nivel de personaje en el que llega cada nivel de conjuro: la primera fila que lo trae, más el retraso si se retrasa.
+    // Nivel de personaje en el que llega cada nivel de conjuro.
     const llegadas = [];
     for (let l = 0; l <= maxNivelConjuro; l++) {
       const primera = tabla.findIndex(function (f) { return f.length > l; });
-      if (primera >= 0) llegadas.push({ nivelConjuro: l, enNivel: l === 0 ? 1 : primera + 1 + (retrasado(l) ? retraso : 0) });
+      if (primera < 0) continue;
+      llegadas.push({ nivelConjuro: l, enNivel: l <= 1 ? 1 : ritmo ? ritmo * (l - 1) : primera + 1 });
     }
     const tr = c.trucos || null;
     const ajustaTrucos = function (n) {
@@ -384,14 +386,14 @@
       return tr.redondeo === 'abajo' ? Math.floor(v) : tr.redondeo === 'cerca' ? Math.round(v) : Math.ceil(v);
     };
     const porDia = llegadas.filter(function (ll) { return ll.enNivel <= nivel; }).map(function (ll) {
-      const f = fila(retrasado(ll.nivelConjuro) ? nivel - retraso : nivel);
+      const f = fila(filaDe(nivel));
       const base = f[ll.nivelConjuro] === undefined ? 0 : f[ll.nivelConjuro];
       return { nivelConjuro: ll.nivelConjuro, cantidad: ll.nivelConjuro === 0 ? ajustaTrucos(base) : base, cantidadBase: base, enNivel: ll.enNivel };
     });
     const faltan = llegadas.filter(function (ll) { return ll.enNivel > nivel; });
     const sig = faltan[0] || null;
     return {
-      atributo: c.atributo || null, retraso: retraso, retrasaDesde: desde === 0 ? null : desde, nota: c.nota || '',
+      atributo: c.atributo || null, ritmo: ritmo, nota: c.nota || '',
       trucos: tr ? { factor: tr.factor, redondeo: tr.redondeo || 'arriba' } : null,
       nivelMax: porDia.length ? porDia[porDia.length - 1].nivelConjuro : -1, porDia: porDia, llegadas: llegadas,
       total: porDia.reduce(function (a, x) { return a + x.cantidad; }, 0),

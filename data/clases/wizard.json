@@ -8,9 +8,9 @@
   "nota": "Habilidades del Wizard de Pathfinder 1e. Los nombres y los niveles son datos de reglas (SRD, OGL 1.0a); el texto de `detalle` son resúmenes propios, no el texto de Paizo. Aquí se documenta el casteo de la clase, pero en este sistema la magia pasa por Gates y Mana (4.2). Un feat extra de la clase NO suma slots (6.1); los del arquetipo sí (6.1). El arquetipo es homebrew.",
   "conjuros": {
     "atributo": "INT",
-    "retraso": 2,
     "fuente": "Tabla de conjuros por día del Wizard (PF1 CRB). Cada fila es un nivel de clase y cada número, los conjuros por día desde el nivel 0 en adelante.",
-    "nota": "Progresión del mago [SUPUESTO]: es la tabla de conjuros por día del Wizard de PF1 sin cambios hasta los conjuros de nivel 3, así que gana conjuros en cada nivel. Los trucos por día se reducen a la mitad (redondeo hacia arriba: 4 → 2, y los 3 del nivel 1 → 2). Los conjuros de nivel 4 en adelante se retrasan 2 niveles: usan la fila N-2 de la tabla, de modo que el nivel 4 llega en el nivel 9 (en PF1, en el 7), el 5 en el 11 y el 9 en el 19. No incluye conjuros extra por INT ni por escuela.",
+    "ritmo": 3,
+    "nota": "Progresión del mago [SUPUESTO el reparto por día]: llega un nivel de conjuro nuevo cada 3 niveles de personaje en vez de cada 2 (nivel de conjuro 2 en el nivel 3, 3 en el 6, 4 en el 9, 5 en el 12, 6 en el 15, 7 en el 18…), y el nivel 1 da trucos y conjuros de nivel 1. Las cantidades por día siguen la tabla del Wizard de PF1 a ese paso (2 niveles de la tabla por cada 3 de personaje). Los trucos por día se reducen a la mitad (redondeo hacia arriba: 4 → 2, y los 3 del nivel 1 → 2). No incluye conjuros extra por INT ni por escuela.",
     "trucos": {
       "factor": 0.5,
       "redondeo": "arriba"
@@ -184,8 +184,7 @@
         4,
         4
       ]
-    ],
-    "retrasaDesde": 4
+    ]
   },
   "habilidades": [
     {

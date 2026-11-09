@@ -1413,11 +1413,11 @@ test('personajes de muestra: Musashi Nanaya (monje) y Herb\'Azzio (mago)', () =>
   assert.deepEqual(mu.personaje.habilidades.map((h) => h.id), ['stealth', 'sense-motive', 'climb', 'intimidate', 'perception']);
   assert.equal(mu.personaje.tagXp.id, 'tracker');
   assert.deepEqual(he.zeo.slots, { total: 10, ocupados: 0, libres: 10, primeraLibre: 'L01' });
-  // Magia: el monje no lanza conjuros; el mago de nivel 7 llega al 3.º con la progresión retardada y los trucos a la mitad (4 → 2).
+  // Magia: el monje no lanza conjuros; el mago de nivel 7 llega al 3.º (un nivel de conjuro nuevo cada 3 niveles) y los trucos van a la mitad (4 → 2).
   assert.equal(mu.conjuros, null);
   assert.equal(he.conjuros.nivelMax, 3);
-  assert.deepEqual(he.conjuros.porDia.map((x) => x.cantidad), [2, 4, 3, 2]);
-  assert.deepEqual(he.conjuros.proximos, [{ nivelConjuro: 4, enNivel: 9 }, { nivelConjuro: 5, enNivel: 11 }]);
+  assert.deepEqual(he.conjuros.porDia.map((x) => x.cantidad), [2, 3, 2, 1]);
+  assert.deepEqual(he.conjuros.proximos, [{ nivelConjuro: 4, enNivel: 9 }, { nivelConjuro: 5, enNivel: 12 }]);
   // Herb'Azzio (v0.9.6): dados d4 y d10; Estrella Mana nivel 2 (Gate de Oro = Sentidos y de Fuego = Capacidad), contrato de Ashura (2 por nivel).
   assert.deepEqual([he.recursos.hp.tiradas[0].dado, he.recursos.mp.tiradas[0].dado], ['d4', 'd10']);
   assert.deepEqual([he.mana.nivel, he.mana.fuerza.total, he.mana.fuerza.aportes[0].porNivel, he.mana.fuerza.aportes[0].cantidad], [2, 15, 2, 14]);
@@ -1436,36 +1436,39 @@ test('personajes de muestra: Musashi Nanaya (monje) y Herb\'Azzio (mago)', () =>
   assert.equal(Core.calcularPersonaje(c, ejemplo()).clase, null);
 });
 
-test('progresión de conjuros del mago: normal hasta el nivel 3 de conjuro y el 4 en adelante retrasado, llega al 4 en el nivel 9', () => {
+test('progresión de conjuros del mago: un nivel de conjuro nuevo cada 3 niveles (3, 6, 9, 12, 15…) y el nivel 1 da el 0 y el 1', () => {
   const mago = leer('data/clases/wizard.json');
-  assert.deepEqual([mago.conjuros.retraso, mago.conjuros.retrasaDesde], [2, 4]);
+  assert.equal(mago.conjuros.ritmo, 3);
   assert.equal(mago.conjuros.porDia.length, 20);
   const en = (n) => Core.progresionConjuros(mago, n);
-  // En el nivel 1 es igual a la normal: 3 trucos y un conjuro de nivel 1.
-  // La tabla sigue siendo la de PF (3 trucos y 1 conjuro); los trucos por día se reducen a la mitad hacia arriba: 3 → 2.
+  // La tabla sigue siendo la de PF (3 trucos y 1 conjuro en la fila 1); los trucos por día van a la mitad hacia arriba: 3 → 2.
   assert.deepEqual(mago.conjuros.porDia[0], [3, 1]);
   assert.deepEqual(mago.conjuros.trucos, { factor: 0.5, redondeo: 'arriba' });
   assert.deepEqual(en(1).porDia.map((x) => x.cantidad), [2, 1]);
   assert.deepEqual(en(1).porDia.map((x) => x.cantidadBase), [3, 1]);
-  // Hasta el nivel de conjuro 3 sigue la tabla de Pathfinder: el 1.º en el nivel 1, el 2.º en el 3 y el 3.º en el 5.
-  assert.deepEqual([1, 2, 3, 4, 5, 6].map((n) => en(n).nivelMax), [1, 1, 2, 2, 3, 3]);
-  // El 4.º se retrasa 2 niveles (7 → 9), el 5.º (9 → 11) y los demás igual, hasta el 9.º en el 19.
-  assert.deepEqual(en(1).llegadas.map((x) => x.enNivel), [1, 1, 3, 5, 9, 11, 13, 15, 17, 19]);
-  assert.deepEqual([7, 8, 9].map((n) => en(n).nivelMax), [3, 3, 4]);
-  assert.deepEqual(en(9).porDia.map((x) => x.cantidad), [2, 4, 4, 3, 1]);
-  assert.deepEqual(en(20).porDia.map((x) => x.cantidad), [2, 4, 4, 4, 4, 4, 4, 3, 3, 2]);
+  // El nivel de conjuro n >= 2 llega en el nivel 3 × (n − 1): 3, 6, 9, 12, 15, 18, 21, 24; el 0 y el 1 en el nivel 1.
+  assert.deepEqual(en(1).llegadas.map((x) => x.enNivel), [1, 1, 3, 6, 9, 12, 15, 18, 21, 24]);
+  assert.deepEqual([1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20].map((n) => en(n).nivelMax), [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7]);
+  // Cantidades por día: siguen la tabla de PF a 2 filas por cada 3 niveles (fila floor(2N/3) + 1).
+  assert.deepEqual(en(3).porDia.map((x) => x.cantidad), [2, 2, 1]);
+  assert.deepEqual(en(6).porDia.map((x) => x.cantidad), [2, 3, 2, 1]);
+  assert.deepEqual(en(9).porDia.map((x) => x.cantidad), [2, 4, 3, 2, 1]);
+  assert.deepEqual(en(20).porDia.map((x) => x.cantidad), [2, 4, 4, 4, 4, 3, 3, 2]);
   assert.deepEqual([1, 5, 9, 20].map((n) => en(n).porDia[0].cantidad), [2, 2, 2, 2]);
   assert.deepEqual(en(8).proximo, { nivelConjuro: 4, enNivel: 9 });
-  assert.equal(en(19).proximo, null);
+  // Nunca pierde conjuros por día al subir de nivel (el total no baja).
+  for (let n = 2; n <= 20; n++) assert.ok(en(n).total >= en(n - 1).total, 'nivel ' + n);
   // Los dos próximos niveles de conjuro, con el nivel de personaje en que llegan.
-  assert.deepEqual(en(7).proximos, [{ nivelConjuro: 4, enNivel: 9 }, { nivelConjuro: 5, enNivel: 11 }]);
-  assert.deepEqual(en(18).proximos, [{ nivelConjuro: 9, enNivel: 19 }]);
-  assert.deepEqual(en(19).proximos, []);
+  assert.deepEqual(en(7).proximos, [{ nivelConjuro: 4, enNivel: 9 }, { nivelConjuro: 5, enNivel: 12 }]);
+  assert.deepEqual(en(1).proximos, [{ nivelConjuro: 2, enNivel: 3 }, { nivelConjuro: 3, enNivel: 6 }]);
+  assert.deepEqual(en(18).proximos, [{ nivelConjuro: 8, enNivel: 21 }, { nivelConjuro: 9, enNivel: 24 }]);
   // El redondeo de los trucos es configurable; sin `trucos` quedan como en la tabla.
   const conTrucos = (t) => Core.progresionConjuros(Object.assign({}, mago, { conjuros: Object.assign({}, mago.conjuros, { trucos: t }) }), 1).porDia[0].cantidad;
   assert.deepEqual([conTrucos({ factor: 0.5, redondeo: 'abajo' }), conTrucos({ factor: 0.5, redondeo: 'cerca' }), conTrucos({ factor: 0.5 }), conTrucos(undefined)], [1, 2, 2, 3]);
-  // Gana al menos un conjuro por nivel (el total de conjuros por día sube en cada nivel de personaje).
-  for (let n = 2; n <= 20; n++) assert.ok(en(n).total >= en(n - 1).total + 1, 'nivel ' + n);
+  // Sin `ritmo` el personaje de nivel N usa la fila N de la tabla (el nivel de conjuro n llega con su fila).
+  const sinRitmo = Object.assign({}, mago, { conjuros: Object.assign({}, mago.conjuros, { ritmo: undefined, trucos: undefined }) });
+  assert.deepEqual(Core.progresionConjuros(sinRitmo, 5).porDia.map((x) => x.cantidad), [4, 3, 2, 1]);
+  assert.deepEqual(Core.progresionConjuros(sinRitmo, 1).llegadas.map((x) => x.enNivel), [1, 1, 3, 5, 7, 9, 11, 13, 15, 17]);
   // Sin tabla (monje, sin archivo) no hay progresión.
   assert.equal(Core.progresionConjuros(leer('data/clases/monk.json'), 7), null);
   assert.equal(Core.progresionConjuros(null, 7), null);
