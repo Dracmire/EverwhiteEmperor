@@ -96,7 +96,7 @@
     abiertos: leerJsonGuardado(CLAVE_ABIERTOS, {}),
     picker: { q: '', tipo: 'todos', soloDisp: true, max: 40 },
     logrosQ: '', indiceLogros: {}, dados: {},
-    actuales: {}, retratos: {},
+    actuales: {}, retratos: {}, imagenSesion: '',
     borradores: {},
     vista: null,
   };
@@ -117,6 +117,10 @@
     if (e.tipo === 'conjuro') return typeof e.id === 'string' || typeof e.nombre === 'string';
     if (e.tipo === 'mana-tecnica') return typeof e.nombre === 'string' && typeof e.nivel === 'number';
     if (e.tipo === 'mana-tecnica-sx') return typeof e.id === 'string' && typeof e.cantidad === 'number';
+    if (e.tipo === 'apunte') return typeof e.autor === 'string' && typeof e.texto === 'string';
+    if (e.tipo === 'resumen') return typeof e.texto === 'string' || typeof e.imagen === 'string';
+    if (e.tipo === 'opciones') return typeof e.id === 'string' && typeof e.titulo === 'string' && Array.isArray(e.opciones);
+    if (e.tipo === 'decision') return typeof e.opciones === 'string' && Array.isArray(e.elegidas);
     if (e.tipo === 'sx') return typeof e.cantidad === 'number';
     if (e.tipo === 'sx-asignar' || e.tipo === 'xp-subsistema') return typeof e.subsistema === 'string' && typeof e.cantidad === 'number';
     return false;
@@ -1289,6 +1293,16 @@
       var tmSx = estado.vista ? estado.vista.calcB.mana.tecnicas.filter(function (t) { return t.id === e.id; })[0] : null;
       return 'SX ' + deltaTxt(e.cantidad) + ' → ' + (tmSx ? tmSx.nombre : e.id);
     }
+    if (e.tipo === 'apunte') return 'Nota de ' + e.autor + (e.rol === 'gm' ? ' (GM)' : '') + ' · ' + (e.texto.length > 60 ? e.texto.slice(0, 60) + '…' : e.texto);
+    if (e.tipo === 'resumen') return 'Resumen e imagen de la sesión' + (e.imagen ? ' · con imagen' : '');
+    if (e.tipo === 'opciones') return 'Opciones · ' + e.titulo + ' (' + e.opciones.length + ', ' + (e.alcance === 'grupo' ? 'grupo' : 'individual') + ')';
+    if (e.tipo === 'decision') {
+      var opDec = estado.vista ? estado.vista.calcB.opciones.lista.filter(function (o) { return o.id === e.opciones; })[0] : null;
+      return 'Decisión · ' + (opDec ? opDec.titulo : e.opciones) + ' → ' + e.elegidas.map(function (id) {
+        var x = opDec ? opDec.opciones.filter(function (o) { return o.id === id; })[0] : null;
+        return x ? x.texto : id;
+      }).join(' · ');
+    }
     if (e.tipo === 'desinscribir') return 'Desinscribir · ' + e.slot;
     if (e.tipo === 'mana-fuerza') return 'Mana force ' + (e.porNivel ? deltaTxt(e.porNivel) + ' por nivel' : deltaTxt(e.cantidad)) + ' · ' + nombreFuenteMF(e.fuente) + (e.nota ? ' (' + e.nota + ')' : '');
     if (e.tipo === 'gate') return 'Gate ' + e.id + ' · ' + nombreTagMana(e.tag) + ' · ' + (e.funcion ? nombreFuncionMana(e.funcion) : 'sin función');
@@ -1316,7 +1330,7 @@
       ? '<div class="lista">' + items + '</div>' +
         '<p class="sub">Estas entradas todavía no están en el personaje. Cópialas y pégalas en la lista <code>entradas</code> de una sesión de <code>characters/' + esc(idPj(pj)) + '.json</code>; el borrador se queda en este navegador hasta que lo vacíes.</p>' +
         '<textarea class="json" id="pk-json" readonly rows="' + Math.min(12, json.split('\n').length) + '" aria-label="Entradas del borrador en JSON">' + esc(json) + '</textarea>' +
-        '<div class="acc-fila"><button class="btn prim" type="button" data-accion="copiar">Copiar JSON</button><button class="btn" type="button" data-accion="vaciar">Vaciar borrador</button><span id="pk-msg" role="status" class="mute" style="font-size:14px"></span></div>'
+        '<div class="acc-fila"><button class="btn prim" type="button" data-accion="copiar">Copiar JSON</button><button class="btn" type="button" data-accion="descargar">Descargar .json</button><button class="btn" type="button" data-accion="vaciar">Vaciar borrador</button><span id="pk-msg" role="status" class="mute" style="font-size:14px"></span></div>'
       : '<p class="mute">Vacío. Cada feat que elijas, achievement que asignes o dado que tires se suma aquí y se calcula como si ya estuviera en el personaje.</p>';
     var resumen = borr.length
       ? chip(plural(borr.length, 'entrada', 'entradas'), 'gold') + (avisosBorr.length ? chip(plural(avisosBorr.length, 'con error', 'con errores'), 'warn') : '')
@@ -1491,17 +1505,156 @@
       '<span class="xp num">' + (w.total === 0 ? '0' : '+' + f(w.total)) + '</span></div>';
   }
 
-  function seccionSesiones(calc) {
+  // ---- notas, resumen y opciones por sesión (10.6)
+
+  /** Una pestaña plegable dentro de una sesión; recuerda si está abierta. `porDefecto` la abre la primera vez. */
+  function detSesion(id, titulo, resumenHtml, cuerpo, porDefecto) {
+    var abierta = estado.abiertos[id] === undefined ? !!porDefecto : estado.abiertos[id];
+    return '<details class="ses-det" data-id="' + esc(id) + '"' + (abierta ? ' open' : '') + '><summary><b>' + esc(titulo) + '</b>' + (resumenHtml || '') + '</summary>' +
+      '<div class="ses-det-c">' + cuerpo + '</div></details>';
+  }
+
+  /** Lo que el GM cuenta de la sesión: una imagen general y un resumen. */
+  function bloqueGM(s) {
+    if (!s.resumen && !s.imagen) return '';
+    var src = s.imagen ? srcImagen(s.imagen) : '';
+    return '<div class="ses-gm">' +
+      (src ? '<img class="ses-img" src="' + esc(src) + '" alt="Imagen general de la sesión" loading="lazy">'
+        : s.imagen ? '<small class="mute">Imagen de la sesión: ' + esc(s.imagen.length > 60 ? s.imagen.slice(0, 60) + '…' : s.imagen) + ' (aquí no se puede mostrar)</small>' : '') +
+      (s.resumen ? '<p class="ses-resumen">' + esc(s.resumen) + '</p>' : '') + '</div>';
+  }
+
+  /** Las notas de la sesión, agrupadas por autor (el GM primero). */
+  function bloqueApuntes(s) {
+    if (!s.apuntes.length) return '';
+    var autores = [], porAutor = {};
+    s.apuntes.forEach(function (a) {
+      var k = a.rol + '|' + a.autor;
+      if (!porAutor[k]) { porAutor[k] = { autor: a.autor, rol: a.rol, notas: [] }; autores.push(porAutor[k]); }
+      porAutor[k].notas.push(a);
+    });
+    autores.sort(function (x, y) { return (x.rol === 'gm' ? 0 : 1) - (y.rol === 'gm' ? 0 : 1); });
+    var cuerpo = autores.map(function (g) {
+      return '<div class="ap-autor"><div class="ap-cab"><b>' + esc(g.autor) + '</b>' + chip(g.rol === 'gm' ? 'GM' : 'Jugador', g.rol === 'gm' ? 'gold' : 'soft') + '</div>' +
+        g.notas.map(function (n) {
+          return '<p class="ap-nota">' + esc(n.texto) + (n.desde === 'borrador' ? ' ' + chip('Borrador', 'gold') : n.desde !== s.id ? ' ' + chip('Añadida después', 'soft') : '') + '</p>';
+        }).join('') + '</div>';
+    }).join('');
+    var quienes = autores.map(function (g) { return g.autor; }).join(', ');
+    return detSesion('ses-' + s.id + '-notas', 'Notas · ' + s.apuntes.length, '<span class="mute">' + esc(quienes) + '</span>', cuerpo, false);
+  }
+
+  /** Una oferta de opciones: el jugador marca su decisión y queda anotada en la sesión de la oferta. */
+  function tarjetaOpciones(o, nombrePj) {
+    var d = o.decision;
+    var multi = o.elige > 1;
+    var grupo = o.alcance === 'grupo';
+    var cab = '<div class="op-cab"><b>' + esc(o.titulo) + '</b>' +
+      chipTip(grupo ? 'Decide el grupo' : 'Decide cada jugador', grupo ? 'acc' : 'soft',
+        grupo ? 'Se decide una vez para todo el grupo. Quien la anota la copia al archivo de cada personaje.' : 'Cada jugador marca la suya en su visor y se la pasa al GM.') +
+      chip(multi ? 'Elige ' + o.elige : 'Elige 1', 'soft') +
+      (d ? chip('Decidido', 'acc') + (d.desde === 'borrador' ? chip('Borrador', 'gold') : '') : chip('Sin decidir', 'gold')) +
+      (o.sesion === 'borrador' ? chip('Borrador', 'gold') : '') + '</div>';
+    var opciones = o.opciones.map(function (x) {
+      if (multi) return '<label class="op-opc"><input type="checkbox" class="op-chk" data-op="' + esc(o.id) + '" value="' + esc(x.id) + '"' + (x.elegida ? ' checked' : '') + '><span>' + esc(x.texto) + '</span></label>';
+      return '<button type="button" class="btn op-opc' + (x.elegida ? ' elegida' : '') + '" data-accion="decidir" data-op="' + esc(o.id) + '" data-o="' + esc(x.id) + '" aria-pressed="' + (x.elegida ? 'true' : 'false') + '">' + (x.elegida ? '✓ ' : '') + esc(x.texto) + '</button>';
+    }).join('');
+    var pie = multi ? '<div class="acc-fila"><button class="btn prim" type="button" data-accion="decidir-multi" data-op="' + esc(o.id) + '">' + (d ? 'Cambiar la decisión' : 'Confirmar la decisión') + '</button></div>' : '';
+    var estadoTxt = d
+      ? '<p class="mute" style="margin:0;font-size:14px">' + (grupo ? 'Decisión del grupo' : 'Decisión de ' + esc(nombrePj)) + ': <b>' + esc(d.textos.join(' · ')) + '</b>' +
+        (d.nota ? ' (' + esc(d.nota) + ')' : '') + (o.historial.length > 1 ? ' · cambiada ' + (o.historial.length - 1) + (o.historial.length === 2 ? ' vez' : ' veces') : '') + '</p>'
+      : '';
+    return '<div class="op-card" id="op-' + esc(o.id) + '">' + cab + (o.texto ? '<p class="ses-resumen">' + esc(o.texto) + '</p>' : '') +
+      '<div class="op-lista">' + opciones + '</div>' + pie + estadoTxt + '</div>';
+  }
+
+  /** La pestaña plegable «Opciones» de una sesión: recompensas u otras decisiones que el GM deja a elegir. */
+  function bloqueOpciones(s, nombrePj) {
+    if (!s.opciones.length) return '';
+    var pend = s.opciones.filter(function (o) { return !o.decision; }).length;
+    return detSesion('ses-' + s.id + '-opc', 'Opciones · ' + s.opciones.length,
+      pend ? chip(pend + ' sin decidir', 'gold') : '<span class="mute">todas decididas</span>',
+      s.opciones.map(function (o) { return tarjetaOpciones(o, nombrePj); }).join(''), pend > 0);
+  }
+
+  /** Las sesiones del registro, de la más nueva a la más vieja, para elegir a cuál va una nota, un resumen o una oferta. */
+  function opcionesDeSesion(calcB) {
+    var l = '<option value="">Sesión en curso</option>';
+    calcB.sesiones.filter(function (x) { return x.id !== 'borrador'; }).map(function (x, i) { return { x: x, n: i }; }).reverse().forEach(function (o) {
+      l += '<option value="' + esc(o.x.id) + '">' + (o.n === 0 ? 'Creación' : 'Sesión ' + o.n) + ' · ' + esc(o.x.titulo) + '</option>';
+    });
+    return l;
+  }
+
+  /** Escribir una nota: la puede escribir un jugador o el GM; el autor se recuerda en este navegador. */
+  function formularioNota(calcB) {
+    var rol = leerGuardado('ewe-rol') === 'gm' ? 'gm' : 'jugador';
+    return '<div class="ses-form"><span class="eyebrow">Escribir una nota</span>' +
+      '<div class="acc-fila"><label class="campo-et">Autor<input class="campo" type="text" id="ap-autor" value="' + esc(leerGuardado('ewe-autor') || '') + '" placeholder="Ana" autocomplete="off" style="width:160px"></label>' +
+      '<label class="campo-et">Rol<select class="campo" id="ap-rol"><option value="jugador"' + (rol === 'jugador' ? ' selected' : '') + '>Jugador</option><option value="gm"' + (rol === 'gm' ? ' selected' : '') + '>GM</option></select></label>' +
+      '<label class="campo-et">Sesión<select class="campo" id="ap-ses">' + opcionesDeSesion(calcB) + '</select></label></div>' +
+      '<textarea class="campo" id="ap-texto" rows="3" aria-label="Texto de la nota" placeholder="Qué pasó, qué sospechas, qué quedó pendiente…" style="width:100%;padding:10px 14px"></textarea>' +
+      '<div class="acc-fila"><button class="btn prim" type="button" data-accion="ap-agregar">Agregar nota</button>' +
+      '<span class="mute" style="font-size:13px">Queda en el borrador; se la pasas al GM con «Copiar JSON».</span></div></div>';
+  }
+
+  /** La sesión que viene (el borrador): ahí se escriben las notas y se ve lo que se ofrece y decide antes de que el GM la cierre. */
+  function bloqueSesionEnCurso(calcB) {
+    var sb = calcB.sesiones.filter(function (x) { return x.id === 'borrador'; })[0];
+    var nombrePj = calcB.personaje.nombre;
+    return '<div class="sesion curso"><div class="cuando"><b>Sesión en curso</b><small>Borrador</small></div><div class="cuerpo">' +
+      (sb ? bloqueGM(sb) : '') + formularioNota(calcB) + (sb ? bloqueApuntes(sb) + bloqueOpciones(sb, nombrePj) : '') + '</div></div>';
+  }
+
+  function seccionSesiones(calc, calcB) {
+    var nombrePj = calcB.personaje.nombre;
+    var propias = calcB.sesiones.filter(function (x) { return x.id !== 'borrador'; });
     var filas = calc.sesiones.map(function (s, i) {
+      var sb = propias[i] || s; // la versión con el borrador: ahí están las notas y decisiones que aún no se guardaron
       var chips = chipsDeSesion(s).map(function (c) { return chip(c[0], c[1]); }).join('');
       return '<div class="sesion"><div class="cuando"><b>' + (i === 0 ? 'Creación' : 'Sesión ' + i) + '</b><small>' + esc(fecha(s.fecha)) + '</small></div>' +
         '<div class="cuerpo"><div class="row-between"><h3>' + esc(s.titulo) + '</h3><div class="delta num"><b>' + (s.xpGanada >= 0 ? '+' : '−') + f(Math.abs(s.xpGanada)) + ' XP</b><small>Acumulado: ' + f(s.xpAcumulada) + ' XP</small></div></div>' +
+        bloqueGM(sb) +
         (chips ? '<div class="chips">' + chips + '</div>' : '') +
-        (s.filasXp.length ? '<div class="filas">' + s.filasXp.map(filaXp).join('') + '</div>' : '') + '</div></div>';
+        (s.filasXp.length ? '<div class="filas">' + s.filasXp.map(filaXp).join('') + '</div>' : '') +
+        bloqueApuntes(sb) + bloqueOpciones(sb, nombrePj) + '</div></div>';
     }).join('');
-    return '<section class="card" style="padding:28px;gap:24px"><div style="display:flex;flex-direction:column;gap:8px"><h2>Sesiones</h2>' +
-      '<p class="sub">Cada fila guarda sus entradas (tag, grado, nivel del contenido y cantidad). La XP se calcula: 40 × multiplicador por Δ × grado del tag. Δ es el nivel del contenido menos el nivel del personaje.</p></div>' +
-      '<div style="display:flex;flex-direction:column;gap:22px">' + filas + '</div></section>';
+    return '<section class="card" id="sesiones" style="padding:28px;gap:24px"><div style="display:flex;flex-direction:column;gap:8px"><h2>Sesiones</h2>' +
+      '<p class="sub">Cada fila guarda sus entradas (tag, grado, nivel del contenido y cantidad). La XP se calcula: 40 × multiplicador por Δ × grado del tag. Δ es el nivel del contenido menos el nivel del personaje. ' +
+      'Cada sesión puede llevar la imagen y el resumen del GM, las notas de cada autor y opciones para elegir.</p></div>' +
+      '<div style="display:flex;flex-direction:column;gap:22px">' + bloqueSesionEnCurso(calcB) + filas + '</div></section>';
+  }
+
+  /** Construir: lo que escribe el GM (resumen, imagen y opciones) y la importación de notas de otros jugadores (opción A, 10.6). */
+  function seccionNotas(calcB) {
+    var op = calcB.opciones;
+    var notas = calcB.sesiones.reduce(function (a, x) { return a + x.apuntes.length; }, 0);
+    var resumen = chip(plural(notas, 'nota', 'notas'), notas ? 'acc' : 'soft') + chip(plural(op.lista.length, 'oferta de opciones', 'ofertas de opciones'), 'soft') +
+      (op.pendientes ? chip(op.pendientes + ' sin decidir', 'gold') : '');
+    var cuerpo = '<p class="sub">Las notas, los resúmenes y las decisiones son entradas del registro: se escriben aquí, quedan en el borrador y se copian a la sesión. ' +
+      'Cada autor escribe solo las suyas; para juntarlas, el jugador te pasa el JSON de su borrador y lo importas abajo.</p>' +
+      '<div class="picker-bloque"><h3 style="font-size:20px">Resumen e imagen de la sesión (GM)</h3>' +
+      '<p class="sub">Lo que se cuenta de la sesión: un resumen y una imagen general. La imagen es una URL, una ruta dentro de <code>characters/</code> o un archivo que se reduce y se guarda dentro de la entrada.</p>' +
+      '<div class="acc-fila"><label class="campo-et">Sesión<select class="campo" id="rs-ses">' + opcionesDeSesion(calcB) + '</select></label></div>' +
+      '<label class="campo-et">Resumen<textarea class="campo" id="rs-texto" rows="3" style="width:min(560px,100%);padding:10px 14px" placeholder="Cruzaron la sierra y…"></textarea></label>' +
+      '<div class="acc-fila"><label class="campo-et">Imagen (URL o ruta)<input class="campo" type="text" id="rs-img" autocomplete="off" placeholder="sesiones/s3.jpg" style="width:260px"></label>' +
+      '<label class="btn file">Elegir archivo<input type="file" id="rs-archivo" accept="image/*"></label><span class="mute" id="rs-img-msg" style="font-size:13px"></span>' +
+      '<button class="btn prim" type="button" data-accion="rs-agregar">Agregar</button></div></div>' +
+      '<div class="picker-bloque"><h3 style="font-size:20px">Ofrecer opciones para elegir (GM)</h3>' +
+      '<p class="sub">Recompensas u otras decisiones. <b>Grupo</b>: una sola decisión para todos. <b>Individual</b>: cada jugador marca la suya. Cada jugador la marca en «Opciones» de la sesión y queda anotada. No aplica nada solo: lo que se elija lo anotas tú en el registro.</p>' +
+      '<div class="acc-fila"><label class="campo-et">Título<input class="campo" type="text" id="op-titulo" autocomplete="off" placeholder="Botín del jefe" style="width:240px"></label>' +
+      '<label class="campo-et">Quién decide<select class="campo" id="op-alcance"><option value="individual">Cada jugador</option><option value="grupo">El grupo</option></select></label>' +
+      '<label class="campo-et">Cuántas se eligen<input class="campo" type="number" inputmode="numeric" min="1" id="op-elige" value="1" style="width:110px;min-width:0"></label>' +
+      '<label class="campo-et">Sesión<select class="campo" id="op-ses">' + opcionesDeSesion(calcB) + '</select></label></div>' +
+      '<label class="campo-et">Texto (opcional)<input class="campo" type="text" id="op-texto" autocomplete="off" placeholder="Solo una por personaje" style="width:min(560px,100%)"></label>' +
+      '<label class="campo-et">Opciones, una por línea<textarea class="campo" id="op-lista" rows="4" style="width:min(560px,100%);padding:10px 14px" placeholder="Espada +1&#10;Anillo de protección&#10;500 po"></textarea></label>' +
+      '<div class="acc-fila"><button class="btn prim" type="button" data-accion="op-agregar">Ofrecer</button></div></div>' +
+      '<div class="picker-bloque"><h3 style="font-size:20px">Importar notas y decisiones</h3>' +
+      '<p class="sub">Pega el JSON que te pasó otro jugador (lo que copió de su borrador) o abre su archivo. Solo se importan notas, resúmenes, opciones y decisiones; lo repetido y lo demás se ignora.</p>' +
+      '<textarea class="json" id="imp-json" rows="4" aria-label="JSON de otro jugador" placeholder="[ { &quot;tipo&quot;: &quot;apunte&quot;, &quot;autor&quot;: &quot;Ana&quot;, &quot;texto&quot;: &quot;…&quot; } ]"></textarea>' +
+      '<div class="acc-fila"><button class="btn prim" type="button" data-accion="importar">Importar</button>' +
+      '<label class="btn file">Abrir archivo<input type="file" id="imp-archivo" accept=".json,.txt,application/json,text/plain"></label></div></div>';
+    return desplegable('notas', 'Notas y opciones', resumen, cuerpo);
   }
 
   // ---- página
@@ -1526,10 +1679,16 @@
     var avisoBorrador = !con && borr.length
       ? '<div class="avisos borrador-aviso"><b>Hay ' + plural(borr.length, 'entrada', 'entradas') + ' en el borrador sin guardar en el personaje. Cámbiate a «Construir» para verlas o copiarlas.</b></div>'
       : '';
+    var porDecidir = calcB.opciones.lista.filter(function (o) { return !o.decision; });
+    var avisoOpciones = porDecidir.length
+      ? '<div class="avisos suave"><b>' + (porDecidir.length === 1 ? 'Hay una opción por decidir' : 'Hay ' + porDecidir.length + ' opciones por decidir') + ': ' +
+        esc(porDecidir.slice(0, 3).map(function (o) { return o.titulo; }).join(', ')) + (porDecidir.length > 3 ? '…' : '') + '.</b>' +
+        '<div class="acc-fila"><button class="btn" type="button" data-accion="ver-opciones" data-op="' + esc(porDecidir[0].id) + '">Ver opciones</button></div></div>'
+      : '';
     // Todo lo que no es la base, los atributos o el registro de sesiones va plegado.
     // En Jugar, feats, equipo y méritos/defectos son listas a la vista; en Construir se editan dentro de plegables.
     var plegables = '<section class="desp-grupo">' +
-      (con ? seccionBorrador(calcB, pj, borr) + seccionFeats(calc, calcB, pj, con) : '') +
+      (con ? seccionBorrador(calcB, pj, borr) + seccionNotas(calcB) + seccionFeats(calc, calcB, pj, con) : '') +
       seccionLogros(calc, calcB, con) +
       (con ? seccionEquipo(calc, con) + seccionMeritos(calc, pj, con) + seccionTiradas(calcB, con) : '') +
       seccionSx(calcB, con) + seccionZeo(calcB, con) + seccionMana(calc, calcB, pj, con) + (con ? seccionMagia(calcB) : '') + '</section>';
@@ -1538,7 +1697,7 @@
       '<div class="tools">' + selectorModo() + (pj.datosDeEjemplo ? chip('Datos de ejemplo · personaje inventado', 'gold') : '') + sel +
       '<label class="btn file">Abrir otro personaje (.json)<input type="file" id="archivo" accept="application/json,.json"></label>' +
       '<button class="btn" id="tema" type="button" aria-pressed="' + tema + '">' + (tema ? 'Tema noche' : 'Tema hielo') + '</button></div></header>' +
-      '<div id="msg" role="status"></div>' + seccionAvisos(calcB) + seccionFicha(calc, calcB, pj, con) + avisoBorrador + (con ? '' : seccionFeatsJuego(calc, calcB) + seccionMagiaJuego(calcB) + '<div class="bloques-juego">' + seccionEquipoJuego(calc) + seccionMeritosJuego(calc) + '</div>') + plegables + seccionSesiones(calc) +
+      '<div id="msg" role="status"></div>' + seccionAvisos(calcB) + seccionFicha(calc, calcB, pj, con) + avisoBorrador + avisoOpciones + (con ? '' : seccionFeatsJuego(calc, calcB) + seccionMagiaJuego(calcB) + '<div class="bloques-juego">' + seccionEquipoJuego(calc) + seccionMeritosJuego(calc) + '</div>') + plegables + seccionSesiones(calc, calcB) +
       '<footer><p class="pie">' + (pj.datosDeEjemplo ? 'Los nombres de raza, méritos, objetos y logros son inventados. ' : '') +
       'Las reglas de Pathfinder 1e se usan bajo la OGL 1.0a; el proyecto es gratuito y no tiene afiliación con Paizo. Los feats se importaron sin su texto: se leen en Archives of Nethys.</p></footer></div>';
   }
@@ -1688,6 +1847,72 @@
     }
     estado.dados[rec] = dado;
     agregar({ tipo: 'tirada', recurso: rec, dado: dado, resultado: resultado }, rec.toUpperCase() + ': ' + dado + ' → ' + resultado + ', agregado al borrador.');
+  }
+
+  // ---- notas y opciones: ids, importación e imagen de la sesión
+
+  /** Un id para una oferta de opciones a partir de su título: minúsculas, sin tildes, y distinto de los que ya hay. */
+  function idUnicoOpciones(titulo) {
+    var base = String(titulo).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'opciones';
+    var usados = {};
+    estado.vista.calcB.opciones.lista.forEach(function (o) { usados[o.id] = true; });
+    var id = base, n = 2;
+    while (usados[id]) { id = base + '-' + n; n += 1; }
+    return id;
+  }
+
+  var TIPOS_IMPORTABLES = ['apunte', 'resumen', 'opciones', 'decision'];
+
+  /**
+   * Opción A de 10.6: las notas de otro jugador llegan como el JSON de su borrador. Entran al borrador solo las notas, los resúmenes,
+   * las ofertas de opciones y las decisiones; lo repetido (ya en el borrador o ya en el registro) y lo demás se cuenta y se ignora.
+   */
+  function importarEntradas(texto) {
+    var pj = pjActual();
+    var datos;
+    try { datos = JSON.parse(texto); } catch (err) { toast('Eso no es JSON válido: ' + err.message, true); return; }
+    var lista = Array.isArray(datos) ? datos : (datos && Array.isArray(datos.entradas) ? datos.entradas : null);
+    if (!lista) { toast('Esperaba una lista de entradas (o un objeto con «entradas»).', true); return; }
+    var conocidas = {};
+    pj.sesiones.forEach(function (ses) { (ses.entradas || []).forEach(function (e) { conocidas[JSON.stringify(e)] = true; }); });
+    borradorDe(pj).forEach(function (e) { conocidas[JSON.stringify(e)] = true; });
+    var nuevas = [], ignoradas = 0, repetidas = 0;
+    lista.forEach(function (e) {
+      if (!entradaValida(e) || TIPOS_IMPORTABLES.indexOf(e.tipo) < 0) { ignoradas += 1; return; }
+      var k = JSON.stringify(e);
+      if (conocidas[k]) { repetidas += 1; return; }
+      conocidas[k] = true;
+      nuevas.push(e);
+    });
+    if (nuevas.length) {
+      fijarBorrador(pj, borradorDe(pj).concat(nuevas));
+      mostrar(pj, true);
+    }
+    var partes = [];
+    if (repetidas) partes.push(plural(repetidas, 'repetida', 'repetidas'));
+    if (ignoradas) partes.push(plural(ignoradas, 'ignorada', 'ignoradas'));
+    toast((nuevas.length ? 'Importadas ' + plural(nuevas.length, 'entrada', 'entradas') : 'No se importó nada') + (partes.length ? ' (' + partes.join(', ') + ')' : '') + '.', !nuevas.length, !!nuevas.length);
+  }
+
+  /** La imagen general de una sesión elegida como archivo: se reduce para que la entrada no pese demasiado. */
+  function procesarImagenSesion(file) {
+    var lector = new FileReader();
+    lector.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var W = Math.min(720, img.width), H = Math.round(img.height * (W / img.width));
+        var c = document.createElement('canvas');
+        c.width = W; c.height = H;
+        c.getContext('2d').drawImage(img, 0, 0, W, H);
+        estado.imagenSesion = c.toDataURL('image/jpeg', 0.78);
+        var m = document.getElementById('rs-img-msg');
+        if (m) m.textContent = 'Imagen lista (' + Math.round(estado.imagenSesion.length / 1024) + ' KB). Pulsa Agregar.';
+      };
+      img.onerror = function () { toast('No se pudo leer esa imagen.', true); };
+      img.src = lector.result;
+    };
+    lector.onerror = function () { toast('No se pudo leer ' + file.name + '.', true); };
+    lector.readAsDataURL(file);
   }
 
   // ---- retrato local
@@ -1896,6 +2121,81 @@
       var aE = { tipo: 'sx-asignar', subsistema: aP[0], cantidad: aN };
       if (aP[0] === 'zeo') aE.rama = aP[1];
       agregar(aE, aN + ' SX asignados a ' + destinoSx(aP[0], aP[1]) + ' (borrador).');
+    } else if (a === 'ap-agregar') {
+      var apAutor = (document.getElementById('ap-autor').value || '').trim();
+      var apTexto = (document.getElementById('ap-texto').value || '').trim();
+      var apRol = document.getElementById('ap-rol').value === 'gm' ? 'gm' : 'jugador';
+      var apSes = document.getElementById('ap-ses').value;
+      if (!apAutor) { toast('Escribe quién es el autor de la nota.', true); return; }
+      if (!apTexto) { toast('Escribe la nota.', true); return; }
+      guardar('ewe-autor', apAutor);
+      guardar('ewe-rol', apRol);
+      var apE = { tipo: 'apunte', autor: apAutor, rol: apRol, texto: apTexto };
+      if (apSes) apE.sesion = apSes;
+      agregar(apE, 'Nota de ' + apAutor + ' agregada al borrador.');
+    } else if (a === 'rs-agregar') {
+      var rsTexto = (document.getElementById('rs-texto').value || '').trim();
+      var rsImg = estado.imagenSesion || (document.getElementById('rs-img').value || '').trim();
+      var rsSes = document.getElementById('rs-ses').value;
+      if (!rsTexto && !rsImg) { toast('Escribe el resumen o elige una imagen.', true); return; }
+      var rsE = { tipo: 'resumen' };
+      if (rsTexto) rsE.texto = rsTexto;
+      if (rsImg) rsE.imagen = rsImg;
+      if (rsSes) rsE.sesion = rsSes;
+      if (agregar(rsE, 'Resumen de la sesión agregado al borrador.')) estado.imagenSesion = '';
+    } else if (a === 'op-agregar') {
+      var opTitulo = (document.getElementById('op-titulo').value || '').trim();
+      var opLineas = (document.getElementById('op-lista').value || '').split('\n').map(function (t) { return t.trim(); }).filter(Boolean);
+      if (!opTitulo) { toast('Escribe el título de las opciones.', true); return; }
+      if (opLineas.length < 2) { toast('Escribe al menos dos opciones, una por línea.', true); return; }
+      var opE = {
+        tipo: 'opciones', id: idUnicoOpciones(opTitulo), titulo: opTitulo, alcance: document.getElementById('op-alcance').value === 'grupo' ? 'grupo' : 'individual',
+        opciones: opLineas.map(function (t, i) { return { id: i < 26 ? String.fromCharCode(97 + i) : 'o' + (i + 1), texto: t }; }),
+      };
+      var opElige = enteroDe('op-elige');
+      if (opElige && opElige > 1) opE.elige = opElige;
+      var opTexto = (document.getElementById('op-texto').value || '').trim();
+      if (opTexto) opE.texto = opTexto;
+      var opSes = document.getElementById('op-ses').value;
+      if (opSes) opE.sesion = opSes;
+      agregar(opE, 'Opciones «' + opTitulo + '» agregadas al borrador.');
+    } else if (a === 'decidir') {
+      agregar({ tipo: 'decision', opciones: boton.getAttribute('data-op'), elegidas: [boton.getAttribute('data-o')] }, 'Decisión anotada en el borrador.');
+    } else if (a === 'decidir-multi') {
+      var dmOp = boton.getAttribute('data-op');
+      var dmEleg = [];
+      Array.prototype.forEach.call(app.querySelectorAll('input.op-chk'), function (el) {
+        if (el.checked && el.getAttribute('data-op') === dmOp) dmEleg.push(el.value);
+      });
+      agregar({ tipo: 'decision', opciones: dmOp, elegidas: dmEleg }, 'Decisión anotada en el borrador.');
+    } else if (a === 'ver-opciones') {
+      var voId = boton.getAttribute('data-op');
+      var voOf = estado.vista.calcB.opciones.lista.filter(function (o) { return o.id === voId; })[0];
+      if (voOf) {
+        estado.abiertos['ses-' + voOf.sesion + '-opc'] = true;
+        guardar(CLAVE_ABIERTOS, JSON.stringify(estado.abiertos));
+        mostrar(pj, true);
+        var voEl = document.getElementById('op-' + voId);
+        if (voEl && voEl.scrollIntoView) voEl.scrollIntoView({ block: 'center' });
+      }
+    } else if (a === 'importar') {
+      importarEntradas(document.getElementById('imp-json').value || '');
+    } else if (a === 'descargar') {
+      var dsArea = document.getElementById('pk-json');
+      var dsMsg = document.getElementById('pk-msg');
+      try {
+        var dsUrl = URL.createObjectURL(new Blob([dsArea.value], { type: 'application/json' }));
+        var dsA = document.createElement('a');
+        dsA.href = dsUrl;
+        dsA.download = 'borrador-' + idPj(pj) + '.json';
+        document.body.appendChild(dsA);
+        dsA.click();
+        document.body.removeChild(dsA);
+        setTimeout(function () { URL.revokeObjectURL(dsUrl); }, 1000);
+        if (dsMsg) dsMsg.textContent = 'Descargado.';
+      } catch (err) {
+        if (dsMsg) dsMsg.textContent = 'No se pudo descargar desde aquí: usa «Copiar JSON».';
+      }
     } else if (a === 'quitar') {
       var borr = borradorDe(pj).slice();
       borr.splice(Number(boton.getAttribute('data-indice')), 1);
@@ -1938,7 +2238,7 @@
       estado.actual = sel.value;
       mostrar(estado.personajes[estado.actual]);
     });
-    Array.prototype.forEach.call(app.querySelectorAll('details.desp, details.zlinea'), function (d) {
+    Array.prototype.forEach.call(app.querySelectorAll('details.desp, details.zlinea, details.ses-det'), function (d) {
       d.addEventListener('toggle', function () {
         estado.abiertos[d.getAttribute('data-id')] = d.open;
         guardar(CLAVE_ABIERTOS, JSON.stringify(estado.abiertos));
@@ -2045,6 +2345,19 @@
     else if (id === 'retrato-archivo') {
       var file = ev.target.files && ev.target.files[0];
       if (file) procesarRetrato(file);
+      return;
+    } else if (id === 'rs-archivo') {
+      var fImg = ev.target.files && ev.target.files[0];
+      if (fImg) procesarImagenSesion(fImg);
+      return;
+    } else if (id === 'imp-archivo') {
+      var fImp = ev.target.files && ev.target.files[0];
+      if (fImp) {
+        var lImp = new FileReader();
+        lImp.onload = function () { importarEntradas(String(lImp.result)); };
+        lImp.onerror = function () { toast('No se pudo leer ' + fImp.name + '.', true); };
+        lImp.readAsText(fImp);
+      }
       return;
     } else return;
     estado.picker.max = 40;

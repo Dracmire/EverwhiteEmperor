@@ -1777,3 +1777,121 @@ test('data/efectos.json y los efectos de feats y clases usan objetivos y grupos 
     });
   });
 });
+
+// ------------------------------------------- notas, resumen y opciones por sesión (6.7)
+
+test('sesión: resumen e imagen del GM, y el campo notas de siempre vale como resumen', () => {
+  const c = contexto();
+  const base = pj([[xp(0)], [{ tipo: 'resumen', texto: ' Cruzaron la sierra. ', imagen: 'sesiones/s1.jpg' }], []]);
+  base.sesiones[0].notas = 'Inicio de campaña.';
+  base.sesiones[2].resumen = 'Los hornos de escarcha.';
+  base.sesiones[2].imagen = 'https://ejemplo.org/horno.png';
+  const r = Core.calcularPersonaje(c, base);
+  assert.deepEqual(errores(r), []);
+  assert.equal(r.sesiones[0].resumen, 'Inicio de campaña.', '`notas` vale como resumen');
+  assert.equal(r.sesiones[0].imagen, null);
+  assert.equal(r.sesiones[1].resumen, 'Cruzaron la sierra.');
+  assert.equal(r.sesiones[1].imagen, 'sesiones/s1.jpg');
+  assert.equal(r.sesiones[2].resumen, 'Los hornos de escarcha.');
+  assert.equal(r.sesiones[2].imagen, 'https://ejemplo.org/horno.png');
+  // Una entrada de resumen puede apuntar a una sesión anterior (el GM completa una sesión ya cerrada).
+  const tarde = Core.calcularPersonaje(c, pj([[xp(0)], [], [{ tipo: 'resumen', sesion: 's1', texto: 'Contado después' }]]));
+  assert.equal(tarde.sesiones[1].resumen, 'Contado después');
+  assert.equal(tarde.sesiones[2].resumen, '');
+  // Entradas inválidas.
+  const mal = Core.calcularPersonaje(c, pj([[xp(0), { tipo: 'resumen' }, { tipo: 'resumen', texto: 5 }, { tipo: 'resumen', imagen: 7 }]]));
+  assert.equal(errores(mal).length, 3);
+  const malSes = pj([[xp(0)]]);
+  malSes.sesiones[0].resumen = 5;
+  malSes.sesiones[0].imagen = {};
+  assert.equal(errores(Core.calcularPersonaje(c, malSes)).length, 2);
+});
+
+test('apuntes: notas por autor, de jugadores y del GM, que van a la sesión que dicen', () => {
+  const c = contexto();
+  const r = Core.calcularPersonaje(c, pj([
+    [xp(0), { tipo: 'apunte', autor: ' Ana ', texto: 'El mapa estaba al revés.' }],
+    [{ tipo: 'apunte', autor: 'GM', rol: 'gm', texto: 'Ojo con el favor del barón.' }, { tipo: 'apunte', autor: 'Luis', texto: 'Mi PJ desconfía.' }],
+    [{ tipo: 'apunte', autor: 'Ana', sesion: 's0', texto: 'Se me olvidó anotar el nombre del posadero.' }, { tipo: 'apunte', autor: 'Ana', sesion: 'no-existe', texto: 'Esta se queda aquí.' }],
+  ]));
+  assert.deepEqual(errores(r), []);
+  assert.deepEqual(r.sesiones[0].apuntes.map((a) => a.autor + ':' + a.rol), ['Ana:jugador', 'Ana:jugador']);
+  assert.equal(r.sesiones[0].apuntes[1].desde, 's2', 'una nota atrasada dice dónde está escrita');
+  assert.deepEqual(r.sesiones[1].apuntes.map((a) => a.autor + ':' + a.rol), ['GM:gm', 'Luis:jugador']);
+  assert.deepEqual(r.sesiones[2].apuntes.map((a) => a.texto), ['Esta se queda aquí.'], 'una sesión que no existe: la nota se queda donde está');
+  const mal = Core.calcularPersonaje(c, pj([[xp(0), { tipo: 'apunte', texto: 'sin autor' }, { tipo: 'apunte', autor: 'Ana' }, { tipo: 'apunte', autor: 'Ana', texto: 'x', rol: 'master' }, { tipo: 'apunte', autor: 'Ana', texto: 'x', sesion: 5 }]]));
+  assert.equal(errores(mal).length, 4);
+});
+
+test('opciones: el GM ofrece, el jugador decide y la decisión queda en la sesión de la oferta (grupo o individual)', () => {
+  const c = contexto();
+  const oferta = (extra) => Object.assign({
+    tipo: 'opciones', id: 'botin-jefe', titulo: 'Botín del jefe', alcance: 'grupo',
+    opciones: [{ id: 'espada', texto: 'Espada +1' }, { id: 'anillo', texto: 'Anillo de protección' }, { id: 'oro', texto: '500 po' }],
+  }, extra || {});
+  const r = Core.calcularPersonaje(c, pj([
+    [xp(0)],
+    [oferta(), oferta({ id: 'favor', titulo: 'Favor del barón', alcance: 'individual', elige: 2 })],
+    [{ tipo: 'decision', opciones: 'botin-jefe', elegidas: ['anillo'] }],
+  ]));
+  assert.deepEqual(errores(r), []);
+  assert.equal(r.opciones.lista.length, 2);
+  assert.equal(r.opciones.pendientes, 1);
+  const botin = r.opciones.lista[0];
+  assert.equal(botin.alcance, 'grupo');
+  assert.equal(botin.sesion, 's1', 'la oferta pertenece a la sesión donde se ofreció');
+  assert.deepEqual(botin.decision.elegidas, ['anillo']);
+  assert.deepEqual(botin.decision.textos, ['Anillo de protección']);
+  assert.equal(botin.decision.desde, 's2', 'pero se sabe en qué sesión se decidió');
+  assert.deepEqual(botin.opciones.map((o) => o.elegida), [false, true, false]);
+  assert.equal(r.sesiones[1].opciones.length, 2, 'la sesión de la oferta lleva sus opciones');
+  assert.equal(r.sesiones[1].opciones[0].decision.elegidas[0], 'anillo', 'y ahí se ve lo decidido');
+  assert.equal(r.opciones.lista[1].decision, null);
+  assert.equal(r.opciones.lista[1].elige, 2);
+  // Cambiar de idea: la última decisión manda y el historial las guarda todas.
+  const cambio = Core.calcularPersonaje(c, pj([[xp(0), oferta(), { tipo: 'decision', opciones: 'botin-jefe', elegidas: ['espada'] }, { tipo: 'decision', opciones: 'botin-jefe', elegidas: ['oro'], nota: 'mejor vender' }]]));
+  assert.deepEqual(errores(cambio), []);
+  assert.deepEqual(cambio.opciones.lista[0].decision.elegidas, ['oro']);
+  assert.equal(cambio.opciones.lista[0].decision.nota, 'mejor vender');
+  assert.equal(cambio.opciones.lista[0].historial.length, 2);
+  assert.equal(cambio.opciones.pendientes, 0);
+});
+
+test('opciones: entradas inválidas y decisiones que no encajan', () => {
+  const c = contexto();
+  const ok = { tipo: 'opciones', id: 'o1', titulo: 'T', opciones: [{ id: 'a', texto: 'A' }, { id: 'b', texto: 'B' }, { id: 'c', texto: 'C' }] };
+  const prueba = (entradas) => errores(Core.calcularPersonaje(c, pj([[xp(0)].concat(entradas)])));
+  assert.deepEqual(prueba([ok]), []);
+  assert.equal(Core.calcularPersonaje(c, pj([[xp(0), ok]])).opciones.lista[0].alcance, 'individual', 'sin alcance, individual');
+  assert.equal(prueba([Object.assign({}, ok, { id: 'Mal Id' })]).length, 1);
+  assert.equal(prueba([ok, ok]).length, 1, 'id repetido');
+  assert.equal(prueba([Object.assign({}, ok, { titulo: '' })]).length, 1);
+  assert.equal(prueba([Object.assign({}, ok, { alcance: 'mesa' })]).length, 1);
+  assert.equal(prueba([Object.assign({}, ok, { opciones: [{ id: 'a', texto: 'A' }] })]).length, 1, 'con una sola opción no hay nada que elegir');
+  assert.equal(prueba([Object.assign({}, ok, { opciones: [{ id: 'a', texto: 'A' }, { id: 'a', texto: 'B' }] })]).length, 1, 'opción repetida');
+  assert.equal(prueba([Object.assign({}, ok, { opciones: [{ id: 'a' }, { id: 'b', texto: 'B' }] })]).length, 1);
+  assert.equal(prueba([Object.assign({}, ok, { elige: 3 })]).length, 1, 'elegir todas no es elegir');
+  assert.equal(prueba([Object.assign({}, ok, { elige: 0 })]).length, 1);
+  assert.equal(prueba([{ tipo: 'decision', opciones: 'o1', elegidas: ['a'] }]).length, 1, 'decisión antes de la oferta');
+  assert.equal(prueba([ok, { tipo: 'decision', opciones: 'o1', elegidas: ['z'] }]).length, 1, 'opción que no existe');
+  assert.equal(prueba([ok, { tipo: 'decision', opciones: 'o1', elegidas: ['a', 'b'] }]).length, 1, 'pide elegir 1');
+  assert.equal(prueba([ok, { tipo: 'decision', opciones: 'o1', elegidas: [] }]).length, 1);
+  assert.equal(prueba([Object.assign({}, ok, { elige: 2 }), { tipo: 'decision', opciones: 'o1', elegidas: ['a', 'a'] }]).length, 1, 'repetida');
+  assert.equal(prueba([Object.assign({}, ok, { elige: 2 }), { tipo: 'decision', opciones: 'o1', elegidas: ['a', 'c'] }]).length, 0);
+  assert.equal(prueba([ok, { tipo: 'decision', opciones: 'o1', elegidas: 'a' }]).length, 1);
+});
+
+test('el personaje de ejemplo trae notas por autor, un resumen con imagen y dos ofertas de opciones (una pendiente)', () => {
+  const c = contexto();
+  const r = Core.calcularPersonaje(c, ejemplo());
+  assert.deepEqual(errores(r), []);
+  const mer = r.sesiones.find((x) => x.titulo === 'Mercado de sombras');
+  assert.equal(mer.imagen, 'sesiones/mercado-de-sombras.svg');
+  assert.ok(fs.existsSync(path.join(RAIZ, 'characters', mer.imagen)), 'la imagen de ejemplo existe');
+  assert.deepEqual(mer.apuntes.map((a) => a.autor), ['GM', 'Ana', 'Luis']);
+  assert.equal(r.opciones.lista.length, 2);
+  assert.deepEqual(r.opciones.lista.map((o) => o.alcance + ':' + (o.decision ? 'decidida' : 'pendiente')), ['grupo:decidida', 'individual:pendiente']);
+  assert.equal(r.opciones.pendientes, 1);
+  // Los datos de XP y de nivel no cambian por llevar notas y opciones.
+  assert.equal(r.nivel.nivel, 7);
+});

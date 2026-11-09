@@ -23,18 +23,25 @@ Object.keys(personajes).forEach((id) => {
   if (clase && !data.clasesDetalle[clase] && fs.existsSync(ruta)) data.clasesDetalle[clase] = JSON.parse(fs.readFileSync(ruta, 'utf8'));
 });
 
-// El retrato (campo "imagen") puede ser una ruta relativa a characters/. En el archivo único no hay carpeta:
-// se convierte en un data: URI. Una URL o un data: ya escrito se deja tal cual.
+// Las imágenes (el retrato, y la imagen general de una sesión: campo "imagen" de la sesión o de una entrada "resumen") pueden ser una
+// ruta relativa a characters/. En el archivo único no hay carpeta: se convierte en un data: URI. Una URL o un data: ya escrito se deja tal cual.
 const MIME = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml' };
-Object.keys(personajes).forEach((id) => {
-  const ruta = personajes[id].imagen;
-  if (typeof ruta !== 'string' || /^(data:|https?:|blob:)/i.test(ruta)) return;
+function incrustar(id, ruta) {
+  if (typeof ruta !== 'string' || /^(data:|https?:|blob:)/i.test(ruta)) return ruta;
   const abs = path.resolve(raiz, 'characters', ruta);
   if (!abs.startsWith(path.join(raiz, 'characters') + path.sep)) throw new Error(id + ': la imagen "' + ruta + '" sale de characters/');
   const mime = MIME[path.extname(abs).toLowerCase()];
   if (!mime) throw new Error(id + ': tipo de imagen no admitido en "' + ruta + '"');
   if (!fs.existsSync(abs)) throw new Error(id + ': no existe la imagen "' + ruta + '"');
-  personajes[id].imagen = 'data:' + mime + ';base64,' + fs.readFileSync(abs).toString('base64');
+  return 'data:' + mime + ';base64,' + fs.readFileSync(abs).toString('base64');
+}
+Object.keys(personajes).forEach((id) => {
+  const pj = personajes[id];
+  pj.imagen = incrustar(id, pj.imagen);
+  pj.sesiones.forEach((ses) => {
+    if (ses.imagen !== undefined) ses.imagen = incrustar(id + '/' + ses.id, ses.imagen);
+    (ses.entradas || []).forEach((e) => { if (e.tipo === 'resumen' && e.imagen !== undefined) e.imagen = incrustar(id + '/' + ses.id, e.imagen); });
+  });
 });
 
 // Evita que un "</script>" o "<!--" dentro de los datos cierre el bloque.

@@ -731,6 +731,8 @@
       inscritas: {},
       conjuros: [],
       tecnicasMana: [],
+      opciones: {},
+      opcionesOrden: [],
     };
     const manaCfg = ctx.mana || null;
     const manaTags = indexar(ctx.manaTags || []);
@@ -752,6 +754,11 @@
         fecha: ses.fecha,
         titulo: ses.titulo,
         notas: ses.notas || '',
+        // Lo que el GM cuenta de la sesión (10.6): un resumen y una imagen general. `notas` (el campo de siempre) vale como resumen.
+        resumen: typeof ses.resumen === 'string' ? ses.resumen : (ses.notas || ''),
+        imagen: typeof ses.imagen === 'string' && ses.imagen.trim() ? ses.imagen.trim() : null,
+        apuntes: [],
+        opciones: [],
         nivelAntes: nivelAntes,
         filasXp: [],
         zeo: {},
@@ -778,6 +785,15 @@
 
       function error(i, msg) {
         avisos.push({ nivel: 'error', sesion: ses.id, indice: i, mensaje: msg });
+      }
+      if (ses.resumen !== undefined && typeof ses.resumen !== 'string') error(null, 'resumen debe ser un texto');
+      if (ses.imagen !== undefined && typeof ses.imagen !== 'string') error(null, 'imagen debe ser una ruta, una URL o un data:');
+
+      /** La sesión a la que pertenece una nota, un resumen o una oferta: la que dice `sesion` si ya existe en el registro; si no, la que la contiene. */
+      function sesionDestino(id) {
+        if (id === undefined || id === null || id === ses.id) return s;
+        if (typeof id !== 'string') throw new Error('sesion debe ser el id de una sesión');
+        return sesionesOut.find(function (x) { return x.id === id; }) || s;
       }
 
       /** Suma SX a un subsistema (zeo exige rama) y lo anota en la sesión; lo usan `xp-subsistema` y `sx-asignar`. */
@@ -1184,6 +1200,64 @@
             s.tecnicasSx.push({ id: tm.id, nombre: tm.nombre, cantidad: e.cantidad, acumulado: tm.acumulado, costoSx: tm.costoSx });
             return;
           }
+          case 'resumen': {
+            if (e.texto !== undefined && typeof e.texto !== 'string') throw new Error('resumen: texto debe ser un texto');
+            if (e.imagen !== undefined && typeof e.imagen !== 'string') throw new Error('resumen: imagen debe ser una ruta, una URL o un data:');
+            const texto = (e.texto || '').trim();
+            const imagen = (e.imagen || '').trim();
+            if (!texto && !imagen) throw new Error('resumen: falta el texto o la imagen');
+            const dest = sesionDestino(e.sesion);
+            if (texto) dest.resumen = texto;
+            if (imagen) dest.imagen = imagen;
+            return;
+          }
+          case 'apunte': {
+            if (typeof e.autor !== 'string' || !e.autor.trim()) throw new Error('apunte: falta el autor');
+            if (typeof e.texto !== 'string' || !e.texto.trim()) throw new Error('apunte: falta el texto');
+            const rol = e.rol === undefined ? 'jugador' : e.rol;
+            if (rol !== 'jugador' && rol !== 'gm') throw new Error('apunte: rol debe ser jugador o gm');
+            sesionDestino(e.sesion).apuntes.push({ autor: e.autor.trim(), rol: rol, texto: e.texto.trim(), desde: ses.id });
+            return;
+          }
+          case 'opciones': {
+            if (typeof e.id !== 'string' || !/^[a-z0-9][a-z0-9-]*$/.test(e.id)) throw new Error('opciones: id debe ser un texto en minúsculas, números y guiones');
+            if (estado.opciones[e.id]) throw new Error('opciones: el id "' + e.id + '" ya existe');
+            if (typeof e.titulo !== 'string' || !e.titulo.trim()) throw new Error('opciones: falta el título');
+            if (e.texto !== undefined && typeof e.texto !== 'string') throw new Error('opciones: texto debe ser un texto');
+            const alcance = e.alcance === undefined ? 'individual' : e.alcance;
+            if (alcance !== 'grupo' && alcance !== 'individual') throw new Error('opciones: alcance debe ser grupo o individual');
+            if (!Array.isArray(e.opciones) || e.opciones.length < 2) throw new Error('opciones: hacen falta al menos 2 opciones para elegir');
+            const vistos = {};
+            const lista = e.opciones.map(function (o) {
+              if (!o || typeof o.id !== 'string' || !o.id.trim() || typeof o.texto !== 'string' || !o.texto.trim()) throw new Error('opciones: cada opción lleva id y texto');
+              if (vistos[o.id]) throw new Error('opciones: la opción "' + o.id + '" está repetida');
+              vistos[o.id] = true;
+              return { id: o.id, texto: o.texto.trim(), elegida: false };
+            });
+            const elige = e.elige === undefined ? 1 : e.elige;
+            if (!esEntero(elige) || elige < 1 || elige >= lista.length) throw new Error('opciones: elige debe ser un entero de 1 a ' + (lista.length - 1) + ' (menos que las opciones)');
+            const dest = sesionDestino(e.sesion);
+            const op = { id: e.id, titulo: e.titulo.trim(), texto: (e.texto || '').trim(), alcance: alcance, elige: elige, opciones: lista, sesion: dest.id, decision: null, historial: [] };
+            estado.opciones[op.id] = op;
+            estado.opcionesOrden.push(op);
+            dest.opciones.push(op);
+            return;
+          }
+          case 'decision': {
+            const op = estado.opciones[e.opciones];
+            if (!op) throw new Error('decision: la oferta "' + e.opciones + '" no existe (tiene que estar antes en el registro)');
+            if (!Array.isArray(e.elegidas) || e.elegidas.some(function (x) { return typeof x !== 'string'; })) throw new Error('decision: elegidas debe ser una lista de ids de opciones');
+            const unicas = e.elegidas.filter(function (x, i) { return e.elegidas.indexOf(x) === i; });
+            if (unicas.length !== e.elegidas.length) throw new Error('decision: hay una opción repetida');
+            const malas = unicas.filter(function (x) { return !op.opciones.some(function (o) { return o.id === x; }); });
+            if (malas.length) throw new Error('decision: "' + malas.join(', ') + '" no es una opción de "' + op.titulo + '"');
+            if (unicas.length !== op.elige) throw new Error('decision: "' + op.titulo + '" pide elegir ' + op.elige + (op.elige === 1 ? ' opción' : ' opciones') + ' y llegaron ' + unicas.length);
+            if (e.nota !== undefined && typeof e.nota !== 'string') throw new Error('decision: nota debe ser un texto');
+            const reg = { elegidas: unicas.slice(), textos: unicas.map(function (x) { return op.opciones.find(function (o) { return o.id === x; }).texto; }), desde: ses.id, nota: (e.nota || '').trim() };
+            op.historial.push(reg);
+            op.decision = reg;
+            return;
+          }
           case 'objeto': {
             aplicarObjeto(e);
             return;
@@ -1246,6 +1320,11 @@
       s.xpGanada = estado.xp - xpAntes;
       s.xpAcumulada = estado.xp;
       sesionesOut.push(s);
+    });
+
+    // Qué opciones quedaron elegidas (la última decisión manda; el historial conserva las anteriores).
+    estado.opcionesOrden.forEach(function (op) {
+      op.opciones.forEach(function (o) { o.elegida = !!op.decision && op.decision.elegidas.indexOf(o.id) >= 0; });
     });
 
     function saldoMeritos() {
@@ -1423,6 +1502,7 @@
       },
       clase: habilidadesDeClase(detalleClase, arquetipoDef ? arquetipoDef.id : null, nivelInfo.nivel),
       conjuros: progresionConjuros(detalleClase, nivelInfo.nivel),
+      opciones: { lista: estado.opcionesOrden, pendientes: estado.opcionesOrden.filter(function (op) { return !op.decision; }).length },
       ventajas: calcularVentajas({
         catalogo: ctx.efectos, efectosFeats: ctx.efectosFeats, clase: habilidadesDeClase(detalleClase, arquetipoDef ? arquetipoDef.id : null, nivelInfo.nivel),
         feats: estado.feats, nivel: nivelInfo.nivel, atributos: todos,

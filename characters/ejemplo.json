@@ -436,6 +436,57 @@
           "funcion": "potencia",
           "tag": "oscuridad",
           "oportunidad": "La grieta bajo el mercado"
+        },
+        {
+          "tipo": "resumen",
+          "texto": "El grupo siguió al contrabandista por los callejones del mercado nocturno y salió con un mapa de las bodegas del barón. Nadie vio a la encapuchada que los seguía.",
+          "imagen": "sesiones/mercado-de-sombras.svg"
+        },
+        {
+          "tipo": "apunte",
+          "autor": "GM",
+          "rol": "gm",
+          "texto": "La encapuchada es la hermana del barón. Reaparece en la sesión del faro si alguien le habló."
+        },
+        {
+          "tipo": "apunte",
+          "autor": "Ana",
+          "rol": "jugador",
+          "texto": "El contrabandista cojeaba de la pierna izquierda y no quiso dar su nombre.\nPendiente: preguntar por el sello de las bodegas."
+        },
+        {
+          "tipo": "apunte",
+          "autor": "Luis",
+          "rol": "jugador",
+          "texto": "Mi personaje no se fía del mapa: la tinta parecía fresca."
+        },
+        {
+          "tipo": "opciones",
+          "id": "botin-mercado",
+          "titulo": "Botín del contrabandista",
+          "texto": "El grupo decide a quién va el pago.",
+          "alcance": "grupo",
+          "opciones": [
+            {
+              "id": "a",
+              "texto": "Quedarse con las 300 po"
+            },
+            {
+              "id": "b",
+              "texto": "Cambiarlas por el mapa de las bodegas"
+            },
+            {
+              "id": "c",
+              "texto": "Pagarle al guía para que calle"
+            }
+          ]
+        },
+        {
+          "tipo": "decision",
+          "opciones": "botin-mercado",
+          "elegidas": [
+            "b"
+          ]
         }
       ]
     },
@@ -581,6 +632,27 @@
           "tipo": "inscribir",
           "slot": "g1",
           "habilidad": "power-attack"
+        },
+        {
+          "tipo": "opciones",
+          "id": "recompensa-cumbre",
+          "titulo": "Recompensa de la cumbre",
+          "texto": "Cada jugador elige una.",
+          "alcance": "individual",
+          "opciones": [
+            {
+              "id": "a",
+              "texto": "Una poción de curación mayor"
+            },
+            {
+              "id": "b",
+              "texto": "+100 XP de entrenamiento"
+            },
+            {
+              "id": "c",
+              "texto": "Un favor del gremio de montañeros"
+            }
+          ]
         }
       ]
     }
