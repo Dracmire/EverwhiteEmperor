@@ -1330,7 +1330,7 @@
       ? '<div class="lista">' + items + '</div>' +
         '<p class="sub">Estas entradas todavía no están en el personaje. Cópialas y pégalas en la lista <code>entradas</code> de una sesión de <code>characters/' + esc(idPj(pj)) + '.json</code>; el borrador se queda en este navegador hasta que lo vacíes.</p>' +
         '<textarea class="json" id="pk-json" readonly rows="' + Math.min(12, json.split('\n').length) + '" aria-label="Entradas del borrador en JSON">' + esc(json) + '</textarea>' +
-        '<div class="acc-fila"><button class="btn prim" type="button" data-accion="copiar">Copiar JSON</button><button class="btn" type="button" data-accion="descargar">Descargar .json</button><button class="btn" type="button" data-accion="vaciar">Vaciar borrador</button><span id="pk-msg" role="status" class="mute" style="font-size:14px"></span></div>'
+        '<div class="acc-fila"><button class="btn prim" type="button" data-accion="copiar">Copiar JSON</button><button class="btn" type="button" data-accion="vaciar">Vaciar borrador</button><span id="pk-msg" role="status" class="mute" style="font-size:14px"></span></div>'
       : '<p class="mute">Vacío. Cada feat que elijas, achievement que asignes o dado que tires se suma aquí y se calcula como si ya estuviera en el personaje.</p>';
     var resumen = borr.length
       ? chip(plural(borr.length, 'entrada', 'entradas'), 'gold') + (avisosBorr.length ? chip(plural(avisosBorr.length, 'con error', 'con errores'), 'warn') : '')
@@ -2180,22 +2180,6 @@
       }
     } else if (a === 'importar') {
       importarEntradas(document.getElementById('imp-json').value || '');
-    } else if (a === 'descargar') {
-      var dsArea = document.getElementById('pk-json');
-      var dsMsg = document.getElementById('pk-msg');
-      try {
-        var dsUrl = URL.createObjectURL(new Blob([dsArea.value], { type: 'application/json' }));
-        var dsA = document.createElement('a');
-        dsA.href = dsUrl;
-        dsA.download = 'borrador-' + idPj(pj) + '.json';
-        document.body.appendChild(dsA);
-        dsA.click();
-        document.body.removeChild(dsA);
-        setTimeout(function () { URL.revokeObjectURL(dsUrl); }, 1000);
-        if (dsMsg) dsMsg.textContent = 'Descargado.';
-      } catch (err) {
-        if (dsMsg) dsMsg.textContent = 'No se pudo descargar desde aquí: usa «Copiar JSON».';
-      }
     } else if (a === 'quitar') {
       var borr = borradorDe(pj).slice();
       borr.splice(Number(boton.getAttribute('data-indice')), 1);
