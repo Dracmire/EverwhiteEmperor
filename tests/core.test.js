@@ -1,5 +1,5 @@
 'use strict';
-// Pruebas del motor. Ejecutar con: node --test tests/
+// Pruebas del motor. Ejecutar con: node --test tests/core.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
