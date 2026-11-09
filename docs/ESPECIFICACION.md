@@ -1,6 +1,6 @@
-# EverwhiteEmperor — Especificación del tracker de personajes (v0.9.3)
+# EverwhiteEmperor — Especificación del tracker de personajes (v0.9.4)
 
-Estado: borrador del 2026-11-08. La v0.9.3 añade el **catálogo de técnicas de Zeo** (raíz, rama, mejoras por nivel y descripción; 4.1.1), las **líneas extra** (L11 en adelante, con origen) y líneas **desplegables** que muestran la técnica raíz. La v0.9.2 **revierte el desplazamiento C + 2 de la recuperación** (C vuelve a ser el bono) y deja el MP en **×5** (1.2), reduce la técnica inicial de cada línea de Zeo a **una sola** (4.1.1) y rehace la **progresión de conjuros del mago**: normal hasta el nivel 3 de conjuro y retrasada desde el 4 (4.2). La v0.9.1 pasó las líneas de Zeo a slots de 5 niveles con varias técnicas por nivel y puso las habilidades activas de clase en Magia. La v0.9.0 implementa las **habilidades de clase por nivel y los arquetipos** (6.5) solo para **Monk y Wizard**, añade el **alineamiento** (1.3) y dos personajes de muestra: **Musashi Nanaya** (monje asesino ninja, L.N) y **Herb'Azzio** (mago sin escuela, N.B), con feats extra a cambio de la escuela (6.1). La v0.8.6 **definió la recuperación de MP** con la misma fórmula (bono de SPR; ×10 entonces, ×5 desde la v0.9.2) y dejó solo **dos descansos**: corto de 2 h y largo de 8 h con **+50 %** (1.2). La v0.8.5 reemplaza la recuperación de 5e por **la fórmula del diseñador en HP por hora** (1.2): C es el bono de CON, el descanso cura R × horas y desaparecen los Dados de Golpe. La v0.8.4 hace que **el SX sea una reserva común de Zeo y Mana** (4.1.3), agrega al visor los **formularios para Gates y Mana force**, y registra como propuesta la **fórmula de recuperación por hora** del diseñador (1.2, pendiente de aclarar qué es C). La v0.8.3 cambia la recuperación a la regla de D&D 5e (la más generosa: descanso largo con todo el HP y Dados de Golpe en el corto, 1.2), difiere la recuperación de MP, e **implementa Mana por Gates** (4.1.2): Mana force, Gates con tag y función, grafo de slots (Gates, nodos y círculos), tabla de compatibilidad entre tags e inscripción de habilidades; todas las cifras de Mana son **[SUPUESTO]** de ejemplo. La v0.8.2 añade la fatiga, los estados DOWN, K.O. y Deadly y los descansos a la vista Jugar (1.2), convierte Equipo y Méritos y defectos en listas de una línea con tooltip, deja las tiradas de HP y MP solo en Construir, y fija que los Gates conectan por defecto salvo incompatibilidad (4.1.2). La v0.8.1 ajusta la vista Jugar (feats como lista, derivados en mini tarjetas) y documenta el diseño nuevo de Mana por Gates, Magia con conjuros y habilidades de clase por nivel, que todavía **no está implementado**. La v0.8 cambió los atributos (STR, DEX, PER, INT, WIS y CHA; CON, SPR y MND se derivan), añade HP y MP con tiradas de dados, y rehace la ficha del visor: retrato, base y atributos arriba, todo lo demás plegado y el registro de sesiones abajo, con achievements asignables desde una lista con scroll (ver "Cambios respecto a versiones anteriores" al final).
+Estado: borrador del 2026-11-08. La v0.9.4 **corrige el modelo de Zeo**: el nivel de una rama es la técnica de rango más alto de sus líneas activas, el nivel zeo es `(heaven + earth + void) / 3`, los sx 10/20/30/50/80 son el costo de una técnica de rango 1 a 5, hay **líneas por activar** (adquiridas y no pagadas; activarlas cuesta 10 + líneas activas + nivel zeo), el origen pasa a ser solo una nota del log y la cabecera de Zeo queda compacta. Además el personaje trae `habilidades` y un `tagXp` propio (1.3), y Musashi Nanaya queda cargado con su hoja. La v0.9.3 añade el **catálogo de técnicas de Zeo** (raíz, rama, mejoras por nivel y descripción; 4.1.1), las **líneas extra** (L11 en adelante, con origen) y líneas **desplegables** que muestran la técnica raíz. La v0.9.2 **revierte el desplazamiento C + 2 de la recuperación** (C vuelve a ser el bono) y deja el MP en **×5** (1.2), reduce la técnica inicial de cada línea de Zeo a **una sola** (4.1.1) y rehace la **progresión de conjuros del mago**: normal hasta el nivel 3 de conjuro y retrasada desde el 4 (4.2). La v0.9.1 pasó las líneas de Zeo a slots de 5 niveles con varias técnicas por nivel y puso las habilidades activas de clase en Magia. La v0.9.0 implementa las **habilidades de clase por nivel y los arquetipos** (6.5) solo para **Monk y Wizard**, añade el **alineamiento** (1.3) y dos personajes de muestra: **Musashi Nanaya** (monje asesino ninja, L.N) y **Herb'Azzio** (mago sin escuela, N.B), con feats extra a cambio de la escuela (6.1). La v0.8.6 **definió la recuperación de MP** con la misma fórmula (bono de SPR; ×10 entonces, ×5 desde la v0.9.2) y dejó solo **dos descansos**: corto de 2 h y largo de 8 h con **+50 %** (1.2). La v0.8.5 reemplaza la recuperación de 5e por **la fórmula del diseñador en HP por hora** (1.2): C es el bono de CON, el descanso cura R × horas y desaparecen los Dados de Golpe. La v0.8.4 hace que **el SX sea una reserva común de Zeo y Mana** (4.1.3), agrega al visor los **formularios para Gates y Mana force**, y registra como propuesta la **fórmula de recuperación por hora** del diseñador (1.2, pendiente de aclarar qué es C). La v0.8.3 cambia la recuperación a la regla de D&D 5e (la más generosa: descanso largo con todo el HP y Dados de Golpe en el corto, 1.2), difiere la recuperación de MP, e **implementa Mana por Gates** (4.1.2): Mana force, Gates con tag y función, grafo de slots (Gates, nodos y círculos), tabla de compatibilidad entre tags e inscripción de habilidades; todas las cifras de Mana son **[SUPUESTO]** de ejemplo. La v0.8.2 añade la fatiga, los estados DOWN, K.O. y Deadly y los descansos a la vista Jugar (1.2), convierte Equipo y Méritos y defectos en listas de una línea con tooltip, deja las tiradas de HP y MP solo en Construir, y fija que los Gates conectan por defecto salvo incompatibilidad (4.1.2). La v0.8.1 ajusta la vista Jugar (feats como lista, derivados en mini tarjetas) y documenta el diseño nuevo de Mana por Gates, Magia con conjuros y habilidades de clase por nivel, que todavía **no está implementado**. La v0.8 cambió los atributos (STR, DEX, PER, INT, WIS y CHA; CON, SPR y MND se derivan), añade HP y MP con tiradas de dados, y rehace la ficha del visor: retrato, base y atributos arriba, todo lo demás plegado y el registro de sesiones abajo, con achievements asignables desde una lista con scroll (ver "Cambios respecto a versiones anteriores" al final).
 
 Convención del documento:
 - **[PENDIENTE]**: falta un dato o una decisión del diseñador.
@@ -102,10 +102,12 @@ Las cifras viven en `data/vitalidad.json` (`descanso.formula`: `atributo`, `mini
 
 ### 1.3 Alineamiento y arquetipo del personaje (v0.9) [DECIDIDO la notación; el resto es SUPUESTO]
 
-El JSON del personaje trae dos campos nuevos, ambos opcionales y fijos (no cambian con las sesiones):
+El JSON del personaje trae campos opcionales y fijos (no cambian con las sesiones):
 
 - **`alineamiento`**: se escribe `ley.moral`, con **L, N o C** (legal, neutral, caótico) y **B, N o M** (bueno, neutral, malo): `L.N` es *Legal neutral* y `N.B` *Neutral bueno*; `N.N` se rotula *Neutral puro*. Un valor que no cumple el formato es un error del personaje.
 - **`arquetipo`**: el `id` de un arquetipo de su clase (6.5), por ejemplo `sombra-asesina`. Un arquetipo que no existe en la clase, o cuya clase no tiene archivo en `data/clases/`, es un error.
+- **`habilidades`** (v0.9.4): lista de ids de tags de `data/xp-config.json` (por ejemplo `stealth`, `sense-motive`, `climb`, `intimidate`, `perception`). **[SUPUESTO]** son solo las habilidades que el personaje tiene; el visor las muestra como chips, sin rangos ni bonos. Un id que no existe es un error.
+- **`tagXp`** (v0.9.4): el id de **un** tag de `xp-config` que es el «tag para recibir experiencia adicional» del personaje (Musashi: `tracker`, «Rastreo»; se agregó a `xp-config` como tag propio). **[PENDIENTE]** la regla del bono: hoy solo se guarda y se muestra, no cambia la XP.
 
 El visor los muestra bajo el nombre: `Monk (Sombra asesina) · Humano · Legal neutral (L.N)`.
 
@@ -307,56 +309,56 @@ No hay otro sistema conocido que tenga a la vez 1000 XP fijos por nivel y una ta
 }
 ```
 
-### 4.1.1 Zeo [DECIDIDO salvo lo marcado]
+### 4.1.1 Zeo (v0.9.4) [DECIDIDO el modelo; las descripciones y los efectos son PENDIENTES]
 
-- **Unidad:** sx (la XP de zeo).
-- **Tres ramas:** las técnicas se dividen en `heaven`, `void` y `earth`. Cada rama acumula sus propios sx y tiene su propio nivel.
-- **El nivel zeo es el menor de los niveles de las tres ramas.**
-- **Tabla de sx por nivel** (niveles 1 a 5):
+**Niveles (corregido en la v0.9.4):**
 
-| Nivel | sx |
-|---|---|
-| 1 (base) | 10 |
-| 2 | 20 |
-| 3 | 30 |
-| 4 | 50 |
-| 5 | 80 |
+- **Tres ramas:** `heaven`, `void` y `earth`. Cada técnica raíz pertenece a una rama y sus mejoras heredan la de su línea.
+- **El nivel de una rama es el rango más alto entre las técnicas de las líneas activas de esa rama.** Heaven nivel 3 = la técnica más alta de una línea heaven activa es de rango 3. Los sx **no** suben las ramas.
+- **El nivel zeo total es `(Heaven + Earth + Void) / 3`.** El motor guarda el valor exacto en `zeo.nivel` y el entero hacia abajo en `zeo.nivelEntero` (el que entra en los costos).
+- **Los sx 10, 20, 30, 50 y 80 son el costo de una técnica de rango 1 a 5** (`costoPorRango`). Es el costo de las «sub ramas»; no tiene nada que ver con el nivel de heaven, earth o void. Los sx se siguen acumulando por rama en la sección de SX, pero no deciden ningún nivel.
+- **Nivel de una línea («Tech Zlv»):** el rango más alto que tiene esa línea.
 
-- **[SUPUESTO]** La tabla se lee igual que la XP principal: cada número es el sx acumulado donde *termina* el nivel (nivel 1: 0 a 10; nivel 2: 10 a 20; nivel 3: 20 a 30; nivel 4: 30 a 50; nivel 5: 50 en adelante, con 80 como cierre). La alternativa es leerla como el costo de cada nivel (acumulado 10, 30, 60, 110, 190). El archivo `data/zeo.json` tiene el campo `lectura` para cambiar de una a otra. **[PENDIENTE confirmar]**
-- **[SUPUESTO]** El nivel máximo de cada rama es 5.
+**Líneas adquiridas y líneas activas (v0.9.4) [DECIDIDO; el redondeo del costo es SUPUESTO]:**
 
-**Líneas de técnica (v0.9.1) [DECIDIDO la estructura; el catálogo de técnicas es PENDIENTE]:**
+- Una línea **adquirida pero no pagada** es una **línea por activar**: la técnica raíz está anotada (`zeo-tecnica` con `activa: false` en el nivel 1) pero **no cuenta para los niveles de las ramas** ni para el nivel zeo.
+- **Activar una línea cuesta `10 + líneas activas + nivel zeo`** (`activarLinea: base 10, porLineaActiva 1, porNivelZeo 1`). El evento es `zeo-activar { linea }`. **[SUPUESTO]** el nivel zeo se toma redondeado hacia abajo (`nivelEntero`).
+- **[PENDIENTE]** El costo de activar se **muestra** (y queda en `zeo.costoActivar` y en la sesión) pero **no se descuenta** de ninguna reserva de sx ni se exige.
+
+**Líneas de técnica (v0.9.1) [DECIDIDO la estructura]:**
 
 - Un personaje tiene **10 líneas de técnica, y cada línea es un slot**. Cada línea tiene **5 niveles**. **La técnica inicial de una línea es una sola** (nivel 1, `1` opción); los demás niveles muestran **varias técnicas**: 3 en el nivel 2, **hasta 5 en los niveles 3 y 4** y 3 de nuevo en el 5 (`opcionesPorNivel: [1, 3, 5, 5, 3]`).
-- **Las opciones del nivel siguiente se abren al tomar técnicas.** La técnica inicial del nivel 1 está disponible desde el inicio. La **primera** técnica tomada en un nivel abre **3 opciones** en el siguiente; cada técnica **extra del mismo nivel** suma **1 opción más** (la segunda abre 4, la tercera 5), con el tope de ese nivel. Ejemplo: con 3 técnicas de nivel 2, el nivel 3 muestra 5 opciones; el nivel 2 y el 5 nunca pasan de 3.
-- Una técnica de nivel N solo se puede tomar si la línea ya tiene una de nivel N−1, y no más de las opciones visibles de ese nivel. Una línea está **ocupada** cuando tiene al menos una técnica; las libres se ocupan con la técnica inicial (nivel 1).
+- **Las opciones del nivel siguiente se abren al tomar técnicas.** La **primera** técnica tomada en un nivel abre **3 opciones** en el siguiente; cada técnica **extra del mismo nivel** suma **1 opción más** (la segunda abre 4, la tercera 5), con el tope de ese nivel.
+- Una técnica de nivel N solo se puede tomar si la línea ya tiene una de nivel N−1, y no más de las opciones visibles de ese nivel. Una línea está **ocupada** cuando tiene una técnica raíz (activa o por activar); las libres se ocupan con la técnica inicial.
 
-**Catálogo de técnicas y líneas extra (v0.9.3) [DECIDIDA la estructura; las descripciones son PENDIENTES]:**
+**Catálogo de técnicas, origen y líneas más allá de L10 (v0.9.4) [DECIDIDO]:**
 
-- **Anotar solo el nombre no dice qué hace la técnica**, así que existe un catálogo, `data/zeo-tecnicas.json`. Cada **línea del catálogo** tiene una **técnica raíz** (nivel 1) con su `rama` (heaven, void o earth), un `origen` (`null` si es de los 10 slots iniciales) y las **mejoras de cada nivel** (2 a 5), cada una con su `descripcion`. Hoy trae las 10 líneas iniciales de la hoja de Musashi y 4 líneas de fuera (Jutsu de Sombras, Buki no Sendo, Sento no Kao y Giman gijutsu). La hoja trae 3 mejoras por nivel en los niveles 2 a 4 (Meditación trae 4 en el nivel 3, por una fila desalineada); el nivel 5 aún no tiene opciones. **Las `descripcion` están en `null`: la hoja solo trae nombres.**
-- **El catálogo lista todas las opciones de un nivel; cuántas se pueden tomar lo sigue marcando la regla de arriba** (3 al abrirse, +1 por cada técnica extra del nivel anterior, hasta el tope). El visor muestra cada línea con lo tomado y lo que falta, y el texto «Sin descripción todavía» mientras no haya descripción.
-- **`zeo-tecnica` resuelve la técnica por id o por nombre** (sin distinguir tildes ni mayúsculas) y guarda el nombre del catálogo. Con una raíz del catálogo, una mejora tiene que ser de esa línea y del nivel en que se toma; una raíz no puede tomarse en dos líneas. Un nombre que no está en el catálogo **sigue valiendo**: se guarda como técnica propia (sin catálogo) y puede traer su propia `descripcion` (y `rama` si es una raíz). Tampoco pueden mezclarse: una mejora del catálogo no entra en una línea cuya raíz es propia.
-- **Líneas extra [DECIDIDO]:** además de los 10 slots iniciales, una línea puede llegar de fuera (clase, raza, logro, ronda de campaña; las filas «OUT» de la hoja). Se numeran desde `L11`, **en orden**, y su técnica raíz **exige `origen`** (texto libre; una raíz del catálogo con origen lo trae por defecto). Una raíz del catálogo con origen (Werewolf, Ninja, Knight…) **no cabe en un slot inicial**. Las líneas extra no cuentan en `slots`; el resultado las cuenta aparte en `zeo.extras` y trae `zeo.catalogo`, que dice qué raíces ya están en uso.
-- **[PENDIENTE]** Las filas «+N» de la hoja («Tecnica del Escape + 2», «Tecnica de Muerte +3», «Sento no Kao +1») y las de las rondas (Awakening Lv 3, Dowsing Lv 1, Doton, Zenjutsu, Self Diagnose, Self Sacrifice, tecnología curativa) no se pueden traducir a reglas todavía. Quedan en `bonos` y `pendientes` del catálogo, sin efecto.
-- **[PENDIENTE]** Si una técnica de nivel N exige tener el nivel zeo N (la hoja rotula «2nd Rank - 20sx», «3rd Rank - 30sx», «4th Rank - 50sx») o el nivel de su rama. Hoy no se exige nada: el nivel zeo no limita las técnicas. Y qué significa «Tech Zlv» en la hoja (¿técnicas tomadas o nivel alcanzado en la línea?).
-- **Visor:** cada línea ocupada es un **desplegable** (se recuerda cuáles están abiertas) con la técnica raíz, la rama y el origen en el resumen; las líneas extra salen aparte. En Construir hay tres formularios: **línea nueva** (raíz del catálogo o propia; sin origen va al primer slot libre y con origen o con los 10 ocupados va a la próxima línea extra), **mejora del catálogo** (solo niveles abiertos con opciones libres) y **otra técnica** de nombre libre.
-- **Vista:** se dibujan las líneas ocupadas y **una sola** libre (con un aviso de cuántas libres quedan). Un personaje sin ninguna línea ocupada ve un único slot vacío.
-- **[SUPUESTO]** Esta estructura **reemplaza a los pisos por niveles acumulados** de la v0.5 (piso 4 con 10 niveles y piso 5 con 20), que dependían de un texto cortado.
-- **[PENDIENTE]** El catálogo de técnicas (nombre, línea, nivel, rama y efecto): hoy una técnica se registra por línea y nivel con un **nombre opcional** (`zeo-tecnica`, sección 8). También falta decidir si el nivel de una técnica debe estar limitado por el nivel zeo (hoy no), a qué rama pertenece cada línea o técnica, cómo se ganan las técnicas, qué actividades dan sx y cuándo puede haber más de 10 líneas.
+- **Anotar solo el nombre no dice qué hace la técnica**, así que existe un catálogo, `data/zeo-tecnicas.json` (versión 0.2.0). Cada **línea del catálogo** tiene una **técnica raíz** (nivel 1) con su `rama`, un `origen` y las **mejoras de cada nivel** (2 a 5), cada una con su `descripcion`. Trae las 10 líneas iniciales de la hoja de Musashi y 4 líneas con origen (Jutsu de Sombras / Werewolf, Buki no Sendo / Ninja, Sento no Kao / Knight, Giman gijutsu / Knight). **Las `descripcion` están en `null`** hasta que el diseñador las entregue.
+- **El `origen` (Werewolf, Ninja, Knight…) es solo una nota del log**: cuenta **cómo adquirió el personaje la técnica** (una oferta de varias opciones en una sesión o ronda: el personaje eligió una y lo descartado queda anotado). **No es un requisito**: ya no se exige para las líneas más allá de L10 ni impide poner una raíz en un slot inicial.
+- **`log` del catálogo:** las filas «+N» (Tecnica del Escape +2, Tecnica de Muerte +3), las rondas y lo descartado quedan como **texto del log** (`log[{origen, texto}]`), sin efecto de reglas.
+- **`zeo-tecnica` resuelve la técnica por id o por nombre** (sin distinguir tildes ni mayúsculas) y guarda el nombre del catálogo. Con una raíz del catálogo, una mejora tiene que ser de esa línea y del nivel en que se toma; una raíz no puede estar en dos líneas. Un nombre fuera del catálogo **sigue valiendo** (técnica propia, `catalogo: false`, con su propia `descripcion` y `rama` si es raíz).
+- **Líneas más allá de L10:** `L11`, `L12`… se aceptan **en orden contiguo** y **sin origen obligatorio**. Los 10 slots iniciales son la base de `zeo.slots`; las demás se cuentan en `zeo.extras`.
 
-Valores de `data/zeo.json` (versión 0.6.1):
+**Visor:**
+
+- **Cabecera compacta (v0.9.4):** una sola cabecera con el **nivel zeo** y las tres ramas con su nivel (sin tarjetas de sx por rama y **sin texto explicativo**).
+- Cada línea es un **desplegable** (se recuerda cuáles están abiertas) con la técnica raíz, la rama y su nivel en el resumen. Las líneas **por activar** salen aparte, con el costo de activación y el botón de activar en Construir.
+- Se dibujan las líneas ocupadas y **una sola** libre (con aviso de cuántas libres quedan).
+- En Construir: **línea nueva** (raíz del catálogo o propia, con la casilla «por activar»), **mejora del catálogo**, **otra técnica** de nombre libre y **activar línea**.
+
+- **[PENDIENTE]** Si una técnica de rango N exige un nivel zeo o de rama (la hoja rotula «2nd Rank - 20sx», «3rd Rank - 30sx»…) y si se descuentan los sx de su costo. Hoy el costo se muestra y no se exige. Qué es «Tech Zlv» exactamente se resolvió como el rango más alto de la línea.
+- **[PENDIENTE]** Las descripciones y los efectos de las técnicas, cómo se ganan los sx y qué actividades los dan.
+
+Valores de `data/zeo.json` (versión 0.7.0):
 
 ```json
 {
   "unidad": "sx",
   "ramas": ["heaven", "void", "earth"],
-  "nivelZeo": "min",
   "nivelMax": 5,
-  "lectura": "umbral-acumulado",
-  "niveles": [
-    { "nivel": 1, "sx": 10 }, { "nivel": 2, "sx": 20 }, { "nivel": 3, "sx": 30 },
-    { "nivel": 4, "sx": 50 }, { "nivel": 5, "sx": 80 }
-  ],
+  "nivelZeo": "promedio-ramas",
+  "costoPorRango": [10, 20, 30, 50, 80],
+  "activarLinea": { "base": 10, "porLineaActiva": 1, "porNivelZeo": 1 },
   "lineas": {
     "total": 10,
     "niveles": 5,
@@ -401,7 +403,7 @@ Entradas del registro (los nodos y los círculos **no** son entradas: el motor l
 ]
 ```
 
-- **El SX de mana** (lo asignado a Mana, 4.1.3) es un **umbral acumulado**, igual que la lectura de Zeo: lo que se asigna a Mana no se vuelve a gastar al construir un Gate **[SUPUESTO]** (`sxGasta: false`).
+- **El SX de mana** (lo asignado a Mana, 4.1.3) es un **umbral acumulado**: lo que se asigna a Mana no se vuelve a gastar al construir un Gate **[SUPUESTO]** (`sxGasta: false`).
 - **`mana-fuerza`:** `cantidad` entera distinta de 0, `fuente` (`criatura-contratada`, `contrato-magico` u `otra`) y `nota`. Perder MF (cantidad negativa) exige nota, y la MF no puede quedar bajo 0. La MF **inicial** es 1 (humano, `mfInicial`), y una raza puede cambiarla con `raza.manaFuerza` **[SUPUESTO]**. La **contabilidad de MF** (base y cada aporte con su fuente y nota) sale en un desplegable del visor.
 - **`gate`:** `id` (letras y números, sin guiones: `g1`), `funcion` (`capacidad`, `intensidad`, `potencia` o `sentidos`), `tag` (debe existir en `data/mana-tags.json`) y `oportunidad` (texto: la oportunidad para construirlo). El Gate número *k* exige **MF ≥ `mfBase`^(k−1)** (`mfBase` = 2: MF 1 permite 1 Gate, 2 permite 2, 4 permite 3, 8 permite 4) y **SX de mana ≥ `sxPorGate[k−1]`** (`[10, 20, 40, 80, 160, 320, 640]`, **[SUPUESTO]**); si falta algo, la entrada se rechaza con el motivo.
 - **`inscribir` / `desinscribir`:** un slot admite **una** habilidad tipo conjuro (6.2) del personaje. Para cambiarla hay que desinscribir antes. **[SUPUESTO]** La misma habilidad puede ocupar varios slots, y no se exige que coincida con el tag del slot.
@@ -661,6 +663,8 @@ Es el núcleo del tracker. Es la **fuente de verdad**: el estado del personaje (
   "clase": "monk",
   "arquetipo": "sombra-asesina",
   "alineamiento": "L.N",
+  "habilidades": ["stealth", "climb"],
+  "tagXp": "tracker",
   "imagen": "retratos/slug.png",
   "atributos": { "STR": 17, "DEX": 13, "PER": 12, "INT": 10, "WIS": 12, "CHA": 8 },
   "sesiones": [
@@ -699,7 +703,7 @@ Reglas:
    - `xp-subsistema` solo para zeo y mana; para zeo exige `rama` (`heaven`, `void` o `earth`);
    - los seis atributos base existen y no se escriben CON, SPR ni MND (1.1);
    - `tirada`: `recurso` hp o mp, `dado` con la forma `dN`, `resultado` entre 1 y N, un nivel ya alcanzado y sin tirada previa del mismo recurso;
-   - `zeo-tecnica` solo con una línea existente (L01 a L10, o la próxima línea extra) y un nivel de 1 a 5; un nivel de más de 1 exige una técnica del nivel anterior en esa línea, no se pueden tomar más técnicas que las opciones visibles de ese nivel (4.1.1) y un nombre no se repite dentro de la línea. Una raíz o mejora del catálogo debe ser de la línea y del nivel que se dice; `origen` y `descripcion`, si se ponen, son textos no vacíos; `rama` debe ser una de las ramas; y la raíz de una línea extra exige `origen`. `zeo-linea` (v0.5) ya no existe y da un error que remite a `zeo-tecnica`;
+   - `zeo-tecnica` solo con una línea existente (L01 a L10, o la próxima línea contigua desde L11) y un nivel de 1 a 5; un nivel de más de 1 exige una técnica del nivel anterior en esa línea, no se pueden tomar más técnicas que las opciones visibles de ese nivel (4.1.1) y un nombre no se repite dentro de la línea. Una raíz o mejora del catálogo debe ser de la línea y del nivel que se dice; `origen` y `descripcion`, si se ponen, son textos no vacíos; `rama` debe ser una de las ramas; `activa` solo puede ser `false` y solo en el nivel 1 (línea adquirida por activar). `zeo-activar { linea }` exige una línea con raíz por activar y la pasa a activa (costo `10 + líneas activas + nivel zeo`, informativo). `habilidades` y `tagXp` del personaje deben ser ids de `data/xp-config.json`. `zeo-linea` (v0.5) ya no existe y da un error que remite a `zeo-tecnica`;
    - `pct` de un grado `cumple` entre 0.25 y 0.30;
    - un racial solo lo puede tener un personaje de la raza a la que pertenece;
    - los feats cumplen sus requisitos estructurados en el momento de ganarlos (atributos, ataque base, nivel y feats previos) y no superan los slots del nivel (1 en el nivel 1, uno más cada 2 niveles);
@@ -788,7 +792,7 @@ Se buscó un visor existente. Ninguno cumple a la vez: estático, licencia compa
 Hay una maqueta visual con datos de ejemplo, construida sobre `characters/ejemplo.json` (un personaje de nivel 7 con 6 sesiones). Todos los números de la maqueta salen de la fórmula de la sección 3 y de `data/zeo.json`; los nombres de razas, méritos, objetos y logros son inventados. Muestra:
 
 - nivel, progreso al siguiente nivel y XP;
-- zeo con sus tres ramas, el nivel zeo como el menor de las tres y las 10 líneas de técnica, cada una con 5 niveles de varias técnicas;
+- zeo con una cabecera compacta (nivel zeo = promedio de las tres ramas), las líneas activas, las líneas por activar y las 10 líneas de técnica, cada una con 5 niveles de varias técnicas;
 - mana (su tabla está pendiente) y fate;
 - méritos y defectos con el saldo de puntos, y el racial con el descuento de perfil de ejemplo;
 - equipo por extremidad, con cargas, y la armadura aparte;
@@ -923,20 +927,11 @@ Grados de tag (nivel 7 contra contenido de nivel 7, base 40):
 | `stealth` en `heroico` | 40 |
 | `close-quarter-combat` en `cumple` y `stealth` en `heroico` (regla `max`) | 40 |
 
-### Zeo (lectura `umbral-acumulado`)
+### Zeo (nivel por técnica más alta, v0.9.4)
 
-| sx de la rama | Nivel de la rama |
-|---|---|
-| 0 | 1 |
-| 9 | 1 |
-| 10 | 2 |
-| 20 | 3 |
-| 30 | 4 |
-| 49 | 4 |
-| 50 | 5 |
-| 80 o más | 5 |
-
-- Nivel zeo: heaven 34 sx (nivel 4), void 22 sx (nivel 3), earth 15 sx (nivel 2) → nivel zeo 2, el menor de los tres.
+- Rama = rango más alto entre las técnicas de sus líneas **activas**; nivel zeo = `(heaven + earth + void) / 3`. Ejemplo: heaven 3, void 2, earth 1 → nivel zeo 2 (exacto 2; `nivelEntero` 2). Con heaven 4, void 3, earth 2 → 3.
+- Las líneas por activar (`activa: false`) no suben ninguna rama. `zeo-activar` las pasa a activas; el costo es `10 + líneas activas + nivel zeo (entero)`. Con 7 activas y nivel zeo 2 cuesta 19.
+- El costo de un rango sale de `costoPorRango`: 10, 20, 30, 50 y 80 para los rangos 1 a 5; no influye en el nivel de las ramas.
 - Opciones visibles de una línea (v0.9.2): el nivel 1 muestra **1** (la técnica inicial); sin técnica en el nivel anterior, 0; con 1, 2 y 3 técnicas de nivel 2 el nivel 3 muestra 3, 4 y 5; el nivel 4 sube igual hasta 5; los niveles 2 y 5 se quedan en 3.
 - Una línea con técnicas 1×1, 2×3 y 3×1: opciones visibles por nivel `[1, 3, 5, 3, 0]`, libres `[0, 0, 4, 3, 0]`. Una línea vacía: `[1, 0, 0, 0, 0]`.
 - Catálogo de técnicas (v0.9.3): ids únicos en todo el catálogo, ramas válidas y 10 líneas sin origen. Una raíz se resuelve por nombre o id (sin tildes ni mayúsculas) y la línea la muestra con su rama y las mejoras del nivel; una mejora de otra línea, de otro nivel, una raíz usada como mejora, una mejora usada como raíz, una raíz en dos líneas, un nombre repetido y una raíz «de fuera» en un slot inicial dan error. Una raíz propia acepta nombres propios con descripción, pero no mejoras del catálogo. Las líneas extra piden origen, salen en orden (L11, L12…) y no cuentan en `slots`; la descripción propia gana a la del catálogo. Las 10 raíces de Musashi se resuelven en el catálogo.
@@ -1044,7 +1039,7 @@ Otros casos de Mana (con los datos de ejemplo):
 
 1. Valor de un dungeon o una misión completos (tabla de criatura según su nivel, o escala por tamaño). La base 40 está decidida como valor inicial; calibrarla con las sesiones por nivel es **[DIFERIDO]**.
 2. **[DIFERIDO]** Tags de combate: la lista completa (hoy `close-quarter-combat` y `combat-healer`), qué valor entre 25% y 30% usar por defecto en `cumple`, y el multiplicador propio de cada tag.
-3. Zeo: confirmar la lectura de la tabla de sx, **el catálogo de técnicas (v0.9.1: hoy solo se registra la línea, el nivel y un nombre opcional)**, a qué rama pertenece cada línea o técnica, cómo se ganan las técnicas y los sx, si el nivel de una técnica depende del nivel zeo y si puede haber más de 10 líneas. Mana: su tabla de XP.
+3. Zeo: las descripciones y los efectos de las técnicas, cómo se ganan los sx, si el rango de una técnica exige nivel zeo o de rama, si el costo de rango (10/20/30/50/80) y el de activar una línea se **descuentan** de una reserva (hoy se muestran, no se cobran) y el redondeo del nivel zeo en el costo de activar (hoy hacia abajo). Mana: su tabla de XP.
 4. Mana: ya no es un atributo que se gasta sino la serie de Gates (4.1.2), implementada en v0.8.3 con cifras de ejemplo. Quedan los valores reales (ver 23).
 5. Fate y achievement: cuánto fate da cada achievement, tope y en qué se gasta.
 6. Méritos y defectos: significado exacto de los puntos iniciales, costo de los méritos comunes, valor de cada defecto, tope de defectos y si la rareza cambia el costo.
@@ -1072,7 +1067,7 @@ Otros casos de Mana (con los datos de ejemplo):
 28. Recuperación por hora (1.2): el redondeo hacia abajo, el recorte del bono y de R a 0, que el +50 % del largo aplique también al MP, y qué hacer con el punto cero (H ≤ 5 no recupera con bono 0) y con la rareza de que desde H ≈ 280 subir el bono enlentece la recuperación.
 29. SX compartido (4.1.3): si el SX se gasta de verdad al construir Gates o subir ramas, si se puede reasignar, y si la reserva tiene tope.
 30. Alineamiento (1.3): hoy es solo una etiqueta; falta decidir cómo entra el Alignment Spiral (Score, Rank, personas) al ledger.
-31. Personajes de muestra (Musashi Nanaya y Herb'Azzio): los atributos, tiradas de HP y MP, feats y equipo son un **borrador** a revisar; la raza «Humano» y los objetos nuevos son marcadores de ejemplo. Las 10 raíces de Zeo de Musashi son las de su hoja; **no se cargaron sus mejoras** (la hoja no dice cuáles tomó) ni sus líneas «OUT».
+31. Personajes de muestra (Musashi Nanaya y Herb'Azzio): los atributos, tiradas de HP y MP, feats y equipo son un **borrador** a revisar; la raza «Humano» y los objetos nuevos son marcadores de ejemplo. Musashi (v0.9.4): sus atributos salen de la hoja (Hoja2, K2:L12); Zeo con 7 líneas activas (Ki Mark, Ki Vision, Sensitive Ki, Sense Burst, Wall Runner, Battle Mind, Deep Meditation, Hearthwarm; heaven 3, void 2, earth 1 → nivel zeo 2, como el «ZEO LEVEL 2» de la hoja) y 3 líneas por activar (Salto Flotante, Técnica de Muerte, Tetsu no hada); habilidades Stealth, Sentir motivo, Climb, Intimidación y Perception; `tagXp` «tracker». HP 57 sale de tiradas ajustadas; **el dado de MP (d10) y sus tiradas son inventados** para llegar a MP 49 (con d6 no se alcanza): falta el dado real. La hoja dice «Bono HP 1» y el motor deriva CON = menor de STR y DEX = 14 → +2. Las filas «OUT» y «+N» son solo log.
 32. **El diseñador entregará las descripciones de las técnicas de Zeo y el equipo**; con eso se corrigen conjuros, clases y Zeo (v0.9.3 deja el catálogo con los nombres de la hoja y las descripciones vacías).
 33. Zeo (4.1.1): qué significan las filas «+N» y las de las rondas de la hoja, si el rango de una técnica exige el nivel zeo o el de su rama, el nivel 5 (sin opciones en la hoja) y qué es «Tech Zlv».
 
@@ -1080,10 +1075,20 @@ Otros casos de Mana (con los datos de ejemplo):
 
 ## Cambios respecto a versiones anteriores
 
+### v0.9.4
+
+- **Zeo: nivel por la técnica más alta [DECIDIDO]:** el nivel de una rama es el rango más alto entre las técnicas de sus líneas **activas**; el nivel zeo es `(heaven + earth + void) / 3` (`zeo.nivel` exacto, `zeo.nivelEntero` hacia abajo). Los sx 10/20/30/50/80 son el **costo de rango** de una técnica, no los niveles de las ramas. `data/zeo.json` pasa a la versión 0.7.0 (sin `niveles` ni `lectura`).
+- **Líneas por activar [DECIDIDO; redondeo SUPUESTO]:** `zeo-tecnica` acepta `activa: false` en el nivel 1; la línea no cuenta para los niveles. Nuevo evento `zeo-activar { linea }`; el costo es `10 + líneas activas + nivel zeo` y solo se muestra (no se descuenta de los sx).
+- **Origen = nota del log [DECIDIDO]:** Werewolf, Ninja y Knight cuentan cómo se adquirió la técnica (opciones ofrecidas; lo descartado queda anotado). Ya no se exige `origen` en las líneas L11 en adelante. `data/zeo-tecnicas.json` pasa a 0.2.0 con un `log` de filas «OUT», «+N» y rondas sin efecto de reglas.
+- **Visor:** cabecera de Zeo compacta (nivel zeo y ramas, sin texto explicativo ni tarjetas de sx), líneas por activar aparte con el botón de activar, formulario de línea nueva con la casilla «por activar» y sin origen obligatorio, y chips de habilidades y de tag de XP.
+- **Personaje:** campos nuevos `habilidades` y `tagXp` (1.3), validados contra `xp-config`; nuevo tag `tracker`. Musashi Nanaya cargado con su hoja (atributos de Hoja2, Zeo, habilidades, tag, HP y MP).
+- **[PENDIENTE]** Dado y tiradas reales de MP de Musashi (d10 inventado), «Bono HP 1» contra CON +2, regla del bono del tag de XP, descuento de sx al activar o tomar rangos, descripciones de técnicas.
+- 89 pruebas.
+
 ### v0.9.3
 
 - **Catálogo de técnicas de Zeo [DECIDIDA la estructura]:** nuevo `data/zeo-tecnicas.json` (14 líneas, 57 técnicas con sus mejoras, tomadas de la hoja de Musashi: bloque de técnicas y filas «OUT»). Cada técnica tiene `descripcion` (hoy `null`). `zeo-tecnica` resuelve por id o nombre, valida línea y nivel contra el catálogo y acepta técnicas propias con su descripción.
-- **Líneas extra [DECIDIDO]:** de la L11 en adelante, en orden, con `origen` obligatorio (Werewolf, Ninja, Knight, rondas…). No cuentan en los slots iniciales; `zeo.extras` y `zeo.catalogo` son nuevos en el resultado. Por esto Musashi (10/10) ya puede añadir líneas raíz nuevas.
+- **Líneas extra:** de la L11 en adelante, en orden. *(En la v0.9.3 exigían `origen`; la v0.9.4 lo quitó: el origen es solo una nota del log.)* No cuentan en los slots iniciales; `zeo.extras` y `zeo.catalogo` son nuevos en el resultado.
 - **Visor:** las líneas de Zeo son **desplegables** y el resumen muestra la técnica raíz, la rama y el origen; el cuerpo trae cada nivel con lo tomado, su descripción y las mejoras que faltan. Tres formularios en Construir (línea nueva, mejora del catálogo y otra técnica). Las 10 raíces de Musashi llevan ahora su nombre.
 - **[PENDIENTE]** Filas «+N», rondas, rango contra nivel zeo y «Tech Zlv» (4.1.1, pendiente 33).
 - 87 pruebas.

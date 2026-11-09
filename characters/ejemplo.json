@@ -203,47 +203,56 @@
         {
           "tipo": "zeo-tecnica",
           "linea": "L01",
-          "nivel": 1
+          "nivel": 1,
+          "tecnica": "Sentir el Ki"
         },
         {
           "tipo": "zeo-tecnica",
           "linea": "L01",
-          "nivel": 2
+          "nivel": 2,
+          "tecnica": "Ki Mark"
         },
         {
           "tipo": "zeo-tecnica",
           "linea": "L02",
-          "nivel": 1
+          "nivel": 1,
+          "tecnica": "Meditación"
         },
         {
           "tipo": "zeo-tecnica",
           "linea": "L03",
-          "nivel": 1
+          "nivel": 1,
+          "tecnica": "Técnica del Escape"
         },
         {
           "tipo": "zeo-tecnica",
           "linea": "L04",
-          "nivel": 1
+          "nivel": 1,
+          "tecnica": "Ocultar el Ki"
         },
         {
           "tipo": "zeo-tecnica",
           "linea": "L05",
-          "nivel": 1
+          "nivel": 1,
+          "tecnica": "Blank Mind"
         },
         {
           "tipo": "zeo-tecnica",
           "linea": "L06",
-          "nivel": 1
+          "nivel": 1,
+          "tecnica": "Katón"
         },
         {
           "tipo": "zeo-tecnica",
           "linea": "L07",
-          "nivel": 1
+          "nivel": 1,
+          "tecnica": "Tracción de Ki"
         },
         {
           "tipo": "zeo-tecnica",
           "linea": "L08",
-          "nivel": 1
+          "nivel": 1,
+          "tecnica": "Tetsu no hada"
         },
         {
           "tipo": "xp-subsistema",
@@ -291,7 +300,8 @@
         {
           "tipo": "zeo-tecnica",
           "linea": "L01",
-          "nivel": 2
+          "nivel": 2,
+          "tecnica": "Ki Vision"
         },
         {
           "tipo": "xp-subsistema",
@@ -352,7 +362,8 @@
         {
           "tipo": "zeo-tecnica",
           "linea": "L02",
-          "nivel": 2
+          "nivel": 2,
+          "tecnica": "Battle Mind"
         },
         {
           "tipo": "achievement",
@@ -491,7 +502,8 @@
         {
           "tipo": "zeo-tecnica",
           "linea": "L03",
-          "nivel": 2
+          "nivel": 2,
+          "tecnica": "Quickness"
         },
         {
           "tipo": "xp-subsistema",

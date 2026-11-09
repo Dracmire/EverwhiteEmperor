@@ -1,12 +1,12 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "fuente": "Hoja de Musashi Nanaya: bloque de técnicas Zeo (columnas D a O) y filas OUT.",
   "notas": {
     "estructura": "Cada línea tiene una técnica raíz (nivel 1) con su rama (heaven, earth o void) y una lista de mejoras por nivel (2 a 5). La hoja trae 3 por nivel en los niveles 2 a 4; Meditación trae 4 en el nivel 3. El nivel 5 aún no tiene opciones.",
-    "cuantas": "El catálogo lista todas las opciones de un nivel. Cuántas se pueden tomar lo marca la regla de data/zeo.json (3 al abrirse, +1 por cada técnica extra del nivel anterior, hasta el tope).",
     "descripcion": "descripcion es el texto de lo que hace la técnica. Está en null hasta que el diseñador lo entregue. Una técnica del registro puede traer su propia descripcion si no está en este catálogo.",
-    "origen": "origen null = línea de los 10 slots iniciales. Con origen (Werewolf, Ninja, Knight…) la línea llega de fuera y va en una línea extra (L11 en adelante).",
-    "ortografia": "Se corrigieron erratas evidentes de la hoja (Ki Erasinng, FireAcumulaton, Wepons). Meditación estaba desalineada en la hoja: se leyeron 3 mejoras de nivel 2 y 4 de nivel 3."
+    "origen": "origen es el log: cómo llegó la técnica (Werewolf, Ninja, Knight, una ronda). Son las ofertas del diseñador; cada vez ofreció varias opciones y el personaje eligió algunas. No cambia ninguna regla: una línea con origen se toma como cualquier otra.",
+    "ortografia": "Se corrigieron erratas evidentes de la hoja (Ki Erasinng, FireAcumulaton, Wepons). Meditación estaba desalineada en la hoja: se leyeron 3 mejoras de nivel 2 y 4 de nivel 3.",
+    "cuantas": "El catálogo lista todas las opciones de un nivel. Cuántas se pueden tomar lo marca la regla de data/zeo.json (3 al abrirse, +1 por cada técnica extra del nivel anterior, hasta el tope)."
   },
   "lineas": [
     {
@@ -406,7 +406,7 @@
         "4": [],
         "5": []
       },
-      "nota": "En la hoja figura como \"Sento no Kao +1\" (sin aclarar qué suma el +1)."
+      "nota": "En la hoja figura como \"Sento no Kao +1\"."
     },
     {
       "id": "giman-gijutsu",
@@ -422,21 +422,31 @@
       }
     }
   ],
-  "bonos": [
+  "log": [
     {
       "origen": "Knight",
-      "linea": "tecnica-del-escape",
-      "niveles": 2,
-      "nota": "La hoja dice \"Tecnica del Escape + 2\". Semántica por confirmar."
+      "texto": "Tecnica del Escape +2"
     },
     {
       "origen": "Knight",
-      "linea": "tecnica-de-muerte",
-      "niveles": 3,
-      "nota": "La hoja dice \"Tecnica de Muerte +3\". Semántica por confirmar."
-    }
-  ],
-  "pendientes": [
+      "texto": "Tecnica de Muerte +3"
+    },
+    {
+      "origen": "Knight",
+      "texto": "Sento no Kao +1"
+    },
+    {
+      "origen": "Knight",
+      "texto": "Giman gijutsu"
+    },
+    {
+      "origen": "Ninja",
+      "texto": "Buki no Sendo"
+    },
+    {
+      "origen": "Werewolf",
+      "texto": "Jutsu de Sombras"
+    },
     {
       "origen": "Round 1 - Evil Locket",
       "texto": "Awakening Lv 3"

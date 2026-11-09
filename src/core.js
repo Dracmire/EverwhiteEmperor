@@ -123,42 +123,42 @@
 
   // -------------------------------------------------------------------- zeo
 
-  function umbralesZeo(zeo) {
-    const base = zeo.niveles.map(function (n) { return n.sx; });
-    if (zeo.lectura === 'costo-por-nivel') {
-      let acum = 0;
-      return base.map(function (v) { acum += v; return acum; });
-    }
-    return base;
+  /** SX que cuesta tomar una técnica de un rango (1 a 5): 10, 20, 30, 50 y 80. Nada que ver con el nivel de las ramas. */
+  function costoRango(zeo, rango) {
+    return zeo.costoPorRango[rango - 1];
   }
 
-  /** Nivel de una rama según sus sx. Con umbral i el nivel i+1 termina en umbral[i]. */
-  function nivelDeSx(sx, zeo) {
-    const um = umbralesZeo(zeo);
-    const max = zeo.nivelMax;
-    let nivel = 1;
-    for (let i = 0; i < max - 1; i++) {
-      if (sx >= um[i]) nivel = i + 2;
-    }
-    return Math.min(max, nivel);
-  }
-
-  function detalleRama(nombre, sx, zeo) {
-    const um = umbralesZeo(zeo);
-    const nivel = nivelDeSx(sx, zeo);
-    const fin = um[nivel - 1];
-    const inicios = [0].concat(um.slice(0, um.length - 1));
-    const segs = um.map(function (f, i) {
-      const ancho = f - inicios[i];
-      return {
-        nivel: i + 1,
-        inicio: inicios[i],
-        fin: f,
-        ancho: ancho,
-        llenado: Math.max(0, Math.min(1, (sx - inicios[i]) / ancho)),
-      };
+  /**
+   * Niveles de Zeo a partir de las líneas **activas**. El nivel de una rama es el rango más alto entre las técnicas de
+   * sus líneas y el nivel zeo es el promedio de las tres ramas: (heaven + earth + void) / 3. Una línea por activar
+   * (adquirida pero no pagada) no cuenta.
+   */
+  function nivelesZeo(zeo, lineasEstado) {
+    const ramas = {};
+    zeo.ramas.forEach(function (r) { ramas[r] = 0; });
+    let activas = 0;
+    let porActivar = 0;
+    Object.keys(lineasEstado).forEach(function (id) {
+      const ts = lineasEstado[id];
+      const raiz = ts.find(function (t) { return t.nivel === 1; });
+      if (!raiz) return;
+      if (raiz.activa === false) { porActivar++; return; }
+      activas++;
+      if (!raiz.rama || ramas[raiz.rama] === undefined) return;
+      const max = Math.max.apply(null, ts.map(function (t) { return t.nivel; }));
+      if (max > ramas[raiz.rama]) ramas[raiz.rama] = max;
     });
-    return { rama: nombre, sx: sx, nivel: nivel, fin: fin, falta: Math.max(0, fin - sx), segs: segs, limita: false };
+    const suma = zeo.ramas.reduce(function (a, r) { return a + ramas[r]; }, 0);
+    return {
+      ramas: ramas, suma: suma, nivel: suma / zeo.ramas.length, nivelEntero: Math.floor(suma / zeo.ramas.length),
+      activas: activas, porActivar: porActivar,
+    };
+  }
+
+  /** SX para activar una línea adquirida: base + una por cada línea ya activa + el nivel zeo (hacia abajo). */
+  function costoActivar(zeo, niveles) {
+    const c = zeo.activarLinea;
+    return c.base + niveles.activas * c.porLineaActiva + niveles.nivelEntero * c.porNivelZeo;
   }
 
   /**
@@ -224,6 +224,7 @@
       }) : [];
       niveles.push({
         nivel: n, tope: cfg.opcionesPorNivel[n - 1], visibles: visibles, tomadas: tomadas, opciones: opciones,
+        costo: zeo.costoPorRango ? costoRango(zeo, n) : null,
         libres: Math.max(0, visibles - tomadas.length), abierto: visibles > 0,
       });
     }
@@ -238,6 +239,8 @@
         descripcion: raizT.descripcion || null, catalogo: !!raizT.catalogo,
       } : null,
       rama: raizT ? raizT.rama || null : null,
+      activa: raizT ? raizT.activa !== false : false,
+      costoActivar: null,
       extra: false,
       niveles: niveles,
     };
@@ -529,6 +532,26 @@
     if (pj.alineamiento !== undefined && !alineamiento) {
       avisos.push({ nivel: 'error', sesion: null, indice: null, mensaje: 'el alineamiento "' + pj.alineamiento + '" no es válido: se escribe ley.moral con L, N o C y B, N o M (por ejemplo L.N o N.B)' });
     }
+    const tagXpDe = function (id) { return cfg.tags.find(function (t) { return t.id === id; }) || null; };
+    const habilidades = [];
+    if (pj.habilidades !== undefined) {
+      if (!Array.isArray(pj.habilidades)) {
+        avisos.push({ nivel: 'error', sesion: null, indice: null, mensaje: 'habilidades debe ser una lista de ids de tag (por ejemplo ["stealth", "climb"])' });
+      } else {
+        pj.habilidades.forEach(function (id) {
+          const t = typeof id === 'string' ? tagXpDe(id) : null;
+          if (!t) avisos.push({ nivel: 'error', sesion: null, indice: null, mensaje: 'la habilidad "' + id + '" no existe como tag en xp-config.json' });
+          else if (habilidades.some(function (h) { return h.id === id; })) avisos.push({ nivel: 'error', sesion: null, indice: null, mensaje: 'la habilidad "' + id + '" está repetida' });
+          else habilidades.push({ id: t.id, nombre: t.nombre });
+        });
+      }
+    }
+    let tagXp = null;
+    if (pj.tagXp !== undefined) {
+      const t = typeof pj.tagXp === 'string' ? tagXpDe(pj.tagXp) : null;
+      if (!t) avisos.push({ nivel: 'error', sesion: null, indice: null, mensaje: 'el tag de XP "' + pj.tagXp + '" no existe en xp-config.json' });
+      else tagXp = { id: t.id, nombre: t.nombre };
+    }
     const detalleClase = (ctx.clasesDetalle || {})[pj.clase] || null;
     const arquetipoElegido = pj.arquetipo === undefined ? null : pj.arquetipo;
     const arquetipoDef = detalleClase && arquetipoElegido ? (detalleClase.arquetipos || []).find(function (a) { return a.id === arquetipoElegido; }) || null : null;
@@ -581,6 +604,7 @@
         filasXp: [],
         zeo: {},
         tecnicas: [],
+        activaciones: [],
         mana: 0,
         sxGanado: 0,
         sxAsignado: [],
@@ -686,12 +710,13 @@
               if (e[k] !== undefined && (typeof e[k] !== 'string' || !e[k].trim())) throw new Error(k + ' debe ser un texto no vacío (o no ponerse)');
             });
             if (e.rama !== undefined && zeo.ramas.indexOf(e.rama) < 0) throw new Error('rama de la técnica: ' + zeo.ramas.join(', '));
+            if (e.activa !== undefined && typeof e.activa !== 'boolean') throw new Error('activa debe ser true o false (o no ponerse)');
+            if (e.activa === false && e.nivel !== 1) throw new Error('activa: false solo va en la técnica raíz (nivel 1)');
             const texto = e.tecnica ? e.tecnica.trim() : null;
             const ref = texto ? buscarTecnica(idxTecnicas, texto) : null;
             const nombre = ref ? ref.nombre : texto;
             const previas = estado.lineas[e.linea] || [];
             const raiz = previas.find(function (t) { return t.nivel === 1; }) || null;
-            const esExtra = num > total;
             if (nombre && previas.some(function (t) { return t.nombre && normTexto(t.nombre) === normTexto(nombre); })) {
               throw new Error('la técnica "' + nombre + '" ya está tomada en ' + e.linea);
             }
@@ -700,15 +725,15 @@
             const visibles = opcionesVisibles(zeo, e.nivel, delAnterior);
             if (!visibles) throw new Error(e.linea + ': el nivel ' + e.nivel + ' aún no está abierto (falta una técnica de nivel ' + (e.nivel - 1) + ')');
             if (delNivel + 1 > visibles) throw new Error(e.linea + ': el nivel ' + e.nivel + ' solo muestra ' + visibles + ' opciones y ya están tomadas');
+            if (raiz && raiz.activa === false) {
+              throw new Error(e.linea + ' está por activar (cuesta ' + costoActivar(zeo, nivelesZeo(zeo, estado.lineas)) + ' sx): actívala antes de tomar mejoras');
+            }
             if (ref && e.nivel === 1) {
               if (ref.tipo !== 'raiz') throw new Error('«' + ref.nombre + '» es una mejora de nivel ' + ref.nivel + ' de ' + ref.linea.nombre + ', no una técnica raíz');
               const otra = Object.keys(estado.lineas).find(function (k) {
                 return k !== e.linea && estado.lineas[k].some(function (t) { return t.nivel === 1 && t.id === ref.id; });
               });
               if (otra) throw new Error('«' + ref.nombre + '» ya es la raíz de ' + otra);
-              if (ref.linea.origen && !esExtra) {
-                throw new Error('«' + ref.nombre + '» viene de ' + ref.linea.origen + ': va en una línea extra (L' + pad(total + extras + 1) + ') con ese origen');
-              }
             } else if (ref) {
               if (ref.tipo === 'raiz') throw new Error('«' + ref.nombre + '» es una técnica raíz (nivel 1), no una mejora de nivel ' + e.nivel);
               if (!raiz || raiz.id !== ref.linea.id) {
@@ -716,17 +741,25 @@
               }
               if (ref.nivel !== e.nivel) throw new Error('«' + ref.nombre + '» es de nivel ' + ref.nivel + ', no del ' + e.nivel);
             }
+            // El origen es solo una nota del registro: cómo llegó la técnica (Knight, Ninja, una ronda…).
             const origen = e.origen ? e.origen.trim() : (e.nivel === 1 && ref && ref.linea.origen) || null;
-            if (esExtra && e.nivel === 1 && !origen) {
-              throw new Error(e.linea + ' es una línea extra: indica el origen (clase, raza, logro…) que la otorga');
-            }
             const rama = e.nivel === 1 ? (ref ? ref.linea.rama : e.rama || null) : (raiz ? raiz.rama : null);
             const descripcion = e.descripcion ? e.descripcion.trim() : (ref ? ref.descripcion : null);
             estado.lineas[e.linea] = previas.concat([{
               linea: e.linea, nivel: e.nivel, nombre: nombre, id: ref ? ref.id : null, rama: rama, origen: origen,
-              descripcion: descripcion, catalogo: !!ref, sesion: s.id,
+              descripcion: descripcion, catalogo: !!ref, activa: e.nivel === 1 ? e.activa !== false : true, sesion: s.id,
             }]);
-            s.tecnicas.push({ linea: e.linea, nivel: e.nivel, nombre: nombre, origen: origen });
+            s.tecnicas.push({ linea: e.linea, nivel: e.nivel, nombre: nombre, origen: origen, activa: e.nivel === 1 ? e.activa !== false : true });
+            return;
+          }
+          case 'zeo-activar': {
+            const previas = estado.lineas[e.linea];
+            const raiz = previas ? previas.find(function (t) { return t.nivel === 1; }) : null;
+            if (!raiz) throw new Error('la línea "' + e.linea + '" no tiene técnica raíz: primero se adquiere con zeo-tecnica');
+            if (raiz.activa !== false) throw new Error(e.linea + ' ya está activa');
+            const costo = costoActivar(zeo, nivelesZeo(zeo, estado.lineas));
+            estado.lineas[e.linea] = previas.map(function (t) { return t === raiz ? Object.assign({}, t, { activa: true }) : t; });
+            s.activaciones.push({ linea: e.linea, nombre: raiz.nombre, costo: costo });
             return;
           }
           case 'feat': {
@@ -1037,15 +1070,16 @@
       };
     }
 
-    const ramas = zeo.ramas.map(function (r) { return detalleRama(r, estado.sx[r], zeo); });
-    const minimo = Math.min.apply(null, ramas.map(function (r) { return r.nivel; }));
-    ramas.forEach(function (r) { r.limita = r.nivel === minimo; });
+    const nivZeo = nivelesZeo(zeo, estado.lineas);
+    const ramas = zeo.ramas.map(function (r) { return { rama: r, nivel: nivZeo.ramas[r], sx: estado.sx[r] }; });
+    const costoAct = costoActivar(zeo, nivZeo);
     const lineas = [];
     const lineasExtra = Object.keys(estado.lineas).filter(function (k) { return Number(k.slice(1)) > zeo.lineas.total; }).length;
     for (let n = 1; n <= zeo.lineas.total + lineasExtra; n++) {
       const id = 'L' + String(n).padStart(2, '0');
       const d = detalleLinea(id, estado.lineas[id] || [], zeo, idxTecnicas);
       d.extra = n > zeo.lineas.total;
+      if (d.ocupada && !d.activa) d.costoActivar = costoAct;
       lineas.push(d);
     }
     // Los slots cuentan solo las líneas iniciales; las extra (L11 en adelante) llegan de fuera y se cuentan aparte.
@@ -1103,6 +1137,7 @@
         imagen: typeof pj.imagen === 'string' ? pj.imagen : null,
         preferidos: raza ? raza.atributosPreferidos || [] : [], perfilRacial: perfil,
         alineamiento: alineamiento, arquetipo: arquetipoDef ? { id: arquetipoDef.id, nombre: arquetipoDef.nombre } : null,
+        habilidades: habilidades, tagXp: tagXp,
       },
       clase: habilidadesDeClase(detalleClase, arquetipoDef ? arquetipoDef.id : null, nivelInfo.nivel),
       conjuros: progresionConjuros(detalleClase, nivelInfo.nivel),
@@ -1110,7 +1145,8 @@
       nivel: nivelInfo,
       sesiones: sesionesOut,
       zeo: {
-        unidad: zeo.unidad, lectura: zeo.lectura, nivel: minimo, ramas: ramas, lineas: lineas, niveles: umbralesZeo(zeo),
+        unidad: zeo.unidad, nivel: nivZeo.nivel, nivelEntero: nivZeo.nivelEntero, suma: nivZeo.suma, ramas: ramas, lineas: lineas,
+        costos: zeo.costoPorRango.slice(), activas: nivZeo.activas, porActivar: nivZeo.porActivar, costoActivar: costoAct,
         slots: { total: lineasBase.length, ocupados: lineasOcupadas, libres: lineasBase.length - lineasOcupadas, primeraLibre: primeraLibre ? primeraLibre.id : null },
         extras: { total: lineasExtra, proxima: 'L' + String(zeo.lineas.total + lineasExtra + 1).padStart(2, '0') },
         catalogo: catalogoTecnicas,
@@ -1327,8 +1363,9 @@
     rotulo: rotulo,
     nivelDeXp: nivelDeXp,
     calcularXpEntrada: calcularXpEntrada,
-    nivelDeSx: nivelDeSx,
-    umbralesZeo: umbralesZeo,
+    nivelesZeo: nivelesZeo,
+    costoActivar: costoActivar,
+    costoRango: costoRango,
     detalleLinea: detalleLinea,
     opcionesVisibles: opcionesVisibles,
     indexarTecnicas: indexarTecnicas,

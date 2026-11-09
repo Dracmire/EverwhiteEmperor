@@ -202,6 +202,13 @@
       "origen": "skill-pf1"
     },
     {
+      "id": "tracker",
+      "nombre": "Rastreo",
+      "grupo": "supervivencia",
+      "mult": 1.0,
+      "origen": "propio"
+    },
+    {
       "id": "knowledge-arcana",
       "nombre": "Conocimiento: arcano",
       "grupo": "conocimiento",

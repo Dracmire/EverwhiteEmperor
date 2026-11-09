@@ -206,26 +206,13 @@ button[data-tip] { cursor: pointer; }
 }
 
 /* zeo */
-.zeo-head { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px 32px; }
-.zeo-nivel { display: flex; align-items: center; gap: 16px; background: var(--surf2); border-radius: 14px; padding: 12px 20px; }
-.zeo-nivel b { font-family: Fraunces, Georgia, serif; font-size: 56px; line-height: 1; color: var(--acc); font-weight: 700; }
-.rama-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.rama-nombre { display: flex; align-items: center; gap: 10px; }
-.rama-nombre i { width: 14px; height: 14px; border-radius: 4px; background: var(--rc); }
-.rama-nombre h3 { font-size: 22px; }
-.sx { display: flex; align-items: baseline; gap: 8px; }
-.sx b { font-family: Fraunces, Georgia, serif; font-size: 40px; line-height: 1; font-weight: 700; }
-.segs { display: flex; gap: 3px; }
-.seg { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.seg .bar { height: 12px; border-radius: 4px; }
-.seg .bar > i { background: var(--rc); }
-.seg span { font-size: 12px; text-align: right; color: var(--mute); }
-.linea { background: var(--surf2); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.linea .id { font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 700; }
-.linea strong { font-size: 18px; color: var(--ink); }
-.pips { display: flex; gap: 4px; }
-.pips i { flex: 1 1 0; height: 10px; border-radius: 3px; border: 1px solid var(--acc); background: var(--acc); }
-.pips i.cerrado { background: transparent; border: 1px dashed var(--mute); }
+.zeo-cab { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px 24px; }
+.zeo-ramas { display: flex; flex-wrap: wrap; gap: 10px; }
+.zrama-caja { display: flex; align-items: center; gap: 8px; background: var(--surf2); border-radius: 12px; padding: 10px 16px; font-weight: 600; }
+.zrama-caja i { width: 12px; height: 12px; border-radius: 4px; background: var(--rc); }
+.zrama-caja b { font-family: Fraunces, Georgia, serif; font-size: 28px; line-height: 1; margin-left: 4px; }
+.zeo-nivel { display: flex; align-items: center; gap: 16px; background: var(--surf2); border-radius: 14px; padding: 10px 20px; }
+.zeo-nivel b { font-family: Fraunces, Georgia, serif; font-size: 40px; line-height: 1; color: var(--acc); font-weight: 700; }
 /* Líneas de técnicas de Zeo (4.1.1): un slot con 5 niveles; cada nivel muestra sus opciones */
 .zlinea { background: var(--surf2); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .zlinea.libre { background: transparent; border: 1px dashed var(--mute); }
@@ -238,6 +225,7 @@ button[data-tip] { cursor: pointer; }
 .zpips i.visible { background: transparent; }
 .zpips i.oculto { border: 1px dashed var(--mute); background: transparent; }
 details.zlinea { display: block; padding: 0; }
+details.zlinea.por-activar { background: transparent; border: 1px dashed var(--acc); }
 details.zlinea > summary { list-style: none; cursor: pointer; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; padding: 12px 14px; min-height: 48px; border-radius: 12px; }
 details.zlinea > summary::-webkit-details-marker { display: none; }
 details.zlinea > summary:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px; }
@@ -403,3 +391,6 @@ textarea.json:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px
 @media (prefers-reduced-motion: no-preference) {
   .bar > i, .mini > i { transition: width 0.4s ease; }
 }
+
+.ficha-hab { display: flex; flex-wrap: wrap; gap: 14px 32px; }
+.ficha-hab-grupo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }

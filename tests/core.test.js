@@ -78,7 +78,7 @@ test('grados de tag', () => {
 
 test('no existe un tag global de combate; los tags de combate son específicos', () => {
   const ctx = contexto();
-  assert.equal(ctx.config.tags.length, 40);
+  assert.equal(ctx.config.tags.length, 41);
   assert.ok(!ctx.config.tags.some((t) => t.id === 'combat'));
   const ids = ctx.config.tags.filter((t) => t.grupo === 'combate').map((t) => t.id).sort();
   assert.deepEqual(ids, ['close-quarter-combat', 'combat-healer']);
@@ -119,17 +119,79 @@ test('un ajuste manual exige motivo y no deja la XP en negativo', () => {
 
 // ------------------------------------------------------------------------- zeo
 
-test('nivel de una rama de zeo (umbral acumulado)', () => {
+test('el costo de una técnica por rango es 10, 20, 30, 50 y 80 sx y no depende de las ramas', () => {
   const zeo = contexto().zeo;
-  const casos = [[0, 1], [9, 1], [10, 2], [20, 3], [30, 4], [49, 4], [50, 5], [80, 5], [500, 5]];
-  casos.forEach(([sx, nivel]) => assert.equal(Core.nivelDeSx(sx, zeo), nivel, sx + ' sx'));
+  assert.deepEqual([1, 2, 3, 4, 5].map((n) => Core.costoRango(zeo, n)), [10, 20, 30, 50, 80]);
+  // Los sx no suben ramas: 500 sx en heaven sin técnicas dejan todo en 0.
+  const r = Core.calcularPersonaje(contexto(), pj([[{ tipo: 'xp-subsistema', subsistema: 'zeo', rama: 'heaven', cantidad: 500 }]]));
+  assert.deepEqual(r.zeo.ramas.map((x) => [x.rama, x.nivel, x.sx]), [['heaven', 0, 500], ['void', 0, 0], ['earth', 0, 0]]);
+  assert.equal(r.zeo.nivel, 0);
 });
 
-test('nivel de una rama de zeo (costo por nivel)', () => {
-  const zeo = Object.assign({}, contexto().zeo, { lectura: 'costo-por-nivel' });
-  assert.deepEqual(Core.umbralesZeo(zeo), [10, 30, 60, 110, 190]);
-  const casos = [[9, 1], [10, 2], [29, 2], [30, 3], [60, 4], [110, 5]];
-  casos.forEach(([sx, nivel]) => assert.equal(Core.nivelDeSx(sx, zeo), nivel, sx + ' sx'));
+test('niveles de zeo: la rama vale su técnica más alta y el nivel zeo es el promedio de las tres', () => {
+  const ctx = contexto();
+  const r = Core.calcularPersonaje(ctx, pj([[
+    tec('L01', 1, 'Sentir el Ki'), tec('L01', 2, 'Ki Mark'), tec('L01', 2, 'Ki Vision'), tec('L01', 3, 'Sense Burst'),
+    tec('L02', 1, 'Katón'), tec('L02', 2, 'Hearthwarm'),
+    tec('L03', 1, 'Meditación'), tec('L03', 2, 'Battle Mind'),
+    tec('L04', 1, 'Blank Mind'),
+    tec('L05', 1, 'Técnica del Escape'),
+  ]]));
+  assert.deepEqual(errores(r), []);
+  assert.deepEqual(r.zeo.ramas.map((x) => [x.rama, x.nivel]), [['heaven', 3], ['void', 2], ['earth', 1]]);
+  assert.equal(r.zeo.suma, 6);
+  assert.equal(r.zeo.nivel, 2);
+  assert.equal(r.zeo.nivelEntero, 2);
+  assert.deepEqual([r.zeo.activas, r.zeo.porActivar], [5, 0]);
+  // El nivel de una línea es el rango más alto que alcanzó.
+  assert.deepEqual(r.zeo.lineas.slice(0, 5).map((l) => l.nivelMax), [3, 2, 2, 1, 1]);
+  // Sin promedio exacto el nivel queda fraccionario y el entero baja.
+  const r2 = Core.calcularPersonaje(ctx, pj([[tec('L01', 1, 'Sentir el Ki'), tec('L02', 1, 'Meditación')]]));
+  assert.equal(r2.zeo.suma, 2);
+  assert.ok(Math.abs(r2.zeo.nivel - 2 / 3) < 1e-9);
+  assert.equal(r2.zeo.nivelEntero, 0);
+});
+
+test('líneas por activar: no cuentan hasta pagarse, cuestan 10 + activas + nivel zeo y no admiten mejoras', () => {
+  const ctx = contexto();
+  const base = [
+    tec('L01', 1, 'Sentir el Ki'), tec('L01', 2, 'Ki Mark'),
+    tec('L02', 1, 'Meditación'), tec('L02', 2, 'Battle Mind'),
+    tec('L03', 1, 'Salto Flotante', { activa: false }),
+    tec('L04', 1, 'Técnica de Muerte', { activa: false }),
+  ];
+  const r = Core.calcularPersonaje(ctx, pj([base]));
+  assert.deepEqual(errores(r), []);
+  // Heaven 2 y void 2; las dos líneas earth no cuentan: zeo = 4 / 3.
+  assert.deepEqual(r.zeo.ramas.map((x) => [x.rama, x.nivel]), [['heaven', 2], ['void', 2], ['earth', 0]]);
+  assert.equal(r.zeo.nivelEntero, 1);
+  assert.deepEqual([r.zeo.activas, r.zeo.porActivar], [2, 2]);
+  // Costo: 10 base + 2 líneas activas + nivel zeo 1.
+  assert.equal(r.zeo.costoActivar, 13);
+  assert.deepEqual(r.zeo.lineas.slice(0, 4).map((l) => [l.activa, l.costoActivar]), [[true, null], [true, null], [false, 13], [false, 13]]);
+  assert.equal(r.zeo.lineas[2].raiz.nombre, 'Salto Flotante');
+  assert.deepEqual(r.zeo.slots, { total: 10, ocupados: 4, libres: 6, primeraLibre: 'L05' });
+  // Una mejora en una línea por activar se rechaza; activar sí y sube los niveles.
+  const r2 = Core.calcularPersonaje(ctx, pj([base.concat([
+    tec('L03', 2, 'Quickness'),
+    { tipo: 'zeo-activar', linea: 'L03' },
+    { tipo: 'zeo-activar', linea: 'L03' },
+    { tipo: 'zeo-activar', linea: 'L09' },
+  ])]));
+  const msgs = errores(r2);
+  assert.equal(msgs.length, 3);
+  assert.match(msgs[0], /L03 está por activar \(cuesta 13 sx\)/);
+  assert.match(msgs[1], /L03 ya está activa/);
+  assert.match(msgs[2], /L09.*no tiene técnica raíz/);
+  assert.equal(r2.zeo.lineas[2].activa, true);
+  assert.deepEqual(r2.zeo.ramas.map((x) => [x.rama, x.nivel]), [['heaven', 2], ['void', 2], ['earth', 1]]);
+  assert.deepEqual([r2.zeo.activas, r2.zeo.porActivar], [3, 1]);
+  assert.equal(r2.zeo.costoActivar, 10 + 3 + 1);
+  // El costo de cada activación sale en la sesión.
+  assert.deepEqual(r2.sesiones[0].activaciones, [{ linea: 'L03', nombre: 'Salto Flotante', costo: 13 }]);
+  // `activa` debe ser booleano y solo va en la raíz.
+  const r3 = Core.calcularPersonaje(ctx, pj([[tec('L01', 1, 'Blank Mind', { activa: 'no' }), tec('L01', 1, 'Blank Mind', { activa: false }), tec('L01', 2, 'Dual Mind', { activa: false })]]));
+  assert.equal(errores(r3).length, 2);
 });
 
 test('opciones visibles: 3 al abrir un nivel, +1 por técnica extra del nivel anterior y tope por nivel', () => {
@@ -172,7 +234,7 @@ test('zeo exige rama; zeo-tecnica exige línea, nivel y cadena; zeo-linea ya no 
     { tipo: 'xp-subsistema', subsistema: 'zeo', cantidad: 5 },
     { tipo: 'xp-subsistema', subsistema: 'zeo', rama: 'sombra', cantidad: 5 },
     { tipo: 'xp-subsistema', subsistema: 'racial', cantidad: 5 },
-    { tipo: 'zeo-tecnica', linea: 'L11', nivel: 1 },
+    { tipo: 'zeo-tecnica', linea: 'L12', nivel: 1 },
     { tipo: 'zeo-tecnica', linea: 'L10', nivel: 6 },
     { tipo: 'zeo-linea', linea: 'L10', niveles: 1 },
     { tipo: 'zeo-tecnica', linea: 'L10', nivel: 2 },
@@ -306,41 +368,33 @@ test('zeo-tecnica: una línea con raíz libre acepta nombres libres, pero no mej
   assert.deepEqual(l.niveles[1].opciones, []);
 });
 
-test('zeo-tecnica: líneas extra (L11 en adelante) piden origen y llegan en orden', () => {
+test('zeo-tecnica: más allá de los 10 slots las líneas siguen en orden (L11, L12…) y no piden origen', () => {
   const ctx = contexto();
   const r = Core.calcularPersonaje(ctx, pj([[
-    tec('L11', 1, 'Algo libre'),                                  // sin origen
-    tec('L12', 1, 'Otra libre', { origen: 'Knight' }),            // salta L11
-    tec('L11', 1, 'Buki no Sendo'),                               // origen del catálogo (Ninja)
+    tec('L12', 1, 'Algo libre'),                                  // salta L11
+    tec('L11', 1, 'Algo libre'),
     tec('L12', 1, 'Pasivo de logro', { origen: 'Round 1 - Evil Locket', descripcion: 'Dowsing.' }),
-    tec('L11', 2, 'Swift Sword Path'),                            // sin origen: ya existe la línea
-    tec('L13', 1, 'Katón'),                                       // raíz base en línea extra: pide origen
+    tec('L11', 2, 'Segunda'),
     tec('L14', 1, 'Nada'),                                        // no existe todavía
   ]]));
   const msgs = errores(r);
-  assert.equal(msgs.length, 4);
-  assert.match(msgs[0], /L11 es una línea extra: indica el origen/);
-  assert.match(msgs[1], /la línea "L12" no existe/);
-  assert.match(msgs[2], /L13 es una línea extra: indica el origen/);
-  assert.match(msgs[3], /la línea "L14" no existe/);
+  assert.equal(msgs.length, 2);
+  assert.match(msgs[0], /la línea "L12" no existe/);
+  assert.match(msgs[1], /la línea "L14" no existe/);
   assert.equal(r.zeo.lineas.length, 12);
   assert.deepEqual(r.zeo.slots, { total: 10, ocupados: 0, libres: 10, primeraLibre: 'L01' });
   assert.deepEqual(r.zeo.extras, { total: 2, proxima: 'L13' });
-  const l11 = r.zeo.lineas[10];
-  assert.equal(l11.extra, true);
-  assert.equal(l11.raiz.nombre, 'Buki no Sendo');
-  assert.equal(l11.raiz.origen, 'Ninja');
-  assert.equal(l11.rama, 'earth');
+  assert.equal(r.zeo.lineas[10].extra, true);
   assert.equal(r.zeo.lineas[11].raiz.origen, 'Round 1 - Evil Locket');
 });
 
-test('zeo-tecnica: una raíz con origen (Werewolf, Ninja, Knight) no cabe en un slot inicial', () => {
+test('zeo-tecnica: el origen es una nota del registro; una raíz «de fuera» cabe en cualquier slot y lo trae por defecto', () => {
   const ctx = contexto();
-  const r = Core.calcularPersonaje(ctx, pj([[tec('L05', 1, 'Jutsu de Sombras'), tec('L11', 1, 'Jutsu de Sombras')]]));
-  const msgs = errores(r);
-  assert.equal(msgs.length, 1);
-  assert.match(msgs[0], /Jutsu de Sombras.*viene de Werewolf.*línea extra \(L11\)/);
-  assert.equal(r.zeo.lineas[10].raiz.origen, 'Werewolf');
+  const r = Core.calcularPersonaje(ctx, pj([[tec('L05', 1, 'Jutsu de Sombras'), tec('L06', 1, 'Buki no Sendo', { origen: 'Ninja (ronda 2)' }), tec('L06', 2, 'Swift Sword Path')]]));
+  assert.deepEqual(errores(r), []);
+  assert.equal(r.zeo.lineas[4].raiz.origen, 'Werewolf');
+  assert.equal(r.zeo.lineas[5].raiz.origen, 'Ninja (ronda 2)');
+  assert.equal(r.zeo.lineas[4].extra, false);
 });
 
 test('zeo-tecnica: origen y descripcion deben ser textos; la descripción propia gana a la del catálogo', () => {
@@ -356,6 +410,19 @@ test('zeo-tecnica: origen y descripcion deben ser textos; la descripción propia
   assert.equal(errores(r).length, 2);
   assert.equal(r.zeo.lineas[0].raiz.descripcion, 'Ki en fuego.');
   assert.equal(r.zeo.lineas[1].raiz.descripcion, 'Mente en blanco.');
+});
+
+test('habilidades y tag de XP del personaje: deben existir como tags de xp-config', () => {
+  const ctx = contexto();
+  const ok = Core.calcularPersonaje(ctx, pj([[xp(0)]], { habilidades: ['stealth', 'climb'], tagXp: 'tracker' }));
+  assert.deepEqual(errores(ok), []);
+  assert.deepEqual(ok.personaje.habilidades.map((h) => h.id), ['stealth', 'climb']);
+  assert.equal(ok.personaje.habilidades[0].nombre, 'Sigilo');
+  assert.deepEqual(ok.personaje.tagXp, { id: 'tracker', nombre: 'Rastreo' });
+  const mal = Core.calcularPersonaje(ctx, pj([[xp(0)]], { habilidades: ['stealth', 'volar-alto', 'stealth'], tagXp: 'nada' }));
+  assert.equal(errores(mal).length, 3);
+  const sin = Core.calcularPersonaje(ctx, pj([[xp(0)]]));
+  assert.deepEqual([sin.personaje.habilidades, sin.personaje.tagXp], [[], null]);
 });
 
 // ------------------------------------------------------- feats y achievements
@@ -1125,9 +1192,10 @@ test('personaje de ejemplo: todo lo derivado coincide y no hay avisos', () => {
   assert.equal(r.nivel.faltan, 14);
   assert.deepEqual(r.sesiones.map((s) => s.xpGanada), [6000, 260, 300, 156, 90, 180]);
   assert.deepEqual(r.sesiones.map((s) => s.xpAcumulada), [6000, 6260, 6560, 6716, 6806, 6986]);
-  assert.deepEqual(r.zeo.ramas.map((x) => [x.rama, x.sx, x.nivel]), [['heaven', 34, 4], ['void', 22, 3], ['earth', 15, 2]]);
+  // Los sx de cada rama no cambian su nivel: lo da la técnica más alta de sus líneas (heaven 2, void 2, earth 2).
+  assert.deepEqual(r.zeo.ramas.map((x) => [x.rama, x.sx, x.nivel]), [['heaven', 34, 2], ['void', 22, 2], ['earth', 15, 2]]);
   assert.equal(r.zeo.nivel, 2);
-  assert.deepEqual(r.zeo.ramas.filter((x) => x.limita).map((x) => x.rama), ['earth']);
+  assert.deepEqual([r.zeo.activas, r.zeo.porActivar], [8, 0]);
   assert.deepEqual(r.zeo.lineas.map((l) => l.total), [3, 2, 2, 1, 1, 1, 1, 1, 0, 0]);
   assert.deepEqual(r.zeo.lineas[0].niveles.map((n) => n.tomadas.length), [1, 2, 0, 0, 0]);
   assert.deepEqual(r.zeo.slots, { total: 10, ocupados: 8, libres: 2, primeraLibre: 'L09' });
@@ -1327,6 +1395,18 @@ test('personajes de muestra: Musashi Nanaya (monje) y Herb\'Azzio (mago)', () =>
   assert.deepEqual(mu.zeo.lineas.map((l) => l.raiz.nombre), ['Sentir el Ki', 'Tracción de Ki', 'Salto Flotante', 'Meditación', 'Ocultar el Ki', 'Blank Mind', 'Técnica de Muerte', 'Técnica del Escape', 'Katón', 'Tetsu no hada']);
   assert.ok(mu.zeo.lineas.every((l) => l.raiz.catalogo && !l.extra));
   assert.deepEqual(mu.zeo.extras, { total: 0, proxima: 'L11' });
+  // Su hoja: heaven 3, void 2, earth 1 → nivel zeo 2; 7 líneas activas y 3 por activar (Salto Flotante, Técnica de Muerte, Tetsu no hada).
+  assert.deepEqual(mu.zeo.ramas.map((x) => [x.rama, x.nivel]), [['heaven', 3], ['void', 2], ['earth', 1]]);
+  assert.equal(mu.zeo.nivel, 2);
+  assert.deepEqual([mu.zeo.activas, mu.zeo.porActivar, mu.zeo.costoActivar], [7, 3, 19]);
+  assert.deepEqual(mu.zeo.lineas.filter((l) => !l.activa).map((l) => l.raiz.nombre), ['Salto Flotante', 'Técnica de Muerte', 'Tetsu no hada']);
+  assert.deepEqual(mu.zeo.lineas.map((l) => l.niveles.flatMap((n) => n.tomadas.map((x) => x.nombre)).slice(1)).slice(0, 4),
+    [['Ki Mark', 'Ki Vision', 'Sensitive Ki', 'Sense Burst'], ['Wall Runner'], [], ['Battle Mind', 'Deep Meditation']]);
+  // Atributos de la Hoja 2 (K2:L12), skills y tag de XP.
+  assert.deepEqual(mu.personaje.atributos, { STR: 14, DEX: 16, PER: 10, INT: 12, WIS: 16, CHA: 11 });
+  assert.deepEqual([mu.recursos.hp.maximo, mu.recursos.mp.maximo], [57, 49]);
+  assert.deepEqual(mu.personaje.habilidades.map((h) => h.id), ['stealth', 'sense-motive', 'climb', 'intimidate', 'perception']);
+  assert.equal(mu.personaje.tagXp.id, 'tracker');
   assert.deepEqual(he.zeo.slots, { total: 10, ocupados: 0, libres: 10, primeraLibre: 'L01' });
   // Magia: el monje no lanza conjuros; el mago de nivel 7 llega al 3.º con la progresión retardada.
   assert.equal(mu.conjuros, null);

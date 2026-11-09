@@ -1,36 +1,25 @@
 {
-  "version": "0.6.2",
+  "version": "0.7.0",
   "unidad": "sx",
   "ramas": [
     "heaven",
     "void",
     "earth"
   ],
-  "nivelZeo": "min",
   "nivelMax": 5,
-  "lectura": "umbral-acumulado",
-  "niveles": [
-    {
-      "nivel": 1,
-      "sx": 10
-    },
-    {
-      "nivel": 2,
-      "sx": 20
-    },
-    {
-      "nivel": 3,
-      "sx": 30
-    },
-    {
-      "nivel": 4,
-      "sx": 50
-    },
-    {
-      "nivel": 5,
-      "sx": 80
-    }
+  "nivelZeo": "promedio-ramas",
+  "costoPorRango": [
+    10,
+    20,
+    30,
+    50,
+    80
   ],
+  "activarLinea": {
+    "base": 10,
+    "porLineaActiva": 1,
+    "porNivelZeo": 1
+  },
   "lineas": {
     "total": 10,
     "niveles": 5,
@@ -45,8 +34,10 @@
     "extraPorTecnica": 1
   },
   "notas": {
-    "lectura": "umbral-acumulado: cada número es el sx donde termina el nivel (como la XP principal). Alternativa: costo-por-nivel (acumulado 10, 30, 60, 110, 190). Por confirmar.",
-    "lineas": "Cada línea es un slot con 5 niveles. Opciones por nivel: 1, 3, 5, 5 y 3. El nivel 1 es la técnica inicial de la línea (una sola). Al tomar la primera técnica de un nivel aparecen 3 opciones en el siguiente; cada técnica extra del mismo nivel suma 1 opción más, hasta el tope de ese nivel (5 en los niveles 3 y 4, 3 en el 2 y en el 5). Reemplaza a los pisos por niveles acumulados de la v0.5.",
-    "tecnicas": "El catálogo de técnicas está en data/zeo-tecnicas.json. Una técnica se registra por línea y nivel; si no está en el catálogo vale como técnica propia, con su descripción. Las líneas extra (L11 en adelante) llegan de fuera de los 10 slots y piden origen."
+    "niveles": "El nivel de una rama es el rango más alto entre las técnicas de sus líneas activas. El nivel zeo es el promedio de las tres ramas: (heaven + earth + void) / 3. Los sx no suben ramas.",
+    "costoPorRango": "SX que cuesta tomar una técnica de ese rango (10, 20, 30, 50, 80). Es el costo de las sub ramas, no el nivel de heaven, earth o void.",
+    "activarLinea": "Una línea adquirida pero no pagada es una línea por activar y no cuenta para los niveles. Activarla cuesta base + una por cada línea activa + el nivel zeo (hacia abajo). [SUPUESTO] el redondeo hacia abajo.",
+    "lineas": "Cada línea es un slot con 5 niveles. Opciones por nivel: 1, 3, 5, 5 y 3. El nivel 1 es la técnica inicial de la línea (una sola). Al tomar la primera técnica de un nivel aparecen 3 opciones en el siguiente; cada técnica extra del mismo nivel suma 1 opción más, hasta el tope de ese nivel.",
+    "tecnicas": "El catálogo está en data/zeo-tecnicas.json. Una técnica fuera del catálogo vale como técnica propia, con su descripción."
   }
 }

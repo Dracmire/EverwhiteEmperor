@@ -8,12 +8,20 @@
   "alineamiento": "L.N",
   "atributos": {
     "STR": 14,
-    "DEX": 18,
-    "PER": 14,
-    "INT": 10,
-    "WIS": 14,
-    "CHA": 10
+    "DEX": 16,
+    "PER": 10,
+    "INT": 12,
+    "WIS": 16,
+    "CHA": 11
   },
+  "habilidades": [
+    "stealth",
+    "sense-motive",
+    "climb",
+    "intimidate",
+    "perception"
+  ],
+  "tagXp": "tracker",
   "extremidades": [
     "mano-derecha",
     "mano-izquierda",
@@ -73,49 +81,49 @@
           "tipo": "tirada",
           "recurso": "hp",
           "dado": "d8",
-          "resultado": 3
+          "resultado": 7
         },
         {
           "tipo": "tirada",
           "recurso": "mp",
-          "dado": "d6",
-          "resultado": 4
+          "dado": "d10",
+          "resultado": 7
         },
         {
           "tipo": "tirada",
           "recurso": "mp",
-          "dado": "d6",
-          "resultado": 3
-        },
-        {
-          "tipo": "tirada",
-          "recurso": "mp",
-          "dado": "d6",
-          "resultado": 5
-        },
-        {
-          "tipo": "tirada",
-          "recurso": "mp",
-          "dado": "d6",
-          "resultado": 2
-        },
-        {
-          "tipo": "tirada",
-          "recurso": "mp",
-          "dado": "d6",
+          "dado": "d10",
           "resultado": 6
         },
         {
           "tipo": "tirada",
           "recurso": "mp",
-          "dado": "d6",
-          "resultado": 3
+          "dado": "d10",
+          "resultado": 8
         },
         {
           "tipo": "tirada",
           "recurso": "mp",
-          "dado": "d6",
-          "resultado": 4
+          "dado": "d10",
+          "resultado": 7
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d10",
+          "resultado": 6
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d10",
+          "resultado": 9
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d10",
+          "resultado": 6
         },
         {
           "tipo": "feat",
@@ -141,21 +149,64 @@
         },
         {
           "tipo": "zeo-tecnica",
+          "linea": "L01",
+          "nivel": 2,
+          "tecnica": "Ki Mark"
+        },
+        {
+          "tipo": "zeo-tecnica",
+          "linea": "L01",
+          "nivel": 2,
+          "tecnica": "Ki Vision"
+        },
+        {
+          "tipo": "zeo-tecnica",
+          "linea": "L01",
+          "nivel": 2,
+          "tecnica": "Sensitive Ki"
+        },
+        {
+          "tipo": "zeo-tecnica",
+          "linea": "L01",
+          "nivel": 3,
+          "tecnica": "Sense Burst"
+        },
+        {
+          "tipo": "zeo-tecnica",
           "linea": "L02",
           "nivel": 1,
           "tecnica": "Tracción de Ki"
         },
         {
           "tipo": "zeo-tecnica",
+          "linea": "L02",
+          "nivel": 2,
+          "tecnica": "Wall Runner"
+        },
+        {
+          "tipo": "zeo-tecnica",
           "linea": "L03",
           "nivel": 1,
-          "tecnica": "Salto Flotante"
+          "tecnica": "Salto Flotante",
+          "activa": false
         },
         {
           "tipo": "zeo-tecnica",
           "linea": "L04",
           "nivel": 1,
           "tecnica": "Meditación"
+        },
+        {
+          "tipo": "zeo-tecnica",
+          "linea": "L04",
+          "nivel": 2,
+          "tecnica": "Battle Mind"
+        },
+        {
+          "tipo": "zeo-tecnica",
+          "linea": "L04",
+          "nivel": 2,
+          "tecnica": "Deep Meditation"
         },
         {
           "tipo": "zeo-tecnica",
@@ -173,7 +224,8 @@
           "tipo": "zeo-tecnica",
           "linea": "L07",
           "nivel": 1,
-          "tecnica": "Técnica de Muerte"
+          "tecnica": "Técnica de Muerte",
+          "activa": false
         },
         {
           "tipo": "zeo-tecnica",
@@ -189,9 +241,16 @@
         },
         {
           "tipo": "zeo-tecnica",
+          "linea": "L09",
+          "nivel": 2,
+          "tecnica": "Hearthwarm"
+        },
+        {
+          "tipo": "zeo-tecnica",
           "linea": "L10",
           "nivel": 1,
-          "tecnica": "Tetsu no hada"
+          "tecnica": "Tetsu no hada",
+          "activa": false
         },
         {
           "tipo": "objeto",
