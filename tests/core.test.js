@@ -1121,8 +1121,11 @@ test('un Gate exige Mana force, SX de mana, oportunidad y datos válidos', () =>
   assert.match(errores(r)[0], /tag "sabor" no existe/);
   r = Core.calcularPersonaje(ctx, base([gate('g1', 'hielo', 'sabor')]));
   assert.match(errores(r)[0], /funcion debe ser capacidad, intensidad, potencia, sentidos/);
-  r = Core.calcularPersonaje(ctx, base([{ tipo: 'gate', id: 'g1', funcion: 'potencia', tag: 'hielo' }]));
-  assert.match(errores(r)[0], /falta la oportunidad/);
+  // La función y la oportunidad pueden quedar sin definir (v0.9.5): el Gate se construye y las muestra vacías.
+  r = Core.calcularPersonaje(ctx, base([{ tipo: 'gate', id: 'g1', tag: 'hielo' }]));
+  assert.deepEqual([errores(r), r.mana.gates[0].funcion, r.mana.gates[0].oportunidad], [[], null, '']);
+  r = Core.calcularPersonaje(ctx, base([{ tipo: 'gate', id: 'g1', tag: 'hielo', oportunidad: 5 }]));
+  assert.match(errores(r)[0], /oportunidad debe ser un texto/);
   // Con MF y SX de sobra, tres Gates válidos se construyen sin errores (hielo y fuego no conectan: 5 slots).
   r = Core.calcularPersonaje(ctx, base([gate('g1', 'hielo'), gate('g2', 'fuego'), gate('g3', 'viento')]));
   assert.deepEqual([errores(r), r.mana.totales.slots], [[], 5]);
@@ -1404,7 +1407,9 @@ test('personajes de muestra: Musashi Nanaya (monje) y Herb\'Azzio (mago)', () =>
     [['Ki Mark', 'Ki Vision', 'Sensitive Ki', 'Sense Burst'], ['Wall Runner'], [], ['Battle Mind', 'Deep Meditation']]);
   // Atributos de la Hoja 2 (K2:L12), skills y tag de XP.
   assert.deepEqual(mu.personaje.atributos, { STR: 14, DEX: 16, PER: 10, INT: 12, WIS: 16, CHA: 11 });
-  assert.deepEqual([mu.recursos.hp.maximo, mu.recursos.mp.maximo], [57, 49]);
+  // Tiradas de la hoja: HP d8 (8+2+6+8+4+7+8 = 43, más CON +2 por nivel = 14) y MP d6 (6+4+4+4+4+3+3 = 28; SPR 11 da +0, la hoja sumaba +3 por nivel).
+  assert.deepEqual([mu.recursos.hp.maximo, mu.recursos.mp.maximo], [57, 28]);
+  assert.deepEqual([mu.recursos.hp.tiradas.map((x) => x.dado)[0], mu.recursos.mp.tiradas.map((x) => x.dado)[0]], ['d8', 'd6']);
   assert.deepEqual(mu.personaje.habilidades.map((h) => h.id), ['stealth', 'sense-motive', 'climb', 'intimidate', 'perception']);
   assert.equal(mu.personaje.tagXp.id, 'tracker');
   assert.deepEqual(he.zeo.slots, { total: 10, ocupados: 0, libres: 10, primeraLibre: 'L01' });
@@ -1413,6 +1418,14 @@ test('personajes de muestra: Musashi Nanaya (monje) y Herb\'Azzio (mago)', () =>
   assert.equal(he.conjuros.nivelMax, 3);
   assert.deepEqual(he.conjuros.porDia.map((x) => x.cantidad), [4, 4, 3, 2]);
   assert.deepEqual(he.conjuros.proximo, { nivelConjuro: 4, enNivel: 9 });
+  // Herb'Azzio (v0.9.5): dados d4 y d10; Mana nivel 2 (Oro y Fuego), contrato de Ashura (2 por nivel), conjuros propios inscritos y un círculo en aprendizaje.
+  assert.deepEqual([he.recursos.hp.tiradas[0].dado, he.recursos.mp.tiradas[0].dado], ['d4', 'd10']);
+  assert.deepEqual([he.mana.nivel, he.mana.fuerza.total, he.mana.fuerza.aportes[0].porNivel, he.mana.fuerza.aportes[0].cantidad], [2, 15, 2, 14]);
+  assert.deepEqual(he.mana.gates.map((g) => [g.id, g.tag, g.funcion]), [['g1', 'oro', null], ['g2', 'fuego', null]]);
+  assert.deepEqual(he.mana.slots.map((s) => [s.id, s.habilidad && s.habilidad.nombre]), [['g1', 'Sagita Lux Magica'], ['g2', null], ['g1-g2', 'Senderos de la Magia']]);
+  assert.deepEqual(he.repertorio.tecnicas.map((x) => [x.nombre, x.costo]), [['Circle Activation', 'Mana 1']]);
+  assert.deepEqual(he.repertorio.aprendiendo.map((x) => [x.nombre, x.nivel, x.listo]), [['Parallel World Casting', 3, false]]);
+  assert.deepEqual(he.repertorio.aprendiendo[0].requisitos.map((q) => [q.clave, q.tiene, q.necesita]), [['gates', 2, 3], ['sx', 20, 200]]);
   // El ejemplo (Fighter) no tiene archivo de clase: sigue funcionando sin detalle.
   assert.equal(Core.calcularPersonaje(c, ejemplo()).clase, null);
 });
@@ -1439,4 +1452,147 @@ test('progresión de conjuros del mago: normal hasta el nivel 3 de conjuro y el 
   // Sin tabla (monje, sin archivo) no hay progresión.
   assert.equal(Core.progresionConjuros(leer('data/clases/monk.json'), 7), null);
   assert.equal(Core.progresionConjuros(null, 7), null);
+});
+
+// ---- v0.9.5: Mana force por nivel, nivel de Mana, conjuros del manual y propios, técnicas y repertorio
+
+const CJ = (extra) => Object.assign({ tipo: 'conjuro' }, extra);
+const mago = (entradas, extra) => pj([[xp(6000), SX(40), MF(3, 'otra', 'p')].concat(entradas)], Object.assign({ clase: 'wizard', raza: 'raza-ejemplo' }, extra || {}));
+
+test('Mana force por nivel: un contrato que crece (porNivel × nivel) y entradas inválidas', () => {
+  const ctx = contexto();
+  // Nivel 7 (6000 XP): 1 de base + 2 por nivel = 15, que permite 4 Gates.
+  const aporte = { tipo: 'mana-fuerza', porNivel: 2, fuente: 'contrato-magico', nota: 'Contrato durmiente' };
+  let r = Core.calcularPersonaje(ctx, pj([[xp(6000), aporte]]));
+  assert.deepEqual([errores(r), r.nivel.nivel, r.mana.fuerza.total, r.mana.fuerza.permitidos], [[], 7, 15, 4]);
+  assert.deepEqual([r.mana.fuerza.aportes[0].porNivel, r.mana.fuerza.aportes[0].cantidad], [2, 14]);
+  assert.equal(r.sesiones[0].mf[0].cantidad, 14);
+  // Crece con los niveles: una sesión más con XP y el aporte sube solo.
+  r = Core.calcularPersonaje(ctx, pj([[xp(6000), aporte], [xp(2000)]]));
+  assert.equal(r.nivel.nivel > 7 ? r.mana.fuerza.total : -1, 1 + 2 * r.nivel.nivel);
+  // El Gate 2 exige MF 2: con el contrato a nivel 7 se puede (y sin él no).
+  r = Core.calcularPersonaje(ctx, pj([[xp(6000), SX(20), aporte, gate('g1', 'hielo'), gate('g2', 'viento')]]));
+  assert.deepEqual([errores(r), r.mana.nivel], [[], 2]);
+  assert.match(errores(Core.calcularPersonaje(ctx, pj([[xp(6000), SX(20), gate('g1', 'hielo'), gate('g2', 'viento')]])))[0], /Gate 2 exige Mana force 2/);
+  // Inválidas: cantidad y porNivel a la vez, porNivel no entero o no positivo, fuente desconocida.
+  const mal = (x) => errores(Core.calcularPersonaje(ctx, pj([[xp(6000), Object.assign({}, aporte, x)]])))[0];
+  assert.match(mal({ cantidad: 1 }), /cantidad o porNivel, no los dos/);
+  assert.match(mal({ porNivel: 0 }), /porNivel debe ser un entero positivo/);
+  assert.match(mal({ porNivel: 1.5 }), /porNivel debe ser un entero positivo/);
+  assert.match(mal({ fuente: 'sueño' }), /fuente debe ser/);
+});
+
+test('nivel de Mana: 0 sin Gates, 1 con un Gate, 2 con un nodo y 3 con un círculo', () => {
+  const ctx = contexto();
+  const nivel = (g) => Core.calcularPersonaje(ctx, base(g)).mana.nivel;
+  assert.equal(nivel([]), 0);
+  assert.equal(nivel([gate('g1', 'hielo')]), 1);
+  assert.equal(nivel([gate('g1', 'hielo'), gate('g2', 'viento')]), 2);
+  assert.equal(nivel([gate('g1', 'hielo'), gate('g2', 'viento'), gate('g3', 'rayo')]), 3);
+  // Con un par sin conexión (hielo y fuego) no hay círculo: sigue en 2.
+  assert.equal(nivel([gate('g1', 'hielo'), gate('g2', 'fuego'), gate('g3', 'viento')]), 2);
+});
+
+test('conjuros del manual: se agregan por id y el nivel sale de la lista de la clase', () => {
+  const ctx = contexto();
+  let r = Core.calcularPersonaje(ctx, mago([CJ({ id: 'magic-missile' }), CJ({ id: 'fireball' }), CJ({ id: 'light' })]));
+  assert.deepEqual(errores(r), []);
+  const rep = r.repertorio;
+  assert.deepEqual(rep.conjuros.map((c) => [c.id, c.nivel, c.origen]), [['magic-missile', 1, 'catalogo'], ['fireball', 3, 'catalogo'], ['light', 0, 'catalogo']]);
+  assert.deepEqual(rep.porNivel.map((g) => [g.nivel, g.conjuros.map((c) => c.id)]), [[0, ['light']], [1, ['magic-missile']], [3, ['fireball']]]);
+  const mm = rep.conjuros[0];
+  assert.deepEqual([mm.escuela, mm.tiempo, mm.salvacion, mm.rc, mm.libro], ['Evocación', '1 standard action', 'none', 'yes', 'CRB']);
+  assert.equal(rep.conjuros.some((c) => c.sobreNivel), false);
+  assert.deepEqual(r.sesiones[0].conjuros.map((c) => c.nombre), ['Magic Missile', 'Fireball', 'Light']);
+  // Errores: id desconocido, repetido, fuera de la lista de la clase y nivel inválido.
+  const err = (e, extra) => errores(Core.calcularPersonaje(ctx, mago(e, extra)))[0];
+  assert.match(err([CJ({ id: 'no-existe' })]), /no existe en data\/conjuros\.json/);
+  assert.match(err([CJ({ id: 'light' }), CJ({ id: 'light' })]), /ya está en el repertorio/);
+  assert.match(err([CJ({ id: 'cure-light-wounds' })]), /no está en la lista de Wizard: indica el nivel con `nivel`/);
+  assert.match(err([CJ({ id: 'light', nivel: 12 })]), /nivel debe ser un entero de 0 a 9/);
+  // Con nivel explícito sí entra (un conjuro fuera de lista que el GM concede).
+  r = Core.calcularPersonaje(ctx, mago([CJ({ id: 'cure-light-wounds', nivel: 2 })]));
+  assert.deepEqual([errores(r), r.repertorio.conjuros[0].nivel], [[], 2]);
+  // Un conjuro de nivel mayor al que la clase alcanza se marca sobreNivel (el mago de nivel 7 llega al 3).
+  r = Core.calcularPersonaje(ctx, mago([CJ({ id: 'wish' })]));
+  assert.deepEqual([errores(r), r.repertorio.conjuros[0].nivel, r.repertorio.conjuros[0].sobreNivel], [[], 9, true]);
+  // Una clase sin lista de conjuros (monje) no puede tomar uno del manual sin nivel.
+  assert.match(errores(Core.calcularPersonaje(ctx, pj([[xp(6000), CJ({ id: 'magic-missile' })]], { clase: 'monk' })))[0], /no está en la lista de Monk/);
+});
+
+test('conjuros propios, técnicas activas y conjuros en aprendizaje', () => {
+  const ctx = contexto();
+  const sagita = CJ({ nombre: 'Sagita Lux Magica', nivel: 1, descripcion: 'Crea 1 proyectil por punto de magia invertido.', costo: 'Mana X' });
+  const tecnica = CJ({ nombre: 'Circle Activation', categoria: 'tecnica', costo: 'Mana 1', descripcion: 'Circula magia.' });
+  const prox = CJ({ nombre: 'Parallel World Casting', nivel: 3, aprendiendo: true, requisitos: { gates: 3, sx: 200 } });
+  let r = Core.calcularPersonaje(ctx, mago([sagita, tecnica, prox]));
+  assert.deepEqual(errores(r), []);
+  const rep = r.repertorio;
+  assert.deepEqual(rep.conjuros.map((c) => [c.id, c.nivel, c.origen]), [['sagita-lux-magica', 1, 'propio']]);
+  assert.deepEqual(rep.tecnicas.map((c) => [c.id, c.nivel, c.costo]), [['circle-activation', null, 'Mana 1']]);
+  assert.deepEqual(rep.aprendiendo.map((c) => c.id), ['parallel-world-casting']);
+  assert.deepEqual(rep.aprendiendo[0].requisitos.map((q) => [q.clave, q.necesita, q.tiene, q.cumple]), [['gates', 3, 0, false], ['sx', 200, 40, false]]);
+  assert.equal(rep.aprendiendo[0].listo, false);
+  assert.equal(rep.total, 3);
+  // Con 3 Gates y 200 SX de mana los requisitos se cumplen.
+  r = Core.calcularPersonaje(ctx, pj([[xp(6000), SX(200), MF(15, 'otra', 'p'), gate('g1', 'hielo'), gate('g2', 'viento'), gate('g3', 'rayo'), prox]], { clase: 'wizard' }));
+  assert.deepEqual([errores(r), r.repertorio.aprendiendo[0].listo], [[], true]);
+  // Errores.
+  const err = (e) => errores(Core.calcularPersonaje(ctx, mago(e)))[0];
+  assert.match(err([CJ({ nombre: 'X' })]), /un conjuro propio necesita nivel/);
+  assert.match(err([CJ({ nombre: 'X', nivel: 10 })]), /un conjuro propio necesita nivel/);
+  assert.match(err([CJ({ nombre: 'Y', categoria: 'tecnica', nivel: 1 })]), /no tiene nivel/);
+  assert.match(err([CJ({ nombre: 'Y', categoria: 'tecnica', aprendiendo: true })]), /no se queda en aprendizaje/);
+  assert.match(err([CJ({ nombre: 'Y', categoria: 'otra', nivel: 1 })]), /categoria debe ser conjuro o tecnica/);
+  assert.match(err([CJ({ nombre: 'Y', nivel: 1, requisitos: { gates: 3 } })]), /requisitos solo vale para un conjuro que se está aprendiendo/);
+  assert.match(err([CJ({ nombre: 'Y', nivel: 1, aprendiendo: true, requisitos: { oro: 3 } })]), /solo admite gates y sx/);
+  assert.match(err([CJ({ nombre: 'Y', nivel: 1, aprendiendo: true, requisitos: { gates: 0 } })]), /requisitos\.gates debe ser un entero positivo/);
+  assert.match(err([CJ({ nombre: 'Y', nivel: 1, descripcion: '  ' })]), /descripcion debe ser un texto no vacío/);
+  assert.match(err([CJ({ nombre: 'Y', nivel: 1, id: 'Mala Id' })]), /id debe ir en minúsculas/);
+  assert.match(err([sagita, CJ({ nombre: 'sagita lux magica', nivel: 2 })]), /ya está en el repertorio/);
+  assert.match(err([CJ({ nombre: 'Y', nivel: 1, aprendiendo: 'sí' })]), /aprendiendo debe ser verdadero o falso/);
+});
+
+test('inscribir un conjuro propio en un slot de Mana: el nivel del conjuro no puede superar al del slot', () => {
+  const ctx = contexto();
+  const g = [gate('g1', 'oro'), gate('g2', 'fuego')];
+  const sagita = CJ({ nombre: 'Sagita Lux Magica', nivel: 1 });
+  const sendero = CJ({ nombre: 'Senderos de la Magia', nivel: 2 });
+  const ins = (slot, conjuro) => ({ tipo: 'inscribir', slot: slot, conjuro: conjuro });
+  const calc = (e) => Core.calcularPersonaje(ctx, mago(g.concat(e)));
+  let r = calc([sagita, sendero, ins('g1', 'sagita-lux-magica'), ins('g1-g2', 'senderos-de-la-magia')]);
+  assert.deepEqual(errores(r), []);
+  assert.deepEqual(r.mana.slots.map((s) => [s.id, s.habilidad && s.habilidad.nombre]), [['g1', 'Sagita Lux Magica'], ['g2', null], ['g1-g2', 'Senderos de la Magia']]);
+  assert.deepEqual(r.repertorio.conjuros.map((c) => [c.id, c.slots]), [['sagita-lux-magica', ['g1']], ['senderos-de-la-magia', ['g1-g2']]]);
+  assert.deepEqual([r.mana.totales.ocupados, r.sesiones[0].inscripciones.length], [2, 2]);
+  // Un conjuro de nivel 2 no cabe en un Gate; uno de nivel 1 sí cabe en un nodo.
+  assert.match(errores(calc([sendero, ins('g1', 'senderos-de-la-magia')]))[0], /es de nivel 2 y el slot g1 es de nivel 1/);
+  assert.deepEqual(errores(calc([sagita, ins('g1-g2', 'sagita-lux-magica')])), []);
+  // Errores: conjuro ajeno, técnica activa, en aprendizaje, habilidad y conjuro a la vez, slot ocupado.
+  assert.match(errores(calc([ins('g1', 'nada')]))[0], /"nada" no es un conjuro del personaje/);
+  assert.match(errores(calc([CJ({ nombre: 'T', categoria: 'tecnica' }), ins('g1', 't')]))[0], /técnica activa y no va en un slot/);
+  assert.match(errores(calc([CJ({ nombre: 'P', nivel: 1, aprendiendo: true }), ins('g1', 'p')]))[0], /todavía se está aprendiendo/);
+  assert.match(errores(calc([sagita, { tipo: 'inscribir', slot: 'g1', conjuro: 'sagita-lux-magica', habilidad: 'x' }]))[0], /habilidad o conjuro, no los dos/);
+  assert.match(errores(calc([sagita, ins('g1', 'sagita-lux-magica'), ins('g1', 'sagita-lux-magica')]))[0], /ya tiene "Sagita Lux Magica"/);
+  // Quitar y volver a inscribir.
+  r = calc([sagita, ins('g1', 'sagita-lux-magica'), { tipo: 'desinscribir', slot: 'g1' }]);
+  assert.deepEqual([errores(r), r.mana.totales.ocupados, r.repertorio.conjuros[0].slots], [[], 0, []]);
+});
+
+test('data/conjuros.json: ids únicos, niveles de 0 a 9 y listas de clases que existen', () => {
+  const cat = leer('data/conjuros.json');
+  const clases = new Set(leer('data/classes.json').clases.map((c) => c.id));
+  assert.ok(cat.conjuros.length > 1000);
+  assert.equal(new Set(cat.conjuros.map((c) => c.id)).size, cat.conjuros.length);
+  cat.conjuros.forEach((c) => {
+    assert.ok(c.nombre && c.escuela && c.libro, c.id);
+    const lista = Object.keys(c.nivel);
+    assert.ok(lista.length > 0, c.id);
+    lista.forEach((k) => {
+      assert.ok(clases.has(k), c.id + ': lista ' + k);
+      assert.ok(Number.isInteger(c.nivel[k]) && c.nivel[k] >= 0 && c.nivel[k] <= 9, c.id + ': nivel ' + k);
+    });
+    assert.ok(!('descripcion' in c), c.id + ': el catálogo no copia el texto');
+  });
+  assert.deepEqual(cat.listas.filter((k) => !clases.has(k)), []);
 });

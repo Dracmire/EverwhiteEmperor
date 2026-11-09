@@ -582,12 +582,16 @@
       mf: [],
       gates: [],
       inscritas: {},
+      conjuros: [],
     };
     const manaCfg = ctx.mana || null;
     const manaTags = indexar(ctx.manaTags || []);
+    const conjurosCat = indexar(ctx.catalogoConjuros || []);
     const mfBase = raza && raza.manaFuerza !== undefined ? raza.manaFuerza : (manaCfg ? manaCfg.mfInicial.valor : 0);
     const mfFuente = raza && raza.manaFuerza !== undefined ? 'raza' : (manaCfg ? manaCfg.mfInicial.fuente : '');
-    const mfActual = function () { return estado.mf.reduce(function (a, x) { return a + x.cantidad; }, mfBase); };
+    // Un aporte fijo suma `cantidad`; uno por nivel (`porNivel`, un contrato que crece) suma porNivel × el nivel actual del personaje.
+    const mfAporte = function (x) { return x.porNivel !== undefined ? x.porNivel * nivelDeXp(estado.xp, cfg).nivel : x.cantidad; };
+    const mfActual = function () { return estado.mf.reduce(function (a, x) { return a + mfAporte(x); }, mfBase); };
     zeo.ramas.forEach(function (r) { estado.sx[r] = 0; });
 
     const sesionesOut = [];
@@ -619,6 +623,7 @@
         mf: [],
         gates: [],
         inscripciones: [],
+        conjuros: [],
       };
 
       function error(i, msg) {
@@ -880,6 +885,18 @@
           }
           case 'mana-fuerza': {
             if (!manaCfg) throw new Error('mana-fuerza: falta data/mana.json');
+            if (e.porNivel !== undefined) {
+              // Aporte que crece con el nivel (por ejemplo un contrato): suma `porNivel` por cada nivel del personaje.
+              if (e.cantidad !== undefined) throw new Error('mana-fuerza: usa cantidad o porNivel, no los dos');
+              if (!esEntero(e.porNivel) || e.porNivel < 1) throw new Error('mana-fuerza: porNivel debe ser un entero positivo (Mana force por cada nivel del personaje)');
+              if (!manaCfg.fuentesMF.some(function (f) { return f.id === e.fuente; })) {
+                throw new Error('mana-fuerza: fuente debe ser ' + manaCfg.fuentesMF.map(function (f) { return f.id; }).join(', '));
+              }
+              const dinamico = { porNivel: e.porNivel, fuente: e.fuente, nota: e.nota || '', sesion: ses.id };
+              estado.mf.push(dinamico);
+              s.mf.push(Object.assign({}, dinamico, { cantidad: mfAporte(dinamico) }));
+              return;
+            }
             if (!esEntero(e.cantidad) || e.cantidad === 0) throw new Error('mana-fuerza: cantidad debe ser un entero distinto de 0');
             if (!manaCfg.fuentesMF.some(function (f) { return f.id === e.fuente; })) {
               throw new Error('mana-fuerza: fuente debe ser ' + manaCfg.fuentesMF.map(function (f) { return f.id; }).join(', '));
@@ -895,9 +912,10 @@
             if (!manaCfg) throw new Error('gate: falta data/mana.json');
             if (typeof e.id !== 'string' || !/^[a-z0-9]+$/i.test(e.id)) throw new Error('gate: id debe ser un texto de letras y números, sin guiones (por ejemplo g1)');
             if (estado.gates.some(function (g) { return g.id === e.id; })) throw new Error('el Gate "' + e.id + '" ya existe');
-            if (!manaCfg.funciones.some(function (f) { return f.id === e.funcion; })) throw new Error('gate: funcion debe ser ' + manaCfg.funciones.map(function (f) { return f.id; }).join(', '));
+            // La función y la oportunidad pueden quedar sin definir (null / vacía): la ficha no siempre las trae.
+            if (e.funcion !== undefined && e.funcion !== null && !manaCfg.funciones.some(function (f) { return f.id === e.funcion; })) throw new Error('gate: funcion debe ser ' + manaCfg.funciones.map(function (f) { return f.id; }).join(', '));
             if (!manaTags[e.tag]) throw new Error('gate: el tag "' + e.tag + '" no existe en data/mana-tags.json');
-            if (typeof e.oportunidad !== 'string' || !e.oportunidad.trim()) throw new Error('gate: falta la oportunidad que permitió construirlo');
+            if (e.oportunidad !== undefined && typeof e.oportunidad !== 'string') throw new Error('gate: oportunidad debe ser un texto');
             const k = estado.gates.length + 1;
             const mfNecesaria = mfDeGate(k, manaCfg);
             if (mfActual() < mfNecesaria) throw new Error('el Gate ' + k + ' exige Mana force ' + mfNecesaria + ' y el personaje tiene ' + mfActual());
@@ -907,7 +925,7 @@
               throw new Error('el Gate ' + k + ' exige ' + sxNecesario + ' SX de mana y el personaje tiene ' + estado.mana +
                 (reservaSx > 0 ? ' (hay ' + reservaSx + ' SX sin asignar en la reserva: asígnalos a Mana)' : ''));
             }
-            const reg = { id: e.id, orden: k, funcion: e.funcion, tag: e.tag, tagNombre: manaTags[e.tag].nombre, oportunidad: e.oportunidad.trim(), sesion: ses.id, mfRequerida: mfNecesaria, sxRequerido: sxNecesario };
+            const reg = { id: e.id, orden: k, funcion: e.funcion || null, tag: e.tag, tagNombre: manaTags[e.tag].nombre, oportunidad: (e.oportunidad || '').trim(), sesion: ses.id, mfRequerida: mfNecesaria, sxRequerido: sxNecesario };
             estado.gates.push(reg);
             s.gates.push(reg);
             return;
@@ -916,6 +934,19 @@
             const slot = grafoMana(estado.gates, manaTags).slots.find(function (x) { return x.id === e.slot; });
             if (!slot) throw new Error('inscribir: el slot "' + e.slot + '" no existe (hay ' + grafoMana(estado.gates, manaTags).slots.map(function (x) { return x.id; }).join(', ') + ')');
             if (estado.inscritas[e.slot]) throw new Error('el slot "' + e.slot + '" ya tiene "' + estado.inscritas[e.slot].nombre + '"; usa desinscribir antes');
+            if (e.conjuro !== undefined) {
+              if (e.habilidad !== undefined) throw new Error('inscribir: usa habilidad o conjuro, no los dos');
+              const cj = estado.conjuros.find(function (x) { return x.id === e.conjuro; });
+              if (!cj) throw new Error('inscribir: "' + e.conjuro + '" no es un conjuro del personaje');
+              if (cj.categoria !== 'conjuro') throw new Error('inscribir: "' + cj.nombre + '" es una técnica activa y no va en un slot');
+              if (cj.aprendiendo) throw new Error('inscribir: "' + cj.nombre + '" todavía se está aprendiendo');
+              if (cj.nivel > slot.nivel) {
+                throw new Error('inscribir: "' + cj.nombre + '" es de nivel ' + cj.nivel + ' y el slot ' + e.slot + ' es de nivel ' + slot.nivel);
+              }
+              estado.inscritas[e.slot] = { id: cj.id, nombre: cj.nombre, sesion: ses.id, tipo: 'conjuro', nivel: cj.nivel };
+              s.inscripciones.push({ slot: e.slot, accion: 'inscribir', habilidad: cj.id, nombre: cj.nombre });
+              return;
+            }
             const hab = estado.feats.find(function (x) { return x.tipo === 'habilidad-tipo-conjuro' && x.id === e.habilidad; });
             if (!hab) throw new Error('inscribir: "' + e.habilidad + '" no es una habilidad tipo conjuro del personaje');
             estado.inscritas[e.slot] = { id: hab.id, nombre: hab.nombre, sesion: ses.id };
@@ -927,6 +958,61 @@
             if (!previa) throw new Error('desinscribir: el slot "' + e.slot + '" no tiene ninguna habilidad');
             delete estado.inscritas[e.slot];
             s.inscripciones.push({ slot: e.slot, accion: 'desinscribir', habilidad: previa.id, nombre: previa.nombre });
+            return;
+          }
+          case 'conjuro': {
+            // Conjuros del manual (por id) o propios (con nombre), y técnicas activas de Mana. `aprendiendo` los deja en espera.
+            const TEXTOS = ['escuela', 'tiempo', 'componentes', 'alcance', 'objetivo', 'duracion', 'salvacion', 'rc', 'costo', 'descripcion'];
+            TEXTOS.forEach(function (k) {
+              if (e[k] !== undefined && (typeof e[k] !== 'string' || !e[k].trim())) throw new Error('conjuro: ' + k + ' debe ser un texto no vacío');
+            });
+            const categoria = e.categoria === undefined ? 'conjuro' : e.categoria;
+            if (categoria !== 'conjuro' && categoria !== 'tecnica') throw new Error('conjuro: categoria debe ser conjuro o tecnica');
+            if (e.aprendiendo !== undefined && typeof e.aprendiendo !== 'boolean') throw new Error('conjuro: aprendiendo debe ser verdadero o falso');
+            if (e.requisitos !== undefined) {
+              if (!e.aprendiendo) throw new Error('conjuro: requisitos solo vale para un conjuro que se está aprendiendo');
+              const r = e.requisitos;
+              if (!r || typeof r !== 'object' || Array.isArray(r)) throw new Error('conjuro: requisitos debe ser un objeto con gates y/o sx');
+              Object.keys(r).forEach(function (k) {
+                if (k !== 'gates' && k !== 'sx') throw new Error('conjuro: requisitos solo admite gates y sx');
+                if (!esEntero(r[k]) || r[k] < 1) throw new Error('conjuro: requisitos.' + k + ' debe ser un entero positivo');
+              });
+            }
+            const nivelValido = function (n) { return esEntero(n) && n >= 0 && n <= 9; };
+            let reg;
+            if (e.nombre === undefined) {
+              if (categoria !== 'conjuro') throw new Error('conjuro: una técnica propia necesita nombre');
+              const cat = conjurosCat[e.id];
+              if (!cat) throw new Error('el conjuro "' + e.id + '" no existe en data/conjuros.json (uno propio lleva nombre y nivel)');
+              let nivel = e.nivel;
+              if (nivel === undefined) {
+                nivel = cat.nivel[pj.clase];
+                if (nivel === undefined) {
+                  throw new Error(cat.nombre + ' no está en la lista de ' + (clases[pj.clase] ? clases[pj.clase].nombre : pj.clase) + ': indica el nivel con `nivel` (está en ' +
+                    Object.keys(cat.nivel).map(function (k) { return k + ' ' + cat.nivel[k]; }).join(', ') + ')');
+                }
+              } else if (!nivelValido(nivel)) throw new Error('conjuro: nivel debe ser un entero de 0 a 9');
+              reg = { id: cat.id, nombre: cat.nombre, categoria: 'conjuro', nivel: nivel, origen: 'catalogo', libro: cat.libro };
+              ['escuela', 'subescuela', 'descriptor', 'tiempo', 'componentes', 'alcance', 'objetivo', 'duracion', 'salvacion', 'rc'].forEach(function (k) {
+                if (cat[k]) reg[k] = cat[k];
+              });
+            } else {
+              if (typeof e.nombre !== 'string' || !e.nombre.trim()) throw new Error('conjuro: nombre debe ser un texto no vacío');
+              const id = e.id !== undefined ? e.id : normTexto(e.nombre).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+              if (typeof id !== 'string' || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(id)) throw new Error('conjuro: id debe ir en minúsculas, con letras, números y guiones');
+              if (categoria === 'tecnica') {
+                if (e.nivel !== undefined) throw new Error('conjuro: una técnica activa no tiene nivel (su costo va en `costo`)');
+                if (e.aprendiendo) throw new Error('conjuro: una técnica activa no se queda en aprendizaje');
+              } else if (!nivelValido(e.nivel)) throw new Error('conjuro: un conjuro propio necesita nivel, un entero de 0 a 9');
+              reg = { id: id, nombre: e.nombre.trim(), categoria: categoria, nivel: categoria === 'tecnica' ? null : e.nivel, origen: 'propio' };
+            }
+            if (estado.conjuros.some(function (x) { return x.id === reg.id; })) throw new Error('"' + reg.nombre + '" ya está en el repertorio');
+            TEXTOS.forEach(function (k) { if (e[k] !== undefined) reg[k] = e[k].trim(); });
+            reg.aprendiendo = !!e.aprendiendo;
+            reg.requisitos = e.requisitos ? Object.assign({}, e.requisitos) : null;
+            reg.sesion = ses.id;
+            estado.conjuros.push(reg);
+            s.conjuros.push({ id: reg.id, nombre: reg.nombre, nivel: reg.nivel, categoria: reg.categoria, aprendiendo: reg.aprendiendo });
             return;
           }
           case 'objeto': {
@@ -1026,9 +1112,11 @@
       const sxSig = manaCfg ? sxDeGate(sig, manaCfg) : null;
       return {
         total: estado.mana,
+        // Nivel de Mana: el de la estructura más grande que ya existe (1 Gate, 2 nodo, 3 círculo).
+        nivel: grafo.circulos.length ? 3 : grafo.nodos.length ? 2 : estado.gates.length ? 1 : 0,
         configurado: !!manaCfg,
         fuerza: {
-          total: mf, base: mfBase, fuenteBase: mfFuente, aportes: estado.mf.slice(),
+          total: mf, base: mfBase, fuenteBase: mfFuente, aportes: estado.mf.map(function (x) { return Object.assign({}, x, { cantidad: mfAporte(x) }); }),
           permitidos: manaCfg ? gatesPermitidos(mf, manaCfg) : 0,
         },
         gates: estado.gates.slice(),
@@ -1048,6 +1136,39 @@
           disponible: mf >= mfSig && estado.mana >= sxSig,
         } : null,
         funciones: manaCfg ? manaCfg.funciones : [],
+      };
+    }
+
+    /** Repertorio de magia: conjuros conocidos por nivel, técnicas activas y lo que se está aprendiendo, con los slots donde está inscrito. */
+    function resultadoRepertorio() {
+      const prog = progresionConjuros(detalleClase, nivelInfo.nivel);
+      const nivelMax = prog ? prog.nivelMax : null;
+      const grafo = grafoMana(estado.gates, manaTags);
+      const lista = estado.conjuros.map(function (c) {
+        const x = Object.assign({}, c);
+        x.slots = grafo.slots.filter(function (sl) { return estado.inscritas[sl.id] && estado.inscritas[sl.id].id === c.id && estado.inscritas[sl.id].tipo === 'conjuro'; })
+          .map(function (sl) { return sl.id; });
+        x.sobreNivel = c.categoria === 'conjuro' && !c.aprendiendo && c.origen === 'catalogo' && (nivelMax === null || c.nivel > nivelMax);
+        if (c.requisitos) {
+          const tiene = { gates: estado.gates.length, sx: estado.mana };
+          const rotulos = { gates: 'Gates', sx: 'SX de mana' };
+          x.requisitos = Object.keys(c.requisitos).map(function (k) {
+            return { clave: k, rotulo: rotulos[k], necesita: c.requisitos[k], tiene: tiene[k], cumple: tiene[k] >= c.requisitos[k] };
+          });
+          x.listo = x.requisitos.every(function (r) { return r.cumple; });
+        }
+        return x;
+      });
+      const conocidos = lista.filter(function (c) { return c.categoria === 'conjuro' && !c.aprendiendo; });
+      const niveles = [];
+      conocidos.forEach(function (c) { if (niveles.indexOf(c.nivel) < 0) niveles.push(c.nivel); });
+      niveles.sort(function (a, b) { return a - b; });
+      return {
+        conjuros: conocidos,
+        tecnicas: lista.filter(function (c) { return c.categoria === 'tecnica'; }),
+        aprendiendo: lista.filter(function (c) { return c.aprendiendo; }),
+        porNivel: niveles.map(function (n) { return { nivel: n, conjuros: conocidos.filter(function (c) { return c.nivel === n; }) }; }),
+        total: lista.length,
       };
     }
 
@@ -1153,6 +1274,7 @@
         reglas: { opcionesPorNivel: zeo.lineas.opcionesPorNivel.slice(), opcionesBase: zeo.lineas.opcionesBase, extraPorTecnica: zeo.lineas.extraPorTecnica },
       },
       mana: resultadoMana(),
+      repertorio: resultadoRepertorio(),
       sx: resultadoSx(),
       recursos: recursos,
       fate: estado.fate,
@@ -1331,6 +1453,7 @@
     vitalidad: 'vitalidad.json',
     mana: 'mana.json',
     manaTags: 'mana-tags.json',
+    conjuros: 'conjuros.json',
   };
 
   /** Convierte los JSON de data/ (ya parseados, por clave de ARCHIVOS) en el contexto del motor. */
@@ -1352,6 +1475,8 @@
       vitalidad: raw.vitalidad,
       mana: raw.mana,
       manaTags: raw.manaTags.tags,
+      // Catálogo de conjuros del manual (data/conjuros.json): datos de reglas, sin el texto de la descripción.
+      catalogoConjuros: (raw.conjuros && raw.conjuros.conjuros) || [],
       // Habilidades por clase (data/clases/<id>.json), solo de las clases que se cargaron: { id: archivo }.
       clasesDetalle: raw.clasesDetalle || {},
     };

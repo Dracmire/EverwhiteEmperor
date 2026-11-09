@@ -33,7 +33,7 @@
       "id": "2026-11-08-00",
       "fecha": "2026-11-08",
       "titulo": "Creación del personaje (nivel 7)",
-      "notas": "Inicio de campaña en nivel 7. Monje asesino ninja (Sombra asesina), sin Engañar ni Disfraz. Atributos, tiradas, feats y equipo son un borrador a revisar.",
+      "notas": "Inicio de campaña en nivel 7. Monje asesino ninja (Sombra asesina), sin Engañar ni Disfraz. Tiradas de HP (d8) y MP (d6) de la hoja del diseñador; atributos, feats y equipo son un borrador a revisar.",
       "entradas": [
         {
           "tipo": "ajuste",
@@ -51,7 +51,7 @@
           "tipo": "tirada",
           "recurso": "hp",
           "dado": "d8",
-          "resultado": 5
+          "resultado": 2
         },
         {
           "tipo": "tirada",
@@ -63,7 +63,7 @@
           "tipo": "tirada",
           "recurso": "hp",
           "dado": "d8",
-          "resultado": 7
+          "resultado": 8
         },
         {
           "tipo": "tirada",
@@ -75,55 +75,55 @@
           "tipo": "tirada",
           "recurso": "hp",
           "dado": "d8",
-          "resultado": 6
+          "resultado": 7
         },
         {
           "tipo": "tirada",
           "recurso": "hp",
           "dado": "d8",
-          "resultado": 7
-        },
-        {
-          "tipo": "tirada",
-          "recurso": "mp",
-          "dado": "d10",
-          "resultado": 7
-        },
-        {
-          "tipo": "tirada",
-          "recurso": "mp",
-          "dado": "d10",
-          "resultado": 6
-        },
-        {
-          "tipo": "tirada",
-          "recurso": "mp",
-          "dado": "d10",
           "resultado": 8
         },
         {
           "tipo": "tirada",
           "recurso": "mp",
-          "dado": "d10",
-          "resultado": 7
-        },
-        {
-          "tipo": "tirada",
-          "recurso": "mp",
-          "dado": "d10",
+          "dado": "d6",
           "resultado": 6
         },
         {
           "tipo": "tirada",
           "recurso": "mp",
-          "dado": "d10",
-          "resultado": 9
+          "dado": "d6",
+          "resultado": 4
         },
         {
           "tipo": "tirada",
           "recurso": "mp",
-          "dado": "d10",
-          "resultado": 6
+          "dado": "d6",
+          "resultado": 4
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 4
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 4
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 3
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d6",
+          "resultado": 3
         },
         {
           "tipo": "feat",

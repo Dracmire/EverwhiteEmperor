@@ -7,6 +7,7 @@ Qué se importó, de dónde, qué se dejó fuera y en qué estado está la licen
 | Dato | Origen | Licencia del origen |
 |---|---|---|
 | `data/feats.pf1.json` | `src/db/feats.csv` de [awesomeSheet](https://github.com/zombieFox/awesomeSheet) (1,478 filas) | MIT, © 2016 Kuldeep Matharu (el archivo LICENSE está en ese repo) |
+| `data/conjuros.json` | `src/db/spells.csv` de [awesomeSheet](https://github.com/zombieFox/awesomeSheet) (2.827 filas) | MIT, © 2016 Kuldeep Matharu |
 | `data/classes.json` | `data/classes.js` de [pixelkeep/pathfinder1e-sheet](https://github.com/pixelkeep/pathfinder1e-sheet) (37 clases) | El README indica MIT; en la copia revisada no hay archivo LICENSE |
 
 Las reglas que describen esos datos son de Pathfinder 1e (Paizo), que las publica como contenido abierto bajo la OGL 1.0a.
@@ -16,6 +17,7 @@ Las reglas que describen esos datos son de Pathfinder 1e (Paizo), que las public
 ```
 node scripts/import-classes.js <ruta a pathfinder1e-sheet/data/classes.js>
 node scripts/import-feats.js   <ruta a awesomesheet/src/db/feats.csv>
+node scripts/import-conjuros.js <ruta a awesomesheet/src/db/spells.csv>
 ```
 
 `import-feats.js` lee `data/classes.json`, así que las clases se importan primero. Las decisiones de diseño sobre feats (conversión a habilidad tipo conjuro, resúmenes propios) viven en `data/feats.conversiones.json` y se aplican al cargar, así que volver a importar no las borra.
@@ -27,6 +29,12 @@ node scripts/import-feats.js   <ruta a awesomesheet/src/db/feats.csv>
 **No se copia** el texto del beneficio ni la descripción. Se leen en la importación solo para marcar `candidatoActivo` (el texto sugiere una acción o usos por día) y no se guardan. El visor enlaza a Archives of Nethys para leer cada feat.
 
 **Clases** (`classes.json`): id, nombre, libro y progresión de ataque base (completa, media o baja).
+
+## Alcance de los conjuros
+
+**Conjuros** (`conjuros.json`): nombre, escuela (traducida), subescuela y descriptor, **nivel por lista de clase**, tiempo de lanzamiento, componentes, alcance, objetivo (objetivo, área o efecto), duración, salvación, resistencia a conjuros y libro. **No se copia** el texto de la descripción ni el resumen, por el mismo motivo que en los feats (la decisión sobre la OGL sigue pendiente). Los datos de reglas se dejan tal como vienen, en inglés.
+
+Se incluyen los libros Core Rulebook, Advanced Player's Guide, Ultimate Magic, Ultimate Combat, Advanced Race Guide y Advanced Class Guide: **1.491 conjuros**. Solo se guardan las listas de las clases que existen en `classes.json` (se descartan antipaladin y adept). Un conjuro que sale en dos libros vale una vez.
 
 ## Alcance de los feats
 

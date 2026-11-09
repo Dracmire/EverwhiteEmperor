@@ -25,7 +25,7 @@
       "id": "2026-11-08-00",
       "fecha": "2026-11-08",
       "titulo": "Creación del personaje (nivel 7)",
-      "notas": "Inicio de campaña en nivel 7. Mago sin escuela arcana: cambia los poderes de escuela por dos feats extra. Atributos, tiradas, feats y equipo son un borrador a revisar.",
+      "notas": "Inicio de campaña en nivel 7. Mago sin escuela arcana: cambia los poderes de escuela por dos feats extra. Dados: HP d4 y MP d10; las tiradas son PROVISIONALES (nivel 1 al máximo y el resto al promedio) hasta tener las reales. Mana: contrato durmiente con Ashura (Mana force = su nivel × 2), dos Gates (Oro y Fuego), un nodo y un círculo en aprendizaje; los 20 SX de mana que justifican los dos Gates son un supuesto. Atributos, feats y equipo son un borrador a revisar.",
       "entradas": [
         {
           "tipo": "ajuste",
@@ -36,85 +36,85 @@
         {
           "tipo": "tirada",
           "recurso": "hp",
-          "dado": "d6",
-          "resultado": 6
-        },
-        {
-          "tipo": "tirada",
-          "recurso": "hp",
-          "dado": "d6",
-          "resultado": 3
-        },
-        {
-          "tipo": "tirada",
-          "recurso": "hp",
-          "dado": "d6",
-          "resultado": 5
-        },
-        {
-          "tipo": "tirada",
-          "recurso": "hp",
-          "dado": "d6",
-          "resultado": 2
-        },
-        {
-          "tipo": "tirada",
-          "recurso": "hp",
-          "dado": "d6",
+          "dado": "d4",
           "resultado": 4
         },
         {
           "tipo": "tirada",
           "recurso": "hp",
-          "dado": "d6",
+          "dado": "d4",
           "resultado": 3
         },
         {
           "tipo": "tirada",
           "recurso": "hp",
-          "dado": "d6",
-          "resultado": 5
+          "dado": "d4",
+          "resultado": 3
         },
         {
           "tipo": "tirada",
-          "recurso": "mp",
-          "dado": "d8",
-          "resultado": 6
+          "recurso": "hp",
+          "dado": "d4",
+          "resultado": 3
         },
         {
           "tipo": "tirada",
-          "recurso": "mp",
-          "dado": "d8",
-          "resultado": 5
+          "recurso": "hp",
+          "dado": "d4",
+          "resultado": 3
         },
         {
           "tipo": "tirada",
-          "recurso": "mp",
-          "dado": "d8",
-          "resultado": 7
+          "recurso": "hp",
+          "dado": "d4",
+          "resultado": 3
         },
         {
           "tipo": "tirada",
-          "recurso": "mp",
-          "dado": "d8",
-          "resultado": 4
-        },
-        {
-          "tipo": "tirada",
-          "recurso": "mp",
-          "dado": "d8",
-          "resultado": 8
-        },
-        {
-          "tipo": "tirada",
-          "recurso": "mp",
-          "dado": "d8",
+          "recurso": "hp",
+          "dado": "d4",
           "resultado": 3
         },
         {
           "tipo": "tirada",
           "recurso": "mp",
-          "dado": "d8",
+          "dado": "d10",
+          "resultado": 10
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d10",
+          "resultado": 6
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d10",
+          "resultado": 6
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d10",
+          "resultado": 6
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d10",
+          "resultado": 6
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d10",
+          "resultado": 6
+        },
+        {
+          "tipo": "tirada",
+          "recurso": "mp",
+          "dado": "d10",
           "resultado": 6
         },
         {
@@ -157,6 +157,66 @@
           "id": "varita-proyectil-magico",
           "accion": "equipar",
           "extremidad": "mano-izquierda"
+        },
+        {
+          "tipo": "xp-subsistema",
+          "subsistema": "mana",
+          "cantidad": 20
+        },
+        {
+          "tipo": "mana-fuerza",
+          "porNivel": 2,
+          "fuente": "contrato-magico",
+          "nota": "Contrato durmiente con Ashura: le da su mismo nivel en Mana force, por 2"
+        },
+        {
+          "tipo": "gate",
+          "id": "g1",
+          "tag": "oro"
+        },
+        {
+          "tipo": "gate",
+          "id": "g2",
+          "tag": "fuego"
+        },
+        {
+          "tipo": "conjuro",
+          "nombre": "Sagita Lux Magica",
+          "nivel": 1,
+          "costo": "Magia invertida, máximo 12",
+          "descripcion": "Crea 1 proyectil por cada punto de magia invertido, pero retrasa la acción 1 punto de iniciativa por cada punto de magia invertido. Máximo 12."
+        },
+        {
+          "tipo": "conjuro",
+          "nombre": "Senderos de la Magia",
+          "nivel": 2
+        },
+        {
+          "tipo": "conjuro",
+          "nombre": "Circle Activation",
+          "categoria": "tecnica",
+          "costo": "Mana 1",
+          "descripcion": "Circula magia por el circuito mágico para aumentar tu RES mágica y purgar efectos mágicos menores."
+        },
+        {
+          "tipo": "conjuro",
+          "nombre": "Parallel World Casting",
+          "nivel": 3,
+          "aprendiendo": true,
+          "requisitos": {
+            "gates": 3,
+            "sx": 200
+          }
+        },
+        {
+          "tipo": "inscribir",
+          "slot": "g1",
+          "conjuro": "sagita-lux-magica"
+        },
+        {
+          "tipo": "inscribir",
+          "slot": "g1-g2",
+          "conjuro": "senderos-de-la-magia"
         }
       ]
     }

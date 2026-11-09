@@ -1,6 +1,6 @@
 {
-  "version": "0.8.3",
-  "nota": "Tabla de compatibilidad entre tags de Gates (4.1.2). Los Gates conectan por defecto; solo los pares listados aquí NO conectan. Estos 13 tags y sus pares son de EJEMPLO: la tabla real tiene unos 200 tags y la define el diseñador. La relación es simétrica: cada par se escribe en los dos tags.",
+  "version": "0.9.5",
+  "nota": "Tabla de compatibilidad entre tags de Gates (4.1.2). Los Gates conectan por defecto; solo los pares listados aquí NO conectan. Los tags con fuente \"ejemplo\" y sus pares son de EJEMPLO: la tabla real tiene unos 200 tags y la define el diseñador. La relación es simétrica: cada par se escribe en los dos tags.",
   "tags": [
     {
       "id": "fuego",
@@ -105,6 +105,12 @@
         "sonido"
       ],
       "fuente": "ejemplo"
+    },
+    {
+      "id": "oro",
+      "nombre": "Oro",
+      "incompatibles": [],
+      "fuente": "diseñador"
     }
   ]
 }

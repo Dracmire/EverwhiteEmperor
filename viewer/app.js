@@ -108,10 +108,13 @@
     if (!e || typeof e !== 'object') return false;
     if (e.tipo === 'feat' || e.tipo === 'achievement') return typeof e.id === 'string';
     if (e.tipo === 'tirada') return (e.recurso === 'hp' || e.recurso === 'mp') && typeof e.dado === 'string' && typeof e.resultado === 'number';
-    if (e.tipo === 'inscribir') return typeof e.slot === 'string' && typeof e.habilidad === 'string';
+    if (e.tipo === 'inscribir') return typeof e.slot === 'string' && (typeof e.habilidad === 'string' || typeof e.conjuro === 'string');
     if (e.tipo === 'desinscribir') return typeof e.slot === 'string';
-    if (e.tipo === 'mana-fuerza') return typeof e.fuente === 'string' && typeof e.cantidad === 'number';
-    if (e.tipo === 'gate') return typeof e.id === 'string' && typeof e.tag === 'string' && typeof e.funcion === 'string';
+    if (e.tipo === 'mana-fuerza') return typeof e.fuente === 'string' && (typeof e.cantidad === 'number' || typeof e.porNivel === 'number');
+    if (e.tipo === 'gate') return typeof e.id === 'string' && typeof e.tag === 'string';
+    if (e.tipo === 'zeo-tecnica') return typeof e.linea === 'string' && typeof e.nivel === 'number';
+    if (e.tipo === 'zeo-activar') return typeof e.linea === 'string';
+    if (e.tipo === 'conjuro') return typeof e.id === 'string' || typeof e.nombre === 'string';
     if (e.tipo === 'sx') return typeof e.cantidad === 'number';
     if (e.tipo === 'sx-asignar' || e.tipo === 'xp-subsistema') return typeof e.subsistema === 'string' && typeof e.cantidad === 'number';
     return false;
@@ -608,7 +611,7 @@
       var lx = n === 1 ? cx : cx + (R + 40) * p.c;
       var ly = n === 1 ? cy + 44 : cy + (R + 40) * p.s;
       var ancla = n === 1 || Math.abs(p.c) < 0.3 ? 'middle' : p.c > 0 ? 'start' : 'end';
-      var fn = (m.funciones.find(function (x) { return x.id === g.funcion; }) || {}).nombre || g.funcion;
+      var fn = g.funcion ? (m.funciones.find(function (x) { return x.id === g.funcion; }) || {}).nombre || g.funcion : 'Sin función';
       return '<circle class="g-nodo' + (lleno ? ' lleno' : '') + '" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="22"/>' +
         '<text class="g-id" x="' + p.x.toFixed(1) + '" y="' + (p.y + 5).toFixed(1) + '" text-anchor="middle">' + esc(g.id) + '</text>' +
         '<text class="g-tag" x="' + lx.toFixed(1) + '" y="' + (ly - 2).toFixed(1) + '" text-anchor="' + ancla + '">' + esc(g.tagNombre) + '</text>' +
@@ -634,8 +637,8 @@
     var nivel = x.nivel === 1 ? 'Gate: equivale a un conjuro de nivel 1.' : x.nivel === 2 ? 'Nodo: dos Gates que conectan; equivale a un conjuro de nivel 2.' : 'Círculo: tres Gates cuyos tres pares conectan; equivale a un conjuro de nivel 3.';
     if (x.nivel === 1) {
       var g = m.gates.find(function (y) { return y.id === x.id; });
-      var fn = (m.funciones.find(function (f) { return f.id === g.funcion; }) || {}).nombre || g.funcion;
-      return nivel + '\nFunción: ' + fn + '. Tag: ' + g.tagNombre + '.\nOportunidad: ' + g.oportunidad + '.';
+      var fn = g.funcion ? (m.funciones.find(function (f) { return f.id === g.funcion; }) || {}).nombre || g.funcion : 'sin definir';
+      return nivel + '\nFunción: ' + fn + '. Tag: ' + g.tagNombre + '.\nOportunidad: ' + (g.oportunidad || 'sin registrar') + '.';
     }
     return nivel + '\nHereda los tags de sus Gates.';
   }
@@ -649,22 +652,26 @@
     };
     var filas = fila({ etiqueta: 'Base', nombre: mf.fuenteBase === 'raza' ? 'Mana force de la raza' : 'Mana force de partida (' + mf.fuenteBase + ')', der: '<span class="pts mas num">+' + mf.base + '</span>' }) +
       mf.aportes.map(function (a) {
-        return fila({ etiqueta: nombreFuente(a.fuente), nombre: a.nota || 'Sin nota', tip: 'Aporte de ' + etiquetaSesion(calc, a.sesion) + '.',
+        return fila({ etiqueta: nombreFuente(a.fuente), nombre: (a.nota || 'Sin nota') + (a.porNivel ? ' · ' + a.porNivel + ' por nivel (nivel ' + Math.round(a.cantidad / a.porNivel) + ')' : ''),
+          tip: 'Aporte de ' + etiquetaSesion(calc, a.sesion) + '.' + (a.porNivel ? ' Crece con el nivel del personaje: ' + a.porNivel + ' × ' + Math.round(a.cantidad / a.porNivel) + '.' : ''),
           der: '<span class="pts ' + (a.cantidad > 0 ? 'mas' : 'menos') + ' num">' + (a.cantidad > 0 ? '+' : '−') + Math.abs(a.cantidad) + '</span>' });
       }).join('');
     var cuerpo = '<ul class="ren-lista">' + filas + '</ul><p class="mute" style="font-size:13px">Total <b>' + mf.total + '</b>. Cada potencia de 2 compra un Gate: MF ' + mf.total + ' permite ' + plural(mf.permitidos, 'Gate', 'Gates') + '.</p>';
     return desplegable('mf', 'Contabilidad de Mana force', chip('MF ' + mf.total, 'acc') + chip(plural(mf.aportes.length + 1, 'aporte', 'aportes'), 'soft'), cuerpo);
   }
 
-  function filaSlot(x, m, habilidades, con) {
+  function filaSlot(x, m, habilidades, con, conjuros) {
     var nivel = x.nivel === 1 ? 'Gate' : x.nivel === 2 ? 'Nodo' : 'Círculo';
     var der;
+    var propios = (conjuros || []).filter(function (c) { return c.nivel <= x.nivel; });
     if (x.habilidad) {
-      der = chip(x.habilidad.nombre, 'acc') + (con ? '<button class="btn mini" type="button" data-accion="desinscribir" data-slot="' + esc(x.id) + '">Quitar</button>' : '');
-    } else if (con && habilidades.length) {
-      der = '<select class="btn" id="insc-' + esc(x.id) + '" aria-label="Habilidad para ' + esc(x.id) + '">' + habilidades.map(function (h) {
-        return '<option value="' + esc(h.id) + '">' + esc(h.nombre) + '</option>';
-      }).join('') + '</select><button class="btn mini" type="button" data-accion="inscribir" data-slot="' + esc(x.id) + '">Inscribir</button>';
+      var delSlot = x.habilidad.tipo === 'conjuro' ? (conjuros || []).filter(function (c) { return c.id === x.habilidad.id; })[0] : null;
+      der = (delSlot ? chipTip(x.habilidad.nombre, 'acc', tipConjuro(delSlot)) : chip(x.habilidad.nombre, 'acc')) + (con ? '<button class="btn mini" type="button" data-accion="desinscribir" data-slot="' + esc(x.id) + '">Quitar</button>' : '');
+    } else if (con && (habilidades.length || propios.length)) {
+      var opcH = habilidades.map(function (h) { return '<option value="h:' + esc(h.id) + '">' + esc(h.nombre) + '</option>'; }).join('');
+      var opcC = propios.map(function (c) { return '<option value="c:' + esc(c.id) + '">' + esc(c.nombre) + ' · ' + (c.nivel === 0 ? 'truco' : 'nivel ' + c.nivel) + '</option>'; }).join('');
+      der = '<select class="btn" id="insc-' + esc(x.id) + '" aria-label="Qué inscribir en ' + esc(x.id) + '">' +
+        (opcC ? '<optgroup label="Conjuros">' + opcC + '</optgroup>' : '') + (opcH ? '<optgroup label="Habilidades">' + opcH + '</optgroup>' : '') + '</select><button class="btn mini" type="button" data-accion="inscribir" data-slot="' + esc(x.id) + '">Inscribir</button>';
     } else {
       der = '<span class="mute">Libre</span>';
     }
@@ -678,7 +685,7 @@
     var n = m.gates.length + 1;
     while (m.gates.some(function (g) { return g.id === siguienteId; })) siguienteId = 'g' + (++n);
     var fuentes = ctx.mana.fuentesMF.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.nombre) + '</option>'; }).join('');
-    var funciones = ctx.mana.funciones.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.nombre) + '</option>'; }).join('');
+    var funciones = '<option value="">Sin definir</option>' + ctx.mana.funciones.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.nombre) + '</option>'; }).join('');
     var tags = ctx.manaTags.slice().sort(function (a, b) { return a.nombre.localeCompare(b.nombre, 'es'); }).map(function (t) {
       var choca = m.gates.filter(function (g) { return (t.incompatibles || []).indexOf(g.tag) >= 0; }).map(function (g) { return g.id; });
       return '<option value="' + esc(t.id) + '">' + esc(t.nombre) + (choca.length ? ' · sin conexión con ' + choca.join(', ') : '') + '</option>';
@@ -694,12 +701,13 @@
       '<div class="acc-fila"><label class="campo-et">Cambio<input class="campo" type="number" inputmode="numeric" step="1" id="mf-n" value="1" style="width:110px;min-width:0"></label>' +
       '<label class="campo-et">Fuente<select class="btn" id="mf-f">' + fuentes + '</select></label>' +
       '<label class="campo-et">Nota<input class="campo" type="text" id="mf-nota" placeholder="Ej.: contrato con el lobo blanco" autocomplete="off" style="width:260px"></label>' +
+      '<label class="campo-et">Crece con el nivel<span class="acc-fila" style="gap:6px"><input type="checkbox" id="mf-pn"> <small class="mute">cambio × nivel</small></span></label>' +
       '<button class="btn prim" type="button" data-accion="mf-agregar">Agregar</button></div></div>' +
       '<div class="picker-bloque"><h3 style="font-size:20px">Construir un Gate</h3>' +
       '<p class="sub">Será el Gate <b>' + esc(siguienteId) + '</b>. ' + esc(estadoGate) + ' El tag decide con quién conecta: los pares incompatibles quedan sin conexión. La función es solo del Gate.</p>' +
       '<div class="acc-fila"><label class="campo-et">Tag<select class="btn" id="gt-tag">' + tags + '</select></label>' +
       '<label class="campo-et">Función<select class="btn" id="gt-fn">' + funciones + '</select></label>' +
-      '<label class="campo-et">Oportunidad para construirlo<input class="campo" type="text" id="gt-op" placeholder="Ej.: el altar del glaciar" autocomplete="off" style="width:260px"></label>' +
+      '<label class="campo-et">Oportunidad para construirlo<input class="campo" type="text" id="gt-op" placeholder="Opcional. Ej.: el altar del glaciar" autocomplete="off" style="width:260px"></label>' +
       '<button class="btn prim" type="button" data-accion="gate-agregar" data-id="' + esc(siguienteId) + '">Agregar Gate</button></div></div>';
   }
 
@@ -709,7 +717,7 @@
     var sig = m.siguiente;
     var habilidades = calcB.feats.lista.filter(function (x) { return x.tipo === 'habilidad-tipo-conjuro'; });
     var caja = function (rotuloTxt, valor) { return '<div class="caja"><small>' + rotuloTxt + '</small><b>' + valor + '</b></div>'; };
-    var cajas = '<div class="cajas">' + caja('SX de mana', f(m.total)) + caja('Mana force', mf.total) + caja('Gates', m.totales.gates + ' de ' + mf.permitidos) + caja('Slots', m.totales.slots) + '</div>';
+    var cajas = '<div class="cajas">' + caja('SX de mana', f(m.total)) + caja('Nivel de Mana', m.nivel) + caja('Mana force', mf.total) + caja('Gates', m.totales.gates + ' de ' + mf.permitidos) + caja('Slots', m.totales.slots) + '</div>';
     var proximo = sig
       ? '<p class="mute" style="font-size:14px">Próximo Gate (' + sig.numero + '): ' +
         'Mana force ' + sig.mfRequerida + (sig.mfFalta ? ' (te faltan ' + sig.mfFalta + ')' : ' (cumples)') + ' y ' + f(sig.sxRequerido) + ' SX' + (sig.sxFalta ? ' (te faltan ' + f(sig.sxFalta) + ')' : ' (cumples)') +
@@ -719,19 +727,113 @@
     if (m.gates.length) {
       var legend = '<p class="mute" style="font-size:13px">Línea continua: los Gates conectan. Línea roja discontinua: tags incompatibles, no conectan. Triángulo sombreado: círculo. Un Gate con relleno tiene su habilidad inscrita.</p>';
       cuerpo += '<div class="mana-grid"><div class="mana-grafo">' + svgGrafoMana(m) + legend + '</div><div class="mana-slots"><span class="eyebrow">Slots · ' + m.totales.ocupados + ' de ' + m.totales.slots + ' con habilidad</span>' +
-        '<ul class="ren-lista una">' + m.slots.map(function (x) { return filaSlot(x, m, habilidades, con); }).join('') + '</ul>' +
-        (con && !habilidades.length ? '<p class="mute" style="font-size:13px">Para inscribir hace falta una habilidad tipo conjuro (un feat de ejecución activa).</p>' : '') + '</div></div>';
+        '<ul class="ren-lista una">' + m.slots.map(function (x) { return filaSlot(x, m, habilidades, con, calcB.repertorio.conjuros); }).join('') + '</ul>' +
+        (con && !habilidades.length && !calcB.repertorio.conjuros.length ? '<p class="mute" style="font-size:13px">Para inscribir hace falta un conjuro (sección Magia) o una habilidad tipo conjuro (un feat de ejecución activa).</p>' : '') + '</div></div>';
     } else {
       cuerpo += '<p class="mute">Todavía no hay Gates. Con Mana force ' + mf.total + ' se permite ' + plural(mf.permitidos, 'Gate', 'Gates') + '.</p>';
     }
     cuerpo += contabilidadMF(calc, m) + (con ? formulariosMana(calcB, m) : '');
-    var resumen = chip('MF ' + mf.total, 'acc') + chip(plural(m.totales.gates, 'Gate', 'Gates'), 'soft') + chip(plural(m.totales.slots, 'slot', 'slots') + (m.totales.ocupados ? ' · ' + m.totales.ocupados + ' inscrito' + (m.totales.ocupados === 1 ? '' : 's') : ''), 'soft') +
+    var resumen = chip('Mana lv ' + m.nivel, 'acc') + chip('MF ' + mf.total, 'soft') + chip(plural(m.totales.gates, 'Gate', 'Gates'), 'soft') + chip(plural(m.totales.slots, 'slot', 'slots') + (m.totales.ocupados ? ' · ' + m.totales.ocupados + ' inscrito' + (m.totales.ocupados === 1 ? '' : 's') : ''), 'soft') +
       chip(f(m.total) + ' SX', 'soft');
     return desplegable('mana', 'Mana', resumen, cuerpo);
   }
 
   /** Nombre corto de un nivel de conjuro: 0 son los trucos. */
   function nombreNivelConjuro(n) { return n === 0 ? 'Trucos' : 'Nivel ' + n; }
+
+  /** Tooltip con los datos de un conjuro o una técnica: nivel, escuela, tiempo, alcance, duración, salvación, costo y texto propio. */
+  function tipConjuro(c) {
+    var l = [];
+    var cab = c.categoria === 'tecnica' ? 'Técnica activa' : c.aprendiendo ? 'En aprendizaje · nivel ' + c.nivel : c.nivel === 0 ? 'Truco' : 'Nivel ' + c.nivel;
+    l.push(c.nombre + ' · ' + cab + (c.escuela ? ' · ' + c.escuela + (c.subescuela ? ' (' + c.subescuela + ')' : '') : '') + (c.descriptor ? ' [' + c.descriptor + ']' : ''));
+    [['Tiempo', c.tiempo], ['Componentes', c.componentes], ['Alcance', c.alcance], ['Objetivo', c.objetivo], ['Duración', c.duracion],
+      ['Salvación', c.salvacion], ['RC', c.rc], ['Costo', c.costo]].forEach(function (d) { if (d[1]) l.push(d[0] + ': ' + d[1]); });
+    if (c.descripcion) l.push(c.descripcion);
+    if (c.requisitos) l.push('Requisitos: ' + c.requisitos.map(function (r) { return r.rotulo + ' ' + r.tiene + ' de ' + r.necesita; }).join(' · '));
+    if (c.slots && c.slots.length) l.push('Inscrito en ' + c.slots.join(', ') + '.');
+    if (c.sobreNivel) l.push('Pasa del nivel de conjuro que la clase alcanza hoy.');
+    if (c.origen === 'catalogo' && !c.descripcion) l.push('Texto: Archives of Nethys.');
+    if (!c.descripcion && c.origen === 'propio' && l.length === 1) l.push('Sin datos todavía.');
+    return l.join('\n');
+  }
+
+  function enlaceConjuro(c) {
+    if (c.origen !== 'catalogo') return '';
+    return '<a class="link" href="https://aonprd.com/SpellDisplay.aspx?ItemName=' + encodeURIComponent(c.nombre).replace(/%20/g, '+') +
+      '" target="_blank" rel="noopener noreferrer" aria-label="Ver el texto de ' + esc(c.nombre) + '">↗</a>';
+  }
+
+  /**
+   * Repertorio de magia: conjuros por nivel (los trucos, a la mitad de tamaño), técnicas activas y lo que se está aprendiendo.
+   * Cada uno es un chip con tooltip de datos; en Construir los del manual traen además el enlace al texto.
+   */
+  function bloqueRepertorio(calcB, con) {
+    var rep = calcB.repertorio;
+    if (!rep.total) {
+      return con ? '<div class="bloque-feats"><span class="eyebrow">Conjuros</span><p class="mute">Todavía no hay conjuros ni técnicas. Agrega uno del manual o crea uno propio abajo.</p></div>' : '';
+    }
+    var chipC = function (c) {
+      return chipTip(c.nombre, c.sobreNivel ? 'warn' : c.slots.length ? 'acc' : '', tipConjuro(c)) + (con ? enlaceConjuro(c) : '');
+    };
+    var grupo = function (rotulo, cuerpo, clase) {
+      return '<div class="conj-grupo' + (clase ? ' ' + clase : '') + '"><span class="conj-et">' + esc(rotulo) + '</span><span class="chips">' + cuerpo + '</span></div>';
+    };
+    var filas = rep.porNivel.map(function (g) {
+      return grupo(nombreNivelConjuro(g.nivel), g.conjuros.map(chipC).join(''), g.nivel === 0 ? 'conj-truco' : '');
+    }).join('');
+    if (rep.tecnicas.length) filas += grupo('Técnicas', rep.tecnicas.map(function (c) { return chipTip(c.nombre, 'gold', tipConjuro(c)) + (c.costo ? chip(c.costo, 'soft') : ''); }).join(''));
+    if (rep.aprendiendo.length) {
+      filas += rep.aprendiendo.map(function (c) {
+        var req = (c.requisitos || []).map(function (r) { return chip(r.rotulo + ' ' + r.tiene + '/' + r.necesita, r.cumple ? 'acc' : 'soft'); }).join('');
+        return grupo('Aprendiendo', chipTip(c.nombre + ' · nivel ' + c.nivel, 'gold', tipConjuro(c)) + req);
+      }).join('');
+    }
+    return '<div class="bloque-feats"><span class="eyebrow">Conjuros y técnicas · ' + rep.total + '</span>' + filas + '</div>';
+  }
+
+  /** Formularios de Construir: agregar un conjuro del manual (por nombre) o crear uno propio, una técnica activa o un conjuro en aprendizaje. */
+  function formulariosConjuros(calcB) {
+    var cl = calcB.personaje.clase;
+    var cj = calcB.conjuros;
+    var sabidos = {};
+    calcB.repertorio.conjuros.concat(calcB.repertorio.aprendiendo).forEach(function (c) { sabidos[c.id] = true; });
+    var lista = estado.ctx.catalogoConjuros.filter(function (c) {
+      if (sabidos[c.id]) return false;
+      if (c.nivel[cl] === undefined) return false;
+      return cj ? c.nivel[cl] <= cj.nivelMax : true;
+    });
+    var sinLista = !lista.length;
+    if (sinLista) lista = estado.ctx.catalogoConjuros.filter(function (c) { return !sabidos[c.id]; });
+    var opciones = lista.map(function (c) {
+      var n = c.nivel[cl] !== undefined ? c.nivel[cl] : Math.min.apply(null, Object.keys(c.nivel).map(function (k) { return c.nivel[k]; }));
+      return '<option value="' + esc(c.nombre) + '" label="' + (c.nivel[cl] !== undefined ? 'nivel ' + n : 'otra lista, nivel ' + n) + ' · ' + esc(c.escuela) + '"></option>';
+    }).join('');
+    var ayudaLista = sinLista
+      ? 'Tu clase no tiene lista de conjuros: busca en todo el manual e indica el nivel.'
+      : 'Salen de la lista de ' + calcB.personaje.claseNombre + (cj ? ' hasta el nivel de conjuro ' + cj.nivelMax : '') + '. Para otro, escribe su nombre e indica el nivel.';
+    var texto = function (id, rotuloTxt, ejemplo, ancho) {
+      return '<label class="campo-et">' + rotuloTxt + '<input class="campo" type="text" id="' + id + '" placeholder="' + esc(ejemplo || '') + '" autocomplete="off" style="width:' + (ancho || 200) + 'px"></label>';
+    };
+    return '<div class="picker-bloque"><h3 style="font-size:20px">Agregar un conjuro del manual</h3>' +
+      '<p class="sub">' + esc(ayudaLista) + ' Se guardan sus datos de reglas (nivel, escuela, tiempo, alcance, duración, salvación), no el texto.</p>' +
+      '<div class="acc-fila"><label class="campo-et">Conjuro<input class="campo" type="text" id="cj-q" list="dl-conjuros" placeholder="Magic Missile" autocomplete="off" style="width:240px"></label>' +
+      '<datalist id="dl-conjuros">' + opciones + '</datalist>' +
+      '<label class="campo-et">Nivel (opcional)<input class="campo" type="number" inputmode="numeric" min="0" max="9" id="cj-n" style="width:110px;min-width:0"></label>' +
+      '<button class="btn prim" type="button" data-accion="cj-manual">Agregar</button></div></div>' +
+      '<div class="picker-bloque"><h3 style="font-size:20px">Crear un conjuro o una técnica propios</h3>' +
+      '<p class="sub">Un conjuro propio lleva nombre y nivel (0 a 9) y se puede inscribir en un slot de Mana de su nivel o mayor. Una técnica activa no tiene nivel, solo costo. «Aprendiendo» lo deja en espera hasta cumplir los requisitos.</p>' +
+      '<div class="acc-fila"><label class="campo-et">Tipo<select class="btn" id="cj-t"><option value="conjuro">Conjuro</option><option value="tecnica">Técnica activa</option></select></label>' +
+      texto('cj-nombre', 'Nombre', 'Sagita Lux Magica', 240) +
+      '<label class="campo-et">Nivel<input class="campo" type="number" inputmode="numeric" min="0" max="9" id="cj-nivel" value="1" style="width:100px;min-width:0"></label>' +
+      texto('cj-costo', 'Costo', 'Mana 1') + '</div>' +
+      '<label class="campo-et">Descripción<textarea class="campo" id="cj-desc" rows="2" placeholder="Qué hace" style="width:min(560px,100%)"></textarea></label>' +
+      '<div class="acc-fila">' + texto('cj-escuela', 'Escuela', 'Evocación', 150) + texto('cj-tiempo', 'Tiempo', '1 standard action', 150) + texto('cj-alcance', 'Alcance', 'close', 130) +
+      texto('cj-duracion', 'Duración', 'instantaneous', 140) + texto('cj-salv', 'Salvación', 'none', 120) + '</div>' +
+      '<div class="acc-fila"><label class="campo-et">Aprendiendo<span class="acc-fila" style="gap:6px"><input type="checkbox" id="cj-apr"> <small class="mute">todavía no lo tiene</small></span></label>' +
+      '<label class="campo-et">Requiere Gates<input class="campo" type="number" inputmode="numeric" min="0" id="cj-rg" style="width:110px;min-width:0"></label>' +
+      '<label class="campo-et">Requiere SX<input class="campo" type="number" inputmode="numeric" min="0" id="cj-rs" style="width:110px;min-width:0"></label>' +
+      '<button class="btn prim" type="button" data-accion="cj-crear">Crear</button></div></div>';
+  }
 
   /**
    * Cuerpo de Magia (4.2): la progresión de conjuros de la clase, si lanza, y las habilidades activas, que ocupan el lugar de los conjuros:
@@ -762,19 +864,21 @@
       ? '<p class="mute" style="font-size:13px">Próximas: ' + esc(prox.slice(0, 4).map(function (h) { return h.nombre + ' (nivel ' + h.nivel + ')'; }).join(', ')) + (prox.length > 4 ? ' y ' + (prox.length - 4) + ' más' : '') + '.</p>'
       : '';
     var intro = con
-      ? '<p class="sub">Magia es lo que reemplaza el casteo. Aquí van la progresión de conjuros de la clase (si lanza) y las habilidades activas, que ocupan el lugar de los conjuros: las de la clase y los feats de ejecución activa de Pathfinder, que se reclasifican como habilidad tipo conjuro y se inscriben en los slots de Mana (Gates, nodos y círculos). El catálogo de conjuros y el costo de usar cada habilidad están pendientes de diseño.</p>'
+      ? '<p class="sub">Magia es lo que reemplaza el casteo. Aquí van la progresión de conjuros de la clase (si lanza) y las habilidades activas, que ocupan el lugar de los conjuros: las de la clase y los feats de ejecución activa de Pathfinder, que se reclasifican como habilidad tipo conjuro y se inscriben en los slots de Mana (Gates, nodos y círculos). Los conjuros se agregan del manual o se crean propios, y se inscriben en esos mismos slots; el costo de usar cada habilidad está pendiente de diseño.</p>'
       : '';
-    return intro + prog +
+    return intro + prog + bloqueRepertorio(calcB, con) +
       '<div class="bloque-feats"><span class="eyebrow">Habilidades activas</span>' +
       (tarjetas ? '<div class="grid g300">' + tarjetas + '</div>' : '<p class="mute">Todavía no hay habilidades activas. Una habilidad activa de la clase o un feat de ejecución activa aparece aquí al ganarlo.</p>') + '</div>' + proximas +
-      '<div class="cajas"><div class="caja"><small>Habilidades activas</small><b>' + (delaClase.length + delFeat.length) + '</b></div><div class="caja"><small>Slots de Mana con habilidad</small><b>' + m.totales.ocupados + ' de ' + m.totales.slots + '</b></div></div>';
+      '<div class="cajas"><div class="caja"><small>Habilidades activas</small><b>' + (delaClase.length + delFeat.length) + '</b></div><div class="caja"><small>Slots de Mana con habilidad</small><b>' + m.totales.ocupados + ' de ' + m.totales.slots + '</b></div></div>' +
+      (con ? formulariosConjuros(calcB) : '');
   }
 
   function chipsMagia(calcB) {
     var cl = calcB.clase, cj = calcB.conjuros;
     var total = (cl ? cl.habilidades.filter(esActiva).length : 0) + calcB.feats.lista.filter(function (x) { return x.tipo === 'habilidad-tipo-conjuro'; }).length;
-    return (cj ? chip(cj.nivelMax === 0 ? 'Solo trucos' : 'Conjuros hasta el nivel ' + cj.nivelMax, 'acc') + (cj.proximo ? chip('Nivel ' + cj.proximo.nivelConjuro + ' en el nivel ' + cj.proximo.enNivel, 'soft') : '') : '') +
-      chip(plural(total, 'habilidad activa', 'habilidades activas'), cj ? 'soft' : 'acc') + chip(calcB.mana.totales.libres + ' slots libres', 'soft');
+    var nCj = calcB.repertorio.conjuros.length;
+    return (nCj ? chip(plural(nCj, 'conjuro', 'conjuros'), 'acc') : '') + (cj ? chip(cj.nivelMax === 0 ? 'Solo trucos' : 'Conjuros hasta el nivel ' + cj.nivelMax, nCj ? 'soft' : 'acc') + (cj.proximo ? chip('Nivel ' + cj.proximo.nivelConjuro + ' en el nivel ' + cj.proximo.enNivel, 'soft') : '') : '') +
+      chip(plural(total, 'habilidad activa', 'habilidades activas'), cj || nCj ? 'soft' : 'acc') + chip(calcB.mana.totales.libres + ' slots libres', 'soft');
   }
 
   /** Vista Jugar: tarjeta siempre visible, donde irían los conjuros. */
@@ -1100,11 +1204,18 @@
     }
     if (e.tipo === 'inscribir') {
       var h = estado.indiceFeats[e.habilidad];
-      return 'Inscribir · ' + (h ? h.nombre : e.habilidad) + ' en ' + e.slot;
+      var cjIns = null;
+      if (e.conjuro && estado.vista) cjIns = estado.vista.calcB.repertorio.conjuros.filter(function (c) { return c.id === e.conjuro; })[0] || null;
+      return 'Inscribir · ' + (e.conjuro ? (cjIns ? cjIns.nombre : e.conjuro) : h ? h.nombre : e.habilidad) + ' en ' + e.slot;
+    }
+    if (e.tipo === 'conjuro') {
+      var cjCat = e.nombre === undefined ? estado.ctx.catalogoConjuros.filter(function (c) { return c.id === e.id; })[0] : null;
+      return (e.categoria === 'tecnica' ? 'Técnica activa · ' : e.aprendiendo ? 'Conjuro (aprendiendo) · ' : 'Conjuro · ') + (cjCat ? cjCat.nombre : e.nombre || e.id) +
+        (typeof e.nivel === 'number' ? ' · nivel ' + e.nivel : '');
     }
     if (e.tipo === 'desinscribir') return 'Desinscribir · ' + e.slot;
-    if (e.tipo === 'mana-fuerza') return 'Mana force ' + deltaTxt(e.cantidad) + ' · ' + nombreFuenteMF(e.fuente) + (e.nota ? ' (' + e.nota + ')' : '');
-    if (e.tipo === 'gate') return 'Gate ' + e.id + ' · ' + nombreTagMana(e.tag) + ' · ' + nombreFuncionMana(e.funcion);
+    if (e.tipo === 'mana-fuerza') return 'Mana force ' + (e.porNivel ? deltaTxt(e.porNivel) + ' por nivel' : deltaTxt(e.cantidad)) + ' · ' + nombreFuenteMF(e.fuente) + (e.nota ? ' (' + e.nota + ')' : '');
+    if (e.tipo === 'gate') return 'Gate ' + e.id + ' · ' + nombreTagMana(e.tag) + ' · ' + (e.funcion ? nombreFuncionMana(e.funcion) : 'sin función');
     if (e.tipo === 'sx') return 'SX +' + e.cantidad + ' a la reserva';
     if (e.tipo === 'sx-asignar') return 'SX ' + e.cantidad + ' de la reserva → ' + destinoSx(e.subsistema, e.rama);
     if (e.tipo === 'xp-subsistema') return 'SX +' + e.cantidad + ' → ' + destinoSx(e.subsistema, e.rama);
@@ -1269,8 +1380,11 @@
     if (s.mana) c.push(['Mana +' + s.mana, '']);
     if (s.sxGanado) c.push(['SX a la reserva +' + s.sxGanado, '']);
     if (s.sxAsignado.length) c.push(['SX asignado de la reserva · ' + s.sxAsignado.map(function (a) { return destinoSx(a.subsistema, a.rama) + ' ' + a.cantidad; }).join(' · '), '']);
-    s.mf.forEach(function (m) { c.push(['Mana force ' + deltaTxt(m.cantidad) + ' · ' + nombreFuenteMF(m.fuente), '']); });
-    s.gates.forEach(function (g) { c.push(['Gate ' + g.id + ' · ' + g.tagNombre + ' (' + nombreFuncionMana(g.funcion) + ')', 'acc']); });
+    s.mf.forEach(function (m) { c.push(['Mana force ' + deltaTxt(m.cantidad) + (m.porNivel ? ' (' + m.porNivel + ' por nivel)' : '') + ' · ' + nombreFuenteMF(m.fuente), '']); });
+    s.gates.forEach(function (g) { c.push(['Gate ' + g.id + ' · ' + g.tagNombre + (g.funcion ? ' (' + nombreFuncionMana(g.funcion) + ')' : ''), 'acc']); });
+    s.conjuros.forEach(function (x) {
+      c.push([(x.categoria === 'tecnica' ? 'Técnica activa · ' : x.aprendiendo ? 'Aprende ' : 'Conjuro · ') + x.nombre + (x.categoria === 'conjuro' ? ' (' + (x.nivel === 0 ? 'truco' : 'nivel ' + x.nivel) + ')' : ''), x.aprendiendo ? 'gold' : 'acc']);
+    });
     s.inscripciones.forEach(function (i) { c.push([(i.accion === 'inscribir' ? 'Inscribió ' : 'Quitó ') + i.nombre + (i.accion === 'inscribir' ? ' en ' : ' de ') + i.slot, '']); });
     var tir = { hp: 0, mp: 0 };
     s.tiradas.forEach(function (t) { tir[t.recurso] += 1; });
@@ -1588,9 +1702,12 @@
     } else if (a === 'inscribir') {
       var slot = boton.getAttribute('data-slot');
       var sel = document.getElementById('insc-' + slot);
-      if (!sel || !sel.value) { toast('Elige la habilidad que quieres inscribir.', true); return; }
-      var hab = estado.indiceFeats[sel.value];
-      agregar({ tipo: 'inscribir', slot: slot, habilidad: sel.value }, '«' + (hab ? hab.nombre : sel.value) + '» inscrita en ' + slot + ' (borrador).');
+      if (!sel || !sel.value) { toast('Elige lo que quieres inscribir.', true); return; }
+      var esConjuro = sel.value.slice(0, 2) === 'c:';
+      var idIns = sel.value.slice(2);
+      var hab = esConjuro ? estado.vista.calcB.repertorio.conjuros.filter(function (c) { return c.id === idIns; })[0] : estado.indiceFeats[idIns];
+      agregar(esConjuro ? { tipo: 'inscribir', slot: slot, conjuro: idIns } : { tipo: 'inscribir', slot: slot, habilidad: idIns },
+        '«' + (hab ? hab.nombre : idIns) + '» inscrita en ' + slot + ' (borrador).');
     } else if (a === 'desinscribir') {
       var slotD = boton.getAttribute('data-slot');
       agregar({ tipo: 'desinscribir', slot: slotD }, 'Se quitará la habilidad de ' + slotD + ' (borrador).');
@@ -1629,19 +1746,55 @@
       if (ztDesc) ztE.descripcion = ztDesc;
       if (ztOri) ztE.origen = ztOri;
       agregar(ztE, 'Técnica de ' + ztL + ' (nivel ' + ztN + ', ' + ztNom + ') agregada al borrador.');
+    } else if (a === 'cj-manual') {
+      var cjQ = (document.getElementById('cj-q').value || '').trim().toLowerCase();
+      var cjRef = estado.ctx.catalogoConjuros.filter(function (c) { return c.nombre.toLowerCase() === cjQ || c.id === cjQ; })[0];
+      if (!cjRef) { toast(cjQ ? 'No hay un conjuro del manual con ese nombre.' : 'Escribe el nombre del conjuro y elígelo de la lista.', true); return; }
+      var cjNv = document.getElementById('cj-n').value;
+      var cjE = { tipo: 'conjuro', id: cjRef.id };
+      if (cjNv !== '') cjE.nivel = Number(cjNv);
+      agregar(cjE, cjRef.nombre + ' agregado al borrador.');
+    } else if (a === 'cj-crear') {
+      var cjNom = (document.getElementById('cj-nombre').value || '').trim();
+      if (!cjNom) { toast('Escribe el nombre del conjuro o de la técnica.', true); return; }
+      var cjTipo = document.getElementById('cj-t').value;
+      var cjP = { tipo: 'conjuro', nombre: cjNom };
+      if (cjTipo === 'tecnica') cjP.categoria = 'tecnica';
+      else {
+        var cjNivel = document.getElementById('cj-nivel').value;
+        if (cjNivel === '') { toast('Un conjuro propio necesita nivel (0 a 9).', true); return; }
+        cjP.nivel = Number(cjNivel);
+      }
+      [['costo', 'cj-costo'], ['descripcion', 'cj-desc'], ['escuela', 'cj-escuela'], ['tiempo', 'cj-tiempo'], ['alcance', 'cj-alcance'],
+        ['duracion', 'cj-duracion'], ['salvacion', 'cj-salv']].forEach(function (par) {
+        var v = (document.getElementById(par[1]).value || '').trim();
+        if (v) cjP[par[0]] = v;
+      });
+      if (cjTipo === 'conjuro' && document.getElementById('cj-apr').checked) {
+        cjP.aprendiendo = true;
+        var rg = Number(document.getElementById('cj-rg').value), rs = Number(document.getElementById('cj-rs').value);
+        if (rg > 0 || rs > 0) { cjP.requisitos = {}; if (rg > 0) cjP.requisitos.gates = rg; if (rs > 0) cjP.requisitos.sx = rs; }
+      }
+      agregar(cjP, cjNom + ' agregado al borrador.');
     } else if (a === 'mf-agregar') {
       var mfN = enteroDe('mf-n');
       if (!mfN) { toast('Escribe cuánta Mana force gana (+) o pierde (−): un entero distinto de 0.', true); return; }
       var mfNota = (document.getElementById('mf-nota').value || '').trim();
-      var mfE = { tipo: 'mana-fuerza', cantidad: mfN, fuente: document.getElementById('mf-f').value };
+      var mfPorNivel = document.getElementById('mf-pn').checked;
+      if (mfPorNivel && mfN < 1) { toast('Una Mana force por nivel es un entero positivo.', true); return; }
+      var mfE = { tipo: 'mana-fuerza', fuente: document.getElementById('mf-f').value };
+      mfE[mfPorNivel ? 'porNivel' : 'cantidad'] = mfN;
       if (mfNota) mfE.nota = mfNota;
-      agregar(mfE, 'Mana force ' + deltaTxt(mfN) + ' agregada al borrador.');
+      agregar(mfE, 'Mana force ' + deltaTxt(mfN) + (mfPorNivel ? ' por nivel' : '') + ' agregada al borrador.');
     } else if (a === 'gate-agregar') {
       var gtOp = (document.getElementById('gt-op').value || '').trim();
-      if (!gtOp) { toast('Escribe la oportunidad que permitió construir el Gate.', true); return; }
       var gtId = boton.getAttribute('data-id');
       var gtTag = document.getElementById('gt-tag').value;
-      agregar({ tipo: 'gate', id: gtId, funcion: document.getElementById('gt-fn').value, tag: gtTag, oportunidad: gtOp }, 'Gate ' + gtId + ' (' + nombreTagMana(gtTag) + ') agregado al borrador.');
+      var gtFn = document.getElementById('gt-fn').value;
+      var gtE = { tipo: 'gate', id: gtId, tag: gtTag };
+      if (gtFn) gtE.funcion = gtFn;
+      if (gtOp) gtE.oportunidad = gtOp;
+      agregar(gtE, 'Gate ' + gtId + ' (' + nombreTagMana(gtTag) + ') agregado al borrador.');
     } else if (a === 'sx-ganar') {
       var gN = enteroDe('sx-gan-n');
       if (!gN || gN < 1) { toast('Escribe cuánto SX se ganó: un entero positivo.', true); return; }
