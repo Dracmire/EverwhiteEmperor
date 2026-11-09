@@ -412,6 +412,18 @@ test('zeo-tecnica: origen y descripcion deben ser textos; la descripción propia
   assert.equal(r.zeo.lineas[1].raiz.descripcion, 'Mente en blanco.');
 });
 
+test('catálogo Zeo: la línea Sentir el Ki trae sus descripciones (todas menos Long Range Sense) y llegan a la ficha', () => {
+  const ctx = contexto();
+  const linea = ctx.zeoTecnicas.find((l) => l.id === 'sentir-el-ki');
+  assert.ok(linea.descripcion && linea.descripcion.includes('20 m'));
+  const ops = [2, 3, 4].reduce((a, n) => a.concat(linea.niveles[n]), []);
+  assert.deepEqual(ops.filter((o) => !o.descripcion).map((o) => o.id), ['long-range-sense']);
+  const r = Core.calcularPersonaje(ctx, pj([[tec('L01', 1, 'Sentir el Ki'), tec('L01', 2, 'Ki Mark')]]));
+  assert.equal(errores(r).length, 0);
+  assert.equal(r.zeo.lineas[0].raiz.descripcion, linea.descripcion);
+  assert.ok(r.zeo.lineas[0].niveles[1].tomadas[0].descripcion.includes('60 m'));
+});
+
 test('habilidades y tag de XP del personaje: deben existir como tags de xp-config', () => {
   const ctx = contexto();
   const ok = Core.calcularPersonaje(ctx, pj([[xp(0)]], { habilidades: ['stealth', 'climb'], tagXp: 'tracker' }));

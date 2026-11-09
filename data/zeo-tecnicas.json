@@ -1,9 +1,9 @@
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "fuente": "Hoja de Musashi Nanaya: bloque de técnicas Zeo (columnas D a O) y filas OUT.",
   "notas": {
     "estructura": "Cada línea tiene una técnica raíz (nivel 1) con su rama (heaven, earth o void) y una lista de mejoras por nivel (2 a 5). La hoja trae 3 por nivel en los niveles 2 a 4; Meditación trae 4 en el nivel 3. El nivel 5 aún no tiene opciones.",
-    "descripcion": "descripcion es el texto de lo que hace la técnica. Está en null hasta que el diseñador lo entregue. Una técnica del registro puede traer su propia descripcion si no está en este catálogo.",
+    "descripcion": "descripcion es el texto de lo que hace la técnica. Está en null hasta que el diseñador lo entregue. Una técnica del registro puede traer su propia descripcion si no está en este catálogo. Entregadas hasta ahora (v0.9.10): la línea Sentir el Ki completa salvo Long Range Sense.",
     "origen": "origen es el log: cómo llegó la técnica (Werewolf, Ninja, Knight, una ronda). Son las ofertas del diseñador; cada vez ofreció varias opciones y el personaje eligió algunas. No cambia ninguna regla: una línea con origen se toma como cualquier otra.",
     "ortografia": "Se corrigieron erratas evidentes de la hoja (Ki Erasinng, FireAcumulaton, Wepons). Meditación estaba desalineada en la hoja: se leyeron 3 mejoras de nivel 2 y 4 de nivel 3.",
     "cuantas": "El catálogo lista todas las opciones de un nivel. Cuántas se pueden tomar lo marca la regla de data/zeo.json (3 al abrirse, +1 por cada técnica extra del nivel anterior, hasta el tope)."
@@ -14,40 +14,40 @@
       "nombre": "Sentir el Ki",
       "rama": "heaven",
       "origen": null,
-      "descripcion": null,
+      "descripcion": "Permite sentir la fuerza vital de las personas en un cono de 20 m. El cono atraviesa obstáculos, pero se reduce con cada uno. No lo afecta la magia común, pero sí las distorsiones. Da información vaga, como la distancia general y el tamaño del «ki».",
       "niveles": {
         "2": [
           {
             "id": "ki-mark",
             "nombre": "Ki Mark",
-            "descripcion": null
+            "descripcion": "Reservas MP para dejar una marca en un blanco con un contacto que dure 5 segundos o más. La marca no deja sensaciones y no es magia, pero Sentir el Ki puede detectarla más allá de su límite de 20 m, hasta 60 m, y da la posición general del blanco."
           },
           {
             "id": "ki-vision",
             "nombre": "Ki Vision",
-            "descripcion": null
+            "descripcion": "Ves una luz tenue alrededor de la gente con «ki» dentro de un rango corto de 6 m. Todo lo que ves puede ser «evaluado». Tiene sinergia con Ki Mark. Tiene las mismas limitaciones que la vista y no ve a través de objetos."
           },
           {
             "id": "sensitive-ki",
             "nombre": "Sensitive Ki",
-            "descripcion": null
+            "descripcion": "Te enfocas en una sola señal de ki para inferir más información de ella. Se puede lanzar a la vez que Sentir el Ki, pero necesita un blanco específico único. La información adicional puede incluir el tamaño de la persona, su posición específica y su estado (herida, cansada, etc.). Usada activamente en una escena social, da un bono a Sentir Motivo, Bluff y Diplomacia."
           }
         ],
         "3": [
           {
             "id": "sense-burst",
             "nombre": "Sense Burst",
-            "descripcion": null
+            "descripcion": "Emites un pulso circular de Sentir el Ki a tu alrededor, en un radio de 20 m. Durante un breve tiempo (1 rd) sientes el ki de todo lo que te rodea, lo que te da tiempo de hacer 2 preguntas en paralelo a otras acciones, o 5 preguntas si no haces nada más mientras dura el efecto. Tiene sinergia con Ki Mark."
           },
           {
             "id": "blind-ki",
             "nombre": "Blind Ki",
-            "descripcion": null
+            "descripcion": "Cierras los ojos y te dejas guiar por el Ki. En este estado eres mucho más sensible a tus alrededores y puedes cancelar el Stealth de oponentes dentro de 6 m, según el ruido ambiental y otros factores. No da visión en la oscuridad ni inmunidad a la ceguera: se apoya en la pequeña vida del ambiente para guiarse, y en lugares desolados también estás ciego."
           },
           {
             "id": "shadow-mark",
             "nombre": "Shadow Mark",
-            "descripcion": null
+            "descripcion": "Pones una marca no en la persona sino en su sombra, y no necesitas tocarla: basta con que tu sombra entre en contacto con la suya. Así tu sombra puede colocar múltiples marcas en hasta 2 blancos + nivel Zeo. Las marcas de Shadow Mark son más difíciles de detectar y son inmunes a «Sentir el Ki» o a derivados de nivel menor a 3."
           }
         ],
         "4": [
@@ -59,12 +59,12 @@
           {
             "id": "ki-snooping",
             "nombre": "Ki Snooping",
-            "descripcion": null
+            "descripcion": "Escuchas usando tu habilidad de Sentir el Ki. Una vez que tienes a un blanco cautivo, escuchas a distancia hasta un máximo igual al alcance de Sentir el Ki, o el doble si tiene Ki Mark. Escuchar requiere tu concentración total: si se rompe, pierdes el blanco y debes volver a captarlo."
           },
           {
             "id": "chi-of-the-land",
             "nombre": "Chi of the Land",
-            "descripcion": null
+            "descripcion": "Lees el ki de la tierra y de las pequeñas cosas vivas; necesitas 1 round completo tocando el suelo. En este estado muchas de tus habilidades basadas en Sentir el Ki se amplifican y pueden doblar o triplicar su alcance. Usada simplemente, lees cambios locales como la corrupción, o energías predominantes del medio, como magia o elemental. Da un bono a detectar trampas."
           }
         ],
         "5": []
