@@ -459,8 +459,9 @@
 
   // ---- subsistemas plegables: zeo, mana y magia
 
-  function textoDescripcion(d) {
-    return d ? '<p class="zdesc">' + esc(d) + '</p>' : '<p class="zdesc sin">Sin descripción todavía.</p>';
+  /** Tooltip de una técnica de Zeo: el nombre (con el origen o «Sin catálogo», si los hay) y su descripción. */
+  function tipZeo(nombre, descripcion, notas) {
+    return nombre + (notas.length ? ' · ' + notas.join(' · ') : '') + '\n' + (descripcion || 'Sin descripción todavía.');
   }
 
   function chipRama(rama) {
@@ -478,12 +479,14 @@
     var txt = (!n.abierto ? 'Cerrado' : n.tomadas.length + ' de ' + n.visibles + (n.visibles < n.tope ? ' (hasta ' + n.tope + ')' : '')) +
       (n.costo ? ' · ' + n.costo + ' sx' : '');
     var tomadas = n.tomadas.map(function (t) {
-      return '<li class="ztec tomada"><span class="ztec-nom">' + esc(t.nombre || 'Técnica sin nombre') + '</span>' +
-        (t.catalogo ? '' : '<span class="chip soft">Sin catálogo</span>') + (t.origen ? '<span class="chip soft">' + esc(t.origen) + '</span>' : '') +
-        textoDescripcion(t.descripcion) + '</li>';
+      var nombre = t.nombre || 'Técnica sin nombre';
+      var notas = [];
+      if (!t.catalogo) notas.push('Sin catálogo');
+      if (t.origen) notas.push(t.origen);
+      return '<li class="ztec tomada"' + tip(tipZeo(nombre, t.descripcion, notas)) + '>' + esc(nombre) + '</li>';
     }).join('');
     var faltan = n.opciones.filter(function (o) { return !o.tomada; }).map(function (o) {
-      return '<li class="ztec"><span class="ztec-nom">' + esc(o.nombre) + '</span>' + (o.descripcion ? '<p class="zdesc">' + esc(o.descripcion) + '</p>' : '') + '</li>';
+      return '<li class="ztec"' + tip(tipZeo(o.nombre, o.descripcion, ['Sin tomar'])) + '>' + esc(o.nombre) + '</li>';
     }).join('');
     return '<div class="znivel' + (n.abierto ? '' : ' cerrado') + '"><span class="znv">Nv. ' + n.nivel + '</span><span class="zpips" aria-hidden="true">' + pips + '</span>' +
       '<span class="zt num">' + txt + '</span>' + (tomadas || faltan ? '<ul class="ztecs">' + tomadas + faltan + '</ul>' : '') + '</div>';
@@ -510,7 +513,7 @@
       ? '<div class="acc-fila"><button class="btn prim" type="button" data-accion="zeo-activar" data-linea="' + esc(l.id) + '">Activar · ' + l.costoActivar + ' sx</button></div>'
       : '';
     return '<details class="zlinea' + (l.activa ? '' : ' por-activar') + '" data-id="' + esc(idDesp) + '"' + (estado.abiertos[idDesp] ? ' open' : '') + '><summary>' + resumen + '</summary>' +
-      '<div class="zlinea-cuerpo">' + niveles + activar + '</div></details>';
+      '<div class="zlinea-cuerpo">' + niveles + '<p class="zayuda mute">Pasa el cursor o toca una técnica para ver su descripción.</p>' + activar + '</div></details>';
   }
 
   /** Orígenes ya conocidos (catálogo y líneas existentes), para sugerirlos al escribir uno. */
@@ -2289,8 +2292,13 @@
   }
   function conTip(ev) { return ev.target && ev.target.closest ? ev.target.closest('[data-tip]') : null; }
   app.addEventListener('mouseover', function (ev) { var el = conTip(ev); if (el) mostrarTip(el); });
+  // Con el dedo no hay cursor que salga del elemento: tras un toque, un mouseout sintético no debe cerrar el cuadro;
+  // se cierra con el siguiente toque fuera (más abajo) o al desplazar la página.
+  var ultimoToque = 0;
+  document.addEventListener('pointerdown', function (ev) { if (ev.pointerType === 'touch') ultimoToque = Date.now(); }, true);
   app.addEventListener('mouseout', function (ev) {
     var el = conTip(ev);
+    if (Date.now() - ultimoToque < 1000) return;
     if (el && !(ev.relatedTarget && el.contains(ev.relatedTarget))) ocultarTip();
   });
   app.addEventListener('focusin', function (ev) { var el = conTip(ev); if (el) mostrarTip(el); });

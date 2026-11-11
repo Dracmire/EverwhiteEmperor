@@ -236,12 +236,11 @@ details.zlinea[open] > summary .desp-flecha { transform: rotate(-135deg); margin
 .zcuenta { font-size: 12px; }
 .chip.zrama i { width: 8px; height: 8px; border-radius: 2px; background: var(--rc); margin-right: 6px; }
 .zlineas { align-items: start; }
-.ztecs { grid-column: 1 / -1; list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.ztec { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; padding-left: 10px; border-left: 3px dashed var(--mute); color: var(--mute); font-size: 13px; }
-.ztec.tomada { border-left: 3px solid var(--acc); color: var(--ink); }
-.ztec-nom { font-weight: 600; }
-.zdesc { flex: 1 1 100%; margin: 0; font-size: 12px; color: var(--mute); }
-.zdesc.sin { font-style: italic; }
+.ztecs { grid-column: 1 / -1; list-style: none; margin: 2px 0 6px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.ztec { display: inline-flex; align-items: center; min-height: 36px; padding: 4px 12px; border-radius: 18px; border: 1px dashed var(--mute); color: var(--mute); font-size: 13px; font-weight: 600; line-height: 1.3; cursor: help; }
+.ztec.tomada { border: 1px solid var(--accSoft); background: var(--accSoft); color: var(--acc); }
+.ztec:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px; }
+.zayuda { margin: -4px 0 0; font-size: 12px; }
 .caja.proximo { background: transparent; border: 1px dashed var(--mute); }
 .caja.proximo b { color: var(--mute); }
 .mini { position: relative; height: 6px; border-radius: 999px; background: var(--track); }
