@@ -1,9 +1,9 @@
 {
-  "version": "0.3.0",
+  "version": "0.4.0",
   "fuente": "Hoja de Musashi Nanaya: bloque de técnicas Zeo (columnas D a O) y filas OUT.",
   "notas": {
     "estructura": "Cada línea tiene una técnica raíz (nivel 1) con su rama (heaven, earth o void) y una lista de mejoras por nivel (2 a 5). La hoja trae 3 por nivel en los niveles 2 a 4; Meditación trae 4 en el nivel 3. El nivel 5 aún no tiene opciones.",
-    "descripcion": "descripcion es el texto de lo que hace la técnica. Está en null hasta que el diseñador lo entregue. Una técnica del registro puede traer su propia descripcion si no está en este catálogo. Entregadas hasta ahora (v0.9.10): la línea Sentir el Ki completa salvo Long Range Sense.",
+    "descripcion": "descripcion es el texto de lo que hace la técnica. Está en null hasta que el diseñador lo entregue. Una técnica del registro puede traer su propia descripcion si no está en este catálogo. Entregadas hasta ahora (v0.9.11): la línea Sentir el Ki completa salvo Long Range Sense, y la raíz de Tracción de Ki, Meditación, Ocultar el Ki y Blank Mind. Sense Burst se reemplazó por una versión nueva del diseñador.",
     "origen": "origen es el log: cómo llegó la técnica (Werewolf, Ninja, Knight, una ronda). Son las ofertas del diseñador; cada vez ofreció varias opciones y el personaje eligió algunas. No cambia ninguna regla: una línea con origen se toma como cualquier otra.",
     "ortografia": "Se corrigieron erratas evidentes de la hoja (Ki Erasinng, FireAcumulaton, Wepons). Meditación estaba desalineada en la hoja: se leyeron 3 mejoras de nivel 2 y 4 de nivel 3.",
     "cuantas": "El catálogo lista todas las opciones de un nivel. Cuántas se pueden tomar lo marca la regla de data/zeo.json (3 al abrirse, +1 por cada técnica extra del nivel anterior, hasta el tope)."
@@ -37,7 +37,7 @@
           {
             "id": "sense-burst",
             "nombre": "Sense Burst",
-            "descripcion": "Emites un pulso circular de Sentir el Ki a tu alrededor, en un radio de 20 m. Durante un breve tiempo (1 rd) sientes el ki de todo lo que te rodea, lo que te da tiempo de hacer 2 preguntas en paralelo a otras acciones, o 5 preguntas si no haces nada más mientras dura el efecto. Tiene sinergia con Ki Mark."
+            "descripcion": "Genera una onda circular expansiva alrededor del usuario, invisible e insonora, que solo produce una tenue brisa. Tiene rápida activación. Todos los potenciales blancos de Sentir el Ki en un radio de «6mt2 + zlv mt2» son afectados [cifra tal como la escribió el diseñador, por confirmar]. Es débil contra criaturas de tamaño diminuto (como un gato) o humanos a ras de piso, y su radio máximo está a la altura de la cintura del usuario. Siempre genera una expansión horizontal y nunca vertical, aunque el usuario cambie de posición. Tiene sinergia con Ki Mark, pero no es compatible con Sensitive Ki."
           },
           {
             "id": "blind-ki",
@@ -75,7 +75,7 @@
       "nombre": "Tracción de Ki",
       "rama": "heaven",
       "origen": null,
-      "descripcion": null,
+      "descripcion": "Eres capaz de caminar sobre superficies verticales a velocidad de caminar. No puedes cargar más de 2,5 kg de peso + 0,2 kg por nivel Zeo. Requiere una acción inicial para tocar la superficie durante 5 segundos antes de activarse.",
       "niveles": {
         "2": [
           {
@@ -133,7 +133,7 @@
       "nombre": "Meditación",
       "rama": "void",
       "origen": null,
-      "descripcion": null,
+      "descripcion": "Entras en un semitrance recuperativo. Durante este tiempo tu MP recupera un 25 % + 5 % por nivel Zeo, y tu HP recupera un 10 % + 2 % por nivel Zeo. Mantienes un nivel bajo de conciencia, así que puedes reaccionar más rápido que una persona durmiendo (como un 50 %). Sin embargo, no es un verdadero descanso sino un descanso parcial: cada meditación causa 1 pt de daño por fatiga a INT por cada hora de uso continuo, hasta un máximo de la mitad del puntaje de INT del personaje, donde ya no puedes usar la técnica.",
       "niveles": {
         "2": [
           {
@@ -183,7 +183,7 @@
       "nombre": "Ocultar el Ki",
       "rama": "heaven",
       "origen": null,
-      "descripcion": null,
+      "descripcion": "Reduce tu presencia y permite enmascarar la vitalidad o el nivel general del usuario. Tu nivel percibido baja en tu nivel Zeo, con un mínimo de la mitad. Además tienes un bono de +5 a esconderse y Stealth. Mientras escondes tu ki no puedes correr ni combatir, y las acciones explosivas, como gritar, rompen el efecto. Puede protegerte contra habilidades sensitivas como Sentir el Ki.",
       "niveles": {
         "2": [
           {
@@ -212,7 +212,7 @@
       "nombre": "Blank Mind",
       "rama": "void",
       "origen": null,
-      "descripcion": null,
+      "descripcion": "Técnica de vacío que te permite vaciar temporalmente tus pensamientos. La capacidad reflexiva o emotiva del personaje queda muy reducida, y cualquier acción de reflexión profunda, como analizar algo o comprenderlo, o cualquier exabrupto emocional, rompe este estado. A cambio, sirve para proteger la mente de asaltos, lecturas y otros efectos, y puede usarse para ignorar cosas.",
       "niveles": {
         "2": [
           {

@@ -424,6 +424,21 @@ test('catálogo Zeo: la línea Sentir el Ki trae sus descripciones (todas menos 
   assert.ok(r.zeo.lineas[0].niveles[1].tomadas[0].descripcion.includes('60 m'));
 });
 
+test('catálogo Zeo: Tracción, Meditación, Ocultar el Ki y Blank Mind traen su descripción y Sense Burst es la versión nueva', () => {
+  const ctx = contexto();
+  const raiz = (id) => ctx.zeoTecnicas.find((l) => l.id === id).descripcion;
+  assert.ok(raiz('traccion-de-ki').includes('5 segundos'));
+  assert.ok(raiz('meditacion').includes('1 pt de daño por fatiga a INT'));
+  assert.ok(raiz('ocultar-el-ki').includes('+5'));
+  assert.ok(raiz('blank-mind').includes('vaciar temporalmente'));
+  const sb = ctx.zeoTecnicas.find((l) => l.id === 'sentir-el-ki').niveles[3].find((o) => o.id === 'sense-burst').descripcion;
+  assert.ok(sb.includes('horizontal') && sb.includes('no es compatible con Sensitive Ki'));
+  assert.ok(!sb.includes('20 m'), 'la descripción vieja (20 m, 2 o 5 preguntas) ya no está');
+  const r = Core.calcularPersonaje(ctx, pj([[tec('L02', 1, 'Meditación')]]));
+  assert.equal(errores(r).length, 0);
+  assert.equal(r.zeo.lineas[1].raiz.descripcion, raiz('meditacion'));
+});
+
 test('habilidades y tag de XP del personaje: deben existir como tags de xp-config', () => {
   const ctx = contexto();
   const ok = Core.calcularPersonaje(ctx, pj([[xp(0)]], { habilidades: ['stealth', 'climb'], tagXp: 'tracker' }));
